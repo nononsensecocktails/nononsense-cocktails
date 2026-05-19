@@ -1,0 +1,12 @@
+CREATE TABLE user_ratings (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    recipe_id INT NOT NULL,
+    name VARCHAR(255),          -- Kept for now, can be removed later
+    source VARCHAR(255),        -- Kept for now, can be removed later
+    stars_out_of_3 VARCHAR(50),
+    last_date DATE,
+    username VARCHAR(50),
+    INDEX idx_recipe_id (recipe_id),
+    UNIQUE KEY unique_rating_per_day (recipe_id, username, last_date),
+    CONSTRAINT fk_recipe_id FOREIGN KEY (recipe_id) REFERENCES recipes(ID)
+);

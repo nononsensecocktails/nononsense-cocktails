@@ -1,0 +1,26 @@
+DROP TABLE IF EXISTS user_ratings;
+
+CREATE TABLE user_ratings (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    recipe_id INT NOT NULL,
+    name VARCHAR(255),          -- Kept for now, can be removed later
+    source VARCHAR(255),        -- Kept for now, can be removed later
+    stars_out_of_3 VARCHAR(50),
+    last_date DATE,
+    username VARCHAR(50),
+    INDEX idx_recipe_id (recipe_id),
+    UNIQUE KEY unique_rating_per_day (recipe_id, username, last_date),
+    CONSTRAINT fk_recipe_id FOREIGN KEY (recipe_id) REFERENCES recipes(ID)
+);
+
+DELETE FROM user_ratings WHERE username = 'jason';
+
+**Need to know recipe_id from recipe table before inserting into user_ratings**
+
+INSERT INTO user_ratings (recipe_id, name, source, stars_out_of_3, last_date, username) VALUES
+
+('3','#65','Drink & Tell','4','2024-05-22','Jason'),
+('5','100 Year Old Cigar','cocktailvirgin.blogspot.com','3','2023-09-22','Jason'),
+('5','100 Year Old Cigar','cocktailvirgin.blogspot.com','1','2023-09-22','Mrinal');
+
+

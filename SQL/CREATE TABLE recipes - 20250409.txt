@@ -1,0 +1,24 @@
+CREATE TABLE recipes (
+    ID INT PRIMARY KEY,
+    Name VARCHAR(255) NOT NULL,
+    Color VARCHAR(50),
+    Source VARCHAR(255) NOT NULL,
+    Page VARCHAR(50),
+    Link TEXT,
+    `Adaptation of` VARCHAR(255),
+    Variations TEXT,
+    `Shaken/Stirred` VARCHAR(50),
+    Ice VARCHAR(50),
+    Family VARCHAR(50),
+    Glass VARCHAR(50),
+    Base VARCHAR(50),
+    Characteristics TEXT,
+    Garnish TEXT,
+    Instructions TEXT,
+    Servings INT,
+    Mixer VARCHAR(50),
+    Ingredients TEXT,
+    Hide BOOLEAN DEFAULT FALSE,
+    UNIQUE KEY (Name, Source)
+);
+

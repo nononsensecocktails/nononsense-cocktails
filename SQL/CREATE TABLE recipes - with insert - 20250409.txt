@@ -1,0 +1,33 @@
+CREATE TABLE recipes (
+    ID INT PRIMARY KEY,
+    Name VARCHAR(255) NOT NULL,
+    Color VARCHAR(50),
+    Source VARCHAR(255) NOT NULL,
+    Page VARCHAR(50),
+    Link TEXT,
+    `Adaptation of` VARCHAR(255),
+    Variations TEXT,
+    `Shaken/Stirred` VARCHAR(50),
+    Ice VARCHAR(50),
+    Family VARCHAR(50),
+    Glass VARCHAR(50),
+    Base VARCHAR(50),
+    Characteristics TEXT,
+    Garnish TEXT,
+    Instructions TEXT,
+    Servings INT,
+    Mixer VARCHAR(50),
+    Ingredients TEXT,
+    Num_Ingredients INT,
+    Hide BOOLEAN DEFAULT FALSE,
+    UNIQUE KEY (Name, Source)
+);
+
+INSERT INTO recipes (ID, Name, Color, Source, Page, Link, 
+    `Adaptation of`, Variations, `Shaken/Stirred`, Ice, Family, Glass, 
+    Base, Characteristics, Garnish, Instructions, Servings, Mixer, 
+    Ingredients, Num_Ingredients, Hide) VALUES
+
+('1','.38 Special','','cocktailvirgin.blogspot.com','','https://cocktailvirgin.blogspot.com/2023/01/38-special.html','','','Stirred','Up','','Coupe','Whiskey','','Lemon Twist','',1,'No','Blended Scotch:2.375;Yellow Chartreuse:0.375;CioCiaro:0.375',3,'0'), 
+
+('2','''Round Midnight','','cocktailvirgin.blogspot.com','','https://cocktailvirgin.blogspot.com/2016/04/round-midnight.html','','','Stirred','Up','','Cocktail','Whiskey','','None','',1,'No','Jameson Irish Whiskey:2;Strega:0.5;Luxardo Maraschino Liqueur:0.25;Raspberry Syrup:1 tsp',4,'0'); 

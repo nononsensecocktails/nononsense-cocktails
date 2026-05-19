@@ -1,0 +1,18 @@
+CREATE TABLE ingredients (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    In_House BOOLEAN DEFAULT FALSE,
+    Name VARCHAR(255) NOT NULL,
+    Base VARCHAR(255),
+    Type VARCHAR(255) NOT NULL,
+    Non_Alcoholic BOOLEAN DEFAULT FALSE,
+    Source VARCHAR(255),
+    ABV DECIMAL(10,4),
+    Cost DECIMAL(10,2),
+    Size_oz DECIMAL(10,2),
+    Cost_oz DECIMAL(10,2),
+    Comments TEXT,
+    Formula TEXT,
+    INDEX idx_name (Name),
+    INDEX idx_base (Base),
+    INDEX idx_type (Type)
+);
