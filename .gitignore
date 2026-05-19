@@ -1,0 +1,12 @@
+# Sensitive files - never upload these
+config.php
+*.log
+php_errors.log
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# IDE/editor files
+.vscode/
+.idea/
