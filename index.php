@@ -42,24 +42,25 @@ $usernames = getUsernames($conn);
             border: none;
             box-shadow: 0 4px 20px rgba(0,0,0,0.1);
         }
-        .filter-card {
-            background: white;
-        }
         .btn-accent {
             background-color: var(--accent);
             border-color: var(--accent);
             color: white;
         }
-        .recipe-card {
-            background: white;
+        .excel-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
         }
-        .ingredient-bar {
-            height: 8px;
-            background: linear-gradient(to right, #e76f51, #f4a261);
-            border-radius: 9999px;
-            margin: 4px 0;
+        .excel-cell {
+            flex: 1;
+            min-width: 120px;
         }
         @media (max-width: 768px) {
+            .excel-row {
+                flex-direction: column;
+            }
             .main-container {
                 margin: 1rem auto;
                 padding: 0 0.5rem;
@@ -75,7 +76,7 @@ $usernames = getUsernames($conn);
                 <img src="images/Coldberry_01_TM.jpg" alt="Logo" style="height: 48px;" class="me-3">
                 <h1 class="h3 mb-0 text-white">No-Nonsense Cocktails</h1>
             </div>
-            <div class="d-flex gap-2">
+            <div class="d-flex gap-2 flex-wrap">
                 <button id="reset-button" class="btn btn-outline-light">Reset</button>
                 <button id="copy-permalink" class="btn btn-outline-light">Share Link</button>
                 <button id="lucky-button" class="btn btn-outline-light">I'm Feeling Lucky</button>
@@ -90,10 +91,8 @@ $usernames = getUsernames($conn);
         <div class="card mb-4">
             <div class="card-body">
                 <div class="row align-items-center">
-                    <div class="col-md-2">
-                        <strong>User:</strong>
-                    </div>
-                    <div class="col-md-10">
+                    <div class="col-md-2 col-3"><strong>User:</strong></div>
+                    <div class="col-md-10 col-9">
                         <select id="user-select" class="form-select">
                             <option value="">Select user...</option>
                             <option value="All">All Users</option>
@@ -107,14 +106,60 @@ $usernames = getUsernames($conn);
         </div>
 
         <!-- Filters -->
-        <div class="card filter-card mb-4">
+        <div class="card mb-4">
             <div class="card-header bg-white">
                 <h5 class="mb-0">Filters</h5>
             </div>
-            <div class="card-body" id="search-boxes-container">
-                <!-- scripts.js will populate this area (same as before) -->
+            <div class="card-body">
                 <div class="search-boxes">
-                    <!-- Existing filter rows go here - JS will manage them -->
+                    <!-- Original filter row that scripts.js expects -->
+                    <div class="excel-row">
+                        <div class="excel-cell term-select-cell">
+                            <select class="term-select form-select" name="term[]">
+                                <option value="" selected>STEP 1: Select a Filter</option>
+                                <option value="All">All</option>
+                                <option value="adaption_of">Adaptation of</option>
+                                <option value="base">Base</option>
+                                <option value="characteristics">Characteristics</option>
+                                <option value="color">Color</option>
+                                <option value="family">Family</option>
+                                <option value="garnish">Garnish</option>
+                                <option value="glass">Glass</option>
+                                <option value="ice">Ice</option>
+                                <option value="ingredients">Ingredients</option>
+                                <option value="instructions">Instructions</option>
+                                <option value="last_date">Last Date</option>
+                                <option value="mixer">Mixer</option>
+                                <option value="name">Name</option>
+                                <option value="servings">Servings</option>
+                                <option value="shaken_stirred">Shaken/Stirred</option>
+                                <option value="source">Source</option>
+                                <option value="stars_out_of_3">Stars out of 3</option>
+                                <option value="variations">Variations</option>
+                            </select>
+                        </div>
+                        <div class="excel-cell">
+                            <select class="operator-select form-select" name="operator[]">
+                                <option value="=" selected>=</option>
+                                <option value="<>">≠</option>
+                            </select>
+                        </div>
+                        <div class="excel-cell">
+                            <input type="text" class="value-input form-control" name="value[]" placeholder="STEP 2: Select or Type a Value">
+                        </div>
+                        <div class="excel-cell" style="flex: 0 0 40px;">
+                            <button class="add-box btn btn-sm btn-outline-secondary w-100">+</button>
+                        </div>
+                        <div class="excel-cell" style="flex: 0 0 40px;">
+                            <button class="remove-box btn btn-sm btn-outline-secondary w-100" style="display:none;">–</button>
+                        </div>
+                        <div class="excel-cell logic-cell" style="flex: 0 0 80px;">
+                            <select class="logic-select form-select" name="logic[]" style="display:none;">
+                                <option value="AND" selected>AND</option>
+                                <option value="OR">OR</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -128,34 +173,30 @@ $usernames = getUsernames($conn);
                             <strong class="me-2">Possible Cocktails:</strong>
                             <span id="name-count" class="badge bg-primary fs-5">0</span>
                         </div>
-                        <select id="name-select" class="form-select mt-2">
-                            <option value="">STEP 3: Select a Name</option>
-                        </select>
+                        <select id="name-select" class="form-select mt-2"></select>
                     </div>
                     <div class="col-md-6">
                         <div class="d-flex align-items-center">
                             <strong class="me-2">Sources:</strong>
                             <span id="source-count" class="badge bg-primary fs-5">0</span>
                         </div>
-                        <select id="source-select" class="form-select mt-2">
-                            <option value="">STEP 4: Select a Source</option>
-                        </select>
+                        <select id="source-select" class="form-select mt-2"></select>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Recipe Details -->
-        <div id="recipe_details" class="recipe-card card"></div>
+        <div id="recipe_details" class="card"></div>
     </div>
 
-    <!-- QR Popup -->
+    <!-- QR Code Modal -->
     <div id="qr-code-popup" class="modal fade" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Share via QR Code</h5>
-                    <button type="button" class="btn-close" id="close-qr-code"></button>
+                    <button type="button" class="btn-close" id="close-qr-code" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body text-center" id="qr-code"></div>
             </div>
