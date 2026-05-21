@@ -25,62 +25,161 @@ $usernames = getUsernames($conn);
         :root {
             --accent: #e76f51;
         }
-        body {
-            background: linear-gradient(180deg, #f8f1e3 0%, #f0e6d2 100%);
-            font-family: system-ui, -apple-system, sans-serif;
+        
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --accent: #f4a261;
+            }
         }
+
+        body {
+            background: #f8f1e3;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: #1e1e1e;
+                color: #e0e0e0;
+            }
+        }
+
+        .main-container {
+            min-width: 1280px;           /* Spreadsheet-style fixed width */
+            margin: 1rem auto;
+            padding: 0 1rem;
+            overflow-x: auto;            /* Horizontal scrollbar when window is too narrow */
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+
         .navbar {
             background: #2a2a2a;
             color: white;
+            padding: 0.75rem 1rem;
         }
-        .main-container {
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 0 1rem;
-        }
-        .card {
-            border: none;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        }
-        .btn-accent {
-            background-color: var(--accent);
-            border-color: var(--accent);
-            color: white;
-        }
+
         .excel-row {
             display: flex;
-            gap: 8px;
-            margin-bottom: 8px;
-            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 6px;
+            flex-wrap: nowrap;           /* NEVER wrap */
+            align-items: center;
         }
+
         .excel-cell {
             flex: 1;
-            min-width: 120px;
+            min-width: 110px;
         }
-        @media (max-width: 768px) {
-            .excel-row {
-                flex-direction: column;
+
+        .card {
+            border: none;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+            margin-bottom: 1rem;
+        }
+
+        .card-body {
+            padding: 12px 16px;
+        }
+
+        .search-boxes .excel-row {
+            background: #fff;
+            border: 1px solid #d0d0d0;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .search-boxes .excel-row {
+                background: #2d2d2d;
+                border-color: #555;
             }
-            .main-container {
-                margin: 1rem auto;
-                padding: 0 0.5rem;
+        }
+
+        /* Recipe details - clean & compact */
+        #recipe_details .excel-row {
+            margin-bottom: 4px;
+            border-bottom: 1px solid #e5e5e5;
+            padding-bottom: 4px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            #recipe_details .excel-row {
+                border-color: #444;
             }
+        }
+
+        #recipe_details .label-cell {
+            font-weight: 600;
+            width: 160px;
+            flex-shrink: 0;
+        }
+
+        /* Ingredients table */
+        .ingredient-table {
+            border: 1px solid #ccc;
+            border-collapse: collapse;
+            width: 100%;
+            background: white;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .ingredient-table {
+                background: #2d2d2d;
+                border-color: #555;
+            }
+        }
+
+        .ingredient-row {
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .ingredient-row {
+                border-bottom-color: #444;
+            }
+        }
+
+        .ingredient-number {
+            width: 32px;
+            text-align: right;
+            font-weight: 500;
+            padding-right: 8px;
+        }
+
+        /* Make sure dropdowns and inputs stay readable */
+        select.form-select, input.form-control {
+            font-size: 0.95rem;
+            padding: 4px 8px;
+            height: auto;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            font-size: 0.9rem;
+        }
+
+        /* Header buttons stay on one line until really narrow */
+        .header-buttons {
+            white-space: nowrap;
         }
     </style>
 </head>
 <body>
     <!-- Header -->
-    <nav class="navbar navbar-dark py-3">
-        <div class="container">
-            <div class="d-flex align-items-center">
+    <nav class="navbar navbar-dark">
+        <div class="container-fluid">
+            <div class="d-flex align-items-center w-100">
                 <img src="images/Coldberry_01_TM.jpg" alt="Logo" style="height: 48px;" class="me-3">
-                <h1 class="h3 mb-0 text-white">No-Nonsense Cocktails</h1>
-            </div>
-            <div class="d-flex gap-2 flex-wrap">
-                <button id="reset-button" class="btn btn-outline-light">Reset</button>
-                <button id="copy-permalink" class="btn btn-outline-light">Share Link</button>
-                <button id="lucky-button" class="btn btn-outline-light">I'm Feeling Lucky</button>
-                <button id="create-qr-code" class="btn btn-outline-light">QR Code</button>
+                <h1 class="h4 mb-0 text-white">No-Nonsense Cocktails</h1>
+                
+                <div class="ms-auto d-flex gap-2 header-buttons">
+                    <button id="reset-button" class="btn btn-outline-light">Reset</button>
+                    <button id="copy-permalink" class="btn btn-outline-light">Share Link</button>
+                    <button id="lucky-button" class="btn btn-outline-light">I'm Feeling Lucky</button>
+                    <button id="create-qr-code" class="btn btn-outline-light">QR Code</button>
+                </div>
             </div>
         </div>
     </nav>
@@ -88,11 +187,11 @@ $usernames = getUsernames($conn);
     <div class="main-container">
         
         <!-- User Selector -->
-        <div class="card mb-4">
+        <div class="card">
             <div class="card-body">
                 <div class="row align-items-center">
-                    <div class="col-md-2 col-3"><strong>User:</strong></div>
-                    <div class="col-md-10 col-9">
+                    <div class="col-auto"><strong>User:</strong></div>
+                    <div class="col">
                         <select id="user-select" class="form-select">
                             <option value="">Select user...</option>
                             <option value="All">All Users</option>
@@ -106,13 +205,13 @@ $usernames = getUsernames($conn);
         </div>
 
         <!-- Filters -->
-        <div class="card mb-4">
-            <div class="card-header bg-white">
+        <div class="card">
+            <div class="card-header">
                 <h5 class="mb-0">Filters</h5>
             </div>
             <div class="card-body">
                 <div class="search-boxes">
-                    <!-- Original filter row that scripts.js expects -->
+                    <!-- Original filter row structure that scripts.js expects -->
                     <div class="excel-row">
                         <div class="excel-cell term-select-cell">
                             <select class="term-select form-select" name="term[]">
@@ -147,10 +246,10 @@ $usernames = getUsernames($conn);
                         <div class="excel-cell">
                             <input type="text" class="value-input form-control" name="value[]" placeholder="STEP 2: Select or Type a Value">
                         </div>
-                        <div class="excel-cell" style="flex: 0 0 40px;">
+                        <div class="excel-cell" style="flex: 0 0 42px;">
                             <button class="add-box btn btn-sm btn-outline-secondary w-100">+</button>
                         </div>
-                        <div class="excel-cell" style="flex: 0 0 40px;">
+                        <div class="excel-cell" style="flex: 0 0 42px;">
                             <button class="remove-box btn btn-sm btn-outline-secondary w-100" style="display:none;">–</button>
                         </div>
                         <div class="excel-cell logic-cell" style="flex: 0 0 80px;">
@@ -165,28 +264,28 @@ $usernames = getUsernames($conn);
         </div>
 
         <!-- Results -->
-        <div class="card mb-4">
+        <div class="card">
             <div class="card-body">
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <div class="d-flex align-items-center">
-                            <strong class="me-2">Possible Cocktails:</strong>
-                            <span id="name-count" class="badge bg-primary fs-5">0</span>
-                        </div>
-                        <select id="name-select" class="form-select mt-2"></select>
+                <div class="excel-row" style="gap: 20px; align-items: center;">
+                    <div style="flex: 0 0 220px;">
+                        <strong>Possible Cocktails:</strong>
+                        <span id="name-count" class="badge bg-primary ms-2">0</span>
                     </div>
-                    <div class="col-md-6">
-                        <div class="d-flex align-items-center">
-                            <strong class="me-2">Sources:</strong>
-                            <span id="source-count" class="badge bg-primary fs-5">0</span>
-                        </div>
-                        <select id="source-select" class="form-select mt-2"></select>
+                    <div style="flex: 1;">
+                        <select id="name-select" class="form-select"></select>
+                    </div>
+                    <div style="flex: 0 0 160px;">
+                        <strong>Sources:</strong>
+                        <span id="source-count" class="badge bg-primary ms-2">0</span>
+                    </div>
+                    <div style="flex: 1;">
+                        <select id="source-select" class="form-select"></select>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Recipe Details -->
+        <!-- Recipe Details (populated by scripts.js) -->
         <div id="recipe_details" class="card"></div>
     </div>
 
