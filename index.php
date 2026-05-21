@@ -35,8 +35,10 @@ $usernames = getUsernames($conn);
         body {
             background: #f8f1e3;
             font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            font-size: 0.95rem;
-            line-height: 1.4;
+            font-size: 0.9rem;
+            line-height: 1.3;
+            margin: 0;
+            padding: 0;
         }
 
         @media (prefers-color-scheme: dark) {
@@ -47,47 +49,63 @@ $usernames = getUsernames($conn);
         }
 
         .main-container {
-            min-width: 1280px;           /* Spreadsheet-style fixed width */
-            margin: 1rem auto;
-            padding: 0 1rem;
-            overflow-x: auto;            /* Horizontal scrollbar when window is too narrow */
-            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            min-width: 1280px;
+            margin: 4px auto;
+            padding: 0 8px;
+            overflow-x: auto;
         }
 
         .navbar {
             background: #2a2a2a;
             color: white;
-            padding: 0.75rem 1rem;
+            padding: 6px 12px;
+            font-size: 0.95rem;
         }
 
         .excel-row {
             display: flex;
-            gap: 6px;
-            margin-bottom: 6px;
-            flex-wrap: nowrap;           /* NEVER wrap */
+            gap: 4px;
+            margin-bottom: 4px;
+            flex-wrap: nowrap;
             align-items: center;
         }
 
         .excel-cell {
             flex: 1;
-            min-width: 110px;
+            min-width: 100px;
         }
 
         .card {
-            border: none;
-            box-shadow: 0 3px 12px rgba(0,0,0,0.08);
-            margin-bottom: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 0;
+            box-shadow: none;
+            margin-bottom: 6px;
         }
 
         .card-body {
-            padding: 12px 16px;
+            padding: 6px 8px;
+        }
+
+        .card-header {
+            padding: 6px 8px;
+            font-weight: 600;
+            background: #f0f0f0;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .card {
+                border-color: #555;
+            }
+            .card-header {
+                background: #2d2d2d;
+            }
         }
 
         .search-boxes .excel-row {
             background: #fff;
             border: 1px solid #d0d0d0;
-            padding: 4px 8px;
-            border-radius: 4px;
+            padding: 3px 6px;
+            border-radius: 3px;
         }
 
         @media (prefers-color-scheme: dark) {
@@ -97,11 +115,19 @@ $usernames = getUsernames($conn);
             }
         }
 
-        /* Recipe details - clean & compact */
+        /* Results row */
+        .results-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            padding: 6px 8px;
+        }
+
+        /* Recipe details - spreadsheet tight */
         #recipe_details .excel-row {
-            margin-bottom: 4px;
+            margin-bottom: 3px;
             border-bottom: 1px solid #e5e5e5;
-            padding-bottom: 4px;
+            padding: 2px 0;
         }
 
         @media (prefers-color-scheme: dark) {
@@ -112,16 +138,18 @@ $usernames = getUsernames($conn);
 
         #recipe_details .label-cell {
             font-weight: 600;
-            width: 160px;
+            width: 140px;
             flex-shrink: 0;
+            padding-right: 8px;
         }
 
-        /* Ingredients table */
+        /* Ingredients table - tight spreadsheet style */
         .ingredient-table {
             border: 1px solid #ccc;
             border-collapse: collapse;
             width: 100%;
             background: white;
+            font-size: 0.85rem;
         }
 
         @media (prefers-color-scheme: dark) {
@@ -131,54 +159,67 @@ $usernames = getUsernames($conn);
             }
         }
 
-        .ingredient-row {
-            border-bottom: 1px solid #e5e5e5;
+        .ingredient-row td {
+            border: 1px solid #e5e5e5;
+            padding: 3px 6px;
+            vertical-align: middle;
         }
 
         @media (prefers-color-scheme: dark) {
-            .ingredient-row {
-                border-bottom-color: #444;
+            .ingredient-row td {
+                border-color: #444;
             }
         }
 
         .ingredient-number {
-            width: 32px;
+            width: 28px;
             text-align: right;
             font-weight: 500;
-            padding-right: 8px;
         }
 
-        /* Make sure dropdowns and inputs stay readable */
         select.form-select, input.form-control {
-            font-size: 0.95rem;
-            padding: 4px 8px;
-            height: auto;
+            font-size: 0.9rem;
+            padding: 3px 6px;
+            height: 32px;
+            border-radius: 3px;
         }
 
         .btn {
-            padding: 6px 12px;
-            font-size: 0.9rem;
+            padding: 4px 10px;
+            font-size: 0.85rem;
+            white-space: nowrap;
         }
 
-        /* Header buttons stay on one line until really narrow */
-        .header-buttons {
-            white-space: nowrap;
+        .header-user {
+            min-width: 160px;
         }
     </style>
 </head>
 <body>
-    <!-- Header -->
+    <!-- Header with User on far right -->
     <nav class="navbar navbar-dark">
-        <div class="container-fluid">
-            <div class="d-flex align-items-center w-100">
-                <img src="images/Coldberry_01_TM.jpg" alt="Logo" style="height: 48px;" class="me-3">
-                <h1 class="h4 mb-0 text-white">No-Nonsense Cocktails</h1>
+        <div class="container-fluid d-flex align-items-center">
+            <div class="d-flex align-items-center">
+                <img src="images/Coldberry_01_TM.jpg" alt="Logo" style="height: 42px;" class="me-2">
+                <h1 class="h5 mb-0 text-white">No-Nonsense Cocktails</h1>
+            </div>
+
+            <div class="ms-auto d-flex align-items-center gap-2">
+                <button id="reset-button" class="btn btn-outline-light">Reset</button>
+                <button id="copy-permalink" class="btn btn-outline-light">Share Link</button>
+                <button id="lucky-button" class="btn btn-outline-light">I'm Feeling Lucky</button>
+                <button id="create-qr-code" class="btn btn-outline-light">QR Code</button>
                 
-                <div class="ms-auto d-flex gap-2 header-buttons">
-                    <button id="reset-button" class="btn btn-outline-light">Reset</button>
-                    <button id="copy-permalink" class="btn btn-outline-light">Share Link</button>
-                    <button id="lucky-button" class="btn btn-outline-light">I'm Feeling Lucky</button>
-                    <button id="create-qr-code" class="btn btn-outline-light">QR Code</button>
+                <!-- User selector in header, far right -->
+                <div class="d-flex align-items-center header-user ms-3">
+                    <strong class="me-2 text-white" style="font-size:0.85rem;">User:</strong>
+                    <select id="user-select" class="form-select">
+                        <option value="">Select...</option>
+                        <option value="All">All Users</option>
+                        <?php foreach ($usernames as $user): ?>
+                            <option value="<?php echo htmlspecialchars($user); ?>"><?php echo htmlspecialchars($user); ?></option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
             </div>
         </div>
@@ -186,32 +227,11 @@ $usernames = getUsernames($conn);
 
     <div class="main-container">
         
-        <!-- User Selector -->
-        <div class="card">
-            <div class="card-body">
-                <div class="row align-items-center">
-                    <div class="col-auto"><strong>User:</strong></div>
-                    <div class="col">
-                        <select id="user-select" class="form-select">
-                            <option value="">Select user...</option>
-                            <option value="All">All Users</option>
-                            <?php foreach ($usernames as $user): ?>
-                                <option value="<?php echo htmlspecialchars($user); ?>"><?php echo htmlspecialchars($user); ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- Filters -->
         <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Filters</h5>
-            </div>
+            <div class="card-header">Filters</div>
             <div class="card-body">
                 <div class="search-boxes">
-                    <!-- Original filter row structure that scripts.js expects -->
                     <div class="excel-row">
                         <div class="excel-cell term-select-cell">
                             <select class="term-select form-select" name="term[]">
@@ -246,13 +266,13 @@ $usernames = getUsernames($conn);
                         <div class="excel-cell">
                             <input type="text" class="value-input form-control" name="value[]" placeholder="STEP 2: Select or Type a Value">
                         </div>
-                        <div class="excel-cell" style="flex: 0 0 42px;">
+                        <div class="excel-cell" style="flex: 0 0 38px;">
                             <button class="add-box btn btn-sm btn-outline-secondary w-100">+</button>
                         </div>
-                        <div class="excel-cell" style="flex: 0 0 42px;">
+                        <div class="excel-cell" style="flex: 0 0 38px;">
                             <button class="remove-box btn btn-sm btn-outline-secondary w-100" style="display:none;">–</button>
                         </div>
-                        <div class="excel-cell logic-cell" style="flex: 0 0 80px;">
+                        <div class="excel-cell logic-cell" style="flex: 0 0 72px;">
                             <select class="logic-select form-select" name="logic[]" style="display:none;">
                                 <option value="AND" selected>AND</option>
                                 <option value="OR">OR</option>
@@ -266,40 +286,26 @@ $usernames = getUsernames($conn);
         <!-- Results -->
         <div class="card">
             <div class="card-body">
-                <div class="excel-row" style="gap: 20px; align-items: center;">
-                    <div style="flex: 0 0 220px;">
-                        <strong>Possible Cocktails:</strong>
-                        <span id="name-count" class="badge bg-primary ms-2">0</span>
-                    </div>
-                    <div style="flex: 1;">
-                        <select id="name-select" class="form-select"></select>
-                    </div>
-                    <div style="flex: 0 0 160px;">
-                        <strong>Sources:</strong>
-                        <span id="source-count" class="badge bg-primary ms-2">0</span>
-                    </div>
-                    <div style="flex: 1;">
-                        <select id="source-select" class="form-select"></select>
-                    </div>
+                <div class="results-row">
+                    <strong>Possible Cocktails:</strong>
+                    <span id="name-count" class="badge bg-primary ms-2">0</span>
+                    <select id="name-select" class="form-select flex-grow-1 mx-3"></select>
+                    
+                    <strong class="ms-3">Sources:</strong>
+                    <span id="source-count" class="badge bg-primary ms-2">0</span>
+                    <select id="source-select" class="form-select flex-grow-1 mx-3"></select>
                 </div>
             </div>
         </div>
 
-        <!-- Recipe Details (populated by scripts.js) -->
+        <!-- Recipe Details -->
         <div id="recipe_details" class="card"></div>
     </div>
 
-    <!-- QR Code Modal -->
-    <div id="qr-code-popup" class="modal fade" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Share via QR Code</h5>
-                    <button type="button" class="btn-close" id="close-qr-code" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body text-center" id="qr-code"></div>
-            </div>
-        </div>
+    <!-- QR Code Popup (simple jQuery-compatible) -->
+    <div id="qr-code-popup" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:white; padding:20px; border:1px solid #ccc; box-shadow:0 0 15px rgba(0,0,0,0.3); z-index:9999;">
+        <div id="qr-code"></div>
+        <button id="close-qr-code" class="btn btn-secondary mt-3">Close</button>
     </div>
 
     <script src="scripts.js"></script>
