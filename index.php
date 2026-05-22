@@ -35,8 +35,8 @@ $usernames = getUsernames($conn);
         body {
             background: #f8f1e3;
             font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            font-size: 0.9rem;
-            line-height: 1.3;
+            font-size: 0.88rem;
+            line-height: 1.25;
             margin: 0;
             padding: 0;
         }
@@ -50,62 +50,59 @@ $usernames = getUsernames($conn);
 
         .main-container {
             min-width: 1280px;
-            margin: 4px auto;
-            padding: 0 8px;
+            margin: 2px auto;
+            padding: 0 6px;
             overflow-x: auto;
         }
 
         .navbar {
             background: #2a2a2a;
             color: white;
-            padding: 6px 12px;
-            font-size: 0.95rem;
+            padding: 4px 10px;
+            font-size: 0.9rem;
         }
 
         .excel-row {
             display: flex;
-            gap: 4px;
-            margin-bottom: 4px;
+            gap: 3px;
+            margin-bottom: 3px;
             flex-wrap: nowrap;
             align-items: center;
         }
 
         .excel-cell {
             flex: 1;
-            min-width: 100px;
+            min-width: 95px;
         }
 
         .card {
             border: 1px solid #ccc;
             border-radius: 0;
             box-shadow: none;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
         }
 
         .card-body {
-            padding: 6px 8px;
+            padding: 4px 6px;
         }
 
         .card-header {
-            padding: 6px 8px;
+            padding: 4px 8px;
             font-weight: 600;
             background: #f0f0f0;
+            font-size: 0.9rem;
         }
 
         @media (prefers-color-scheme: dark) {
-            .card {
-                border-color: #555;
-            }
-            .card-header {
-                background: #2d2d2d;
-            }
+            .card { border-color: #555; }
+            .card-header { background: #2d2d2d; }
         }
 
         .search-boxes .excel-row {
             background: #fff;
             border: 1px solid #d0d0d0;
-            padding: 3px 6px;
-            border-radius: 3px;
+            padding: 2px 5px;
+            border-radius: 2px;
         }
 
         @media (prefers-color-scheme: dark) {
@@ -115,17 +112,18 @@ $usernames = getUsernames($conn);
             }
         }
 
-        /* Results row */
+        /* Results row - ultra tight */
         .results-row {
             display: flex;
-            gap: 12px;
+            gap: 8px;
             align-items: center;
-            padding: 6px 8px;
+            padding: 4px 6px;
+            font-size: 0.9rem;
         }
 
-        /* Recipe details - spreadsheet tight */
+        /* Recipe details - spreadsheet tight + labels immediately next to values */
         #recipe_details .excel-row {
-            margin-bottom: 3px;
+            margin-bottom: 2px;
             border-bottom: 1px solid #e5e5e5;
             padding: 2px 0;
         }
@@ -138,12 +136,18 @@ $usernames = getUsernames($conn);
 
         #recipe_details .label-cell {
             font-weight: 600;
-            width: 140px;
+            width: 130px;
             flex-shrink: 0;
-            padding-right: 8px;
+            padding-right: 6px;
+            text-align: right;
         }
 
-        /* Ingredients table - tight spreadsheet style */
+        #recipe_details .content-cell {
+            flex: 1;
+            padding-left: 4px;
+        }
+
+        /* Ingredients table - very tight */
         .ingredient-table {
             border: 1px solid #ccc;
             border-collapse: collapse;
@@ -161,7 +165,7 @@ $usernames = getUsernames($conn);
 
         .ingredient-row td {
             border: 1px solid #e5e5e5;
-            padding: 3px 6px;
+            padding: 2px 5px;
             vertical-align: middle;
         }
 
@@ -172,35 +176,35 @@ $usernames = getUsernames($conn);
         }
 
         .ingredient-number {
-            width: 28px;
+            width: 26px;
             text-align: right;
             font-weight: 500;
         }
 
         select.form-select, input.form-control {
-            font-size: 0.9rem;
-            padding: 3px 6px;
-            height: 32px;
-            border-radius: 3px;
+            font-size: 0.88rem;
+            padding: 2px 6px;
+            height: 30px;
+            border-radius: 2px;
         }
 
         .btn {
-            padding: 4px 10px;
+            padding: 3px 9px;
             font-size: 0.85rem;
             white-space: nowrap;
         }
 
         .header-user {
-            min-width: 160px;
+            min-width: 150px;
         }
     </style>
 </head>
 <body>
-    <!-- Header with User on far right -->
+    <!-- Header -->
     <nav class="navbar navbar-dark">
         <div class="container-fluid d-flex align-items-center">
             <div class="d-flex align-items-center">
-                <img src="images/Coldberry_01_TM.jpg" alt="Logo" style="height: 42px;" class="me-2">
+                <img src="images/Coldberry_01_TM.jpg" alt="Logo" style="height: 38px;" class="me-2">
                 <h1 class="h5 mb-0 text-white">No-Nonsense Cocktails</h1>
             </div>
 
@@ -210,9 +214,8 @@ $usernames = getUsernames($conn);
                 <button id="lucky-button" class="btn btn-outline-light">I'm Feeling Lucky</button>
                 <button id="create-qr-code" class="btn btn-outline-light">QR Code</button>
                 
-                <!-- User selector in header, far right -->
                 <div class="d-flex align-items-center header-user ms-3">
-                    <strong class="me-2 text-white" style="font-size:0.85rem;">User:</strong>
+                    <strong class="me-1 text-white" style="font-size:0.85rem;">User:</strong>
                     <select id="user-select" class="form-select">
                         <option value="">Select...</option>
                         <option value="All">All Users</option>
@@ -266,13 +269,13 @@ $usernames = getUsernames($conn);
                         <div class="excel-cell">
                             <input type="text" class="value-input form-control" name="value[]" placeholder="STEP 2: Select or Type a Value">
                         </div>
-                        <div class="excel-cell" style="flex: 0 0 38px;">
+                        <div class="excel-cell" style="flex: 0 0 34px;">
                             <button class="add-box btn btn-sm btn-outline-secondary w-100">+</button>
                         </div>
-                        <div class="excel-cell" style="flex: 0 0 38px;">
+                        <div class="excel-cell" style="flex: 0 0 34px;">
                             <button class="remove-box btn btn-sm btn-outline-secondary w-100" style="display:none;">–</button>
                         </div>
-                        <div class="excel-cell logic-cell" style="flex: 0 0 72px;">
+                        <div class="excel-cell logic-cell" style="flex: 0 0 68px;">
                             <select class="logic-select form-select" name="logic[]" style="display:none;">
                                 <option value="AND" selected>AND</option>
                                 <option value="OR">OR</option>
@@ -288,12 +291,12 @@ $usernames = getUsernames($conn);
             <div class="card-body">
                 <div class="results-row">
                     <strong>Possible Cocktails:</strong>
-                    <span id="name-count" class="badge bg-primary ms-2">0</span>
-                    <select id="name-select" class="form-select flex-grow-1 mx-3"></select>
+                    <span id="name-count" class="badge bg-primary ms-1">0</span>
+                    <select id="name-select" class="form-select flex-grow-1 mx-2"></select>
                     
-                    <strong class="ms-3">Sources:</strong>
-                    <span id="source-count" class="badge bg-primary ms-2">0</span>
-                    <select id="source-select" class="form-select flex-grow-1 mx-3"></select>
+                    <strong class="ms-2">Sources:</strong>
+                    <span id="source-count" class="badge bg-primary ms-1">0</span>
+                    <select id="source-select" class="form-select flex-grow-1 mx-2"></select>
                 </div>
             </div>
         </div>
@@ -302,10 +305,10 @@ $usernames = getUsernames($conn);
         <div id="recipe_details" class="card"></div>
     </div>
 
-    <!-- QR Code Popup (simple jQuery-compatible) -->
-    <div id="qr-code-popup" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:white; padding:20px; border:1px solid #ccc; box-shadow:0 0 15px rgba(0,0,0,0.3); z-index:9999;">
+    <!-- QR Code Popup -->
+    <div id="qr-code-popup" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:white; padding:15px; border:1px solid #ccc; box-shadow:0 0 15px rgba(0,0,0,0.3); z-index:9999;">
         <div id="qr-code"></div>
-        <button id="close-qr-code" class="btn btn-secondary mt-3">Close</button>
+        <button id="close-qr-code" class="btn btn-secondary mt-2">Close</button>
     </div>
 
     <script src="scripts.js"></script>
