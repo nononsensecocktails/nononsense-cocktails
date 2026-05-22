@@ -15,79 +15,67 @@ $usernames = getUsernames($conn);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>No-Nonsense Cocktails</title>
-    <meta name="description" content="Find your next perfect cocktail. Filter by ingredients, glass, ratings, and more.">
     
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     
     <style>
-        :root {
-            --accent: #e76f51;
-        }
-        
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --accent: #f4a261;
-            }
-        }
+        :root { --accent: #e76f51; }
+        @media (prefers-color-scheme: dark) { :root { --accent: #f4a261; } }
 
         body {
             background: #f8f1e3;
             font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            font-size: 0.88rem;
-            line-height: 1.25;
+            font-size: 0.85rem;
+            line-height: 1.2;
             margin: 0;
             padding: 0;
         }
-
         @media (prefers-color-scheme: dark) {
-            body {
-                background: #1e1e1e;
-                color: #e0e0e0;
-            }
+            body { background: #1e1e1e; color: #e0e0e0; }
         }
 
         .main-container {
             min-width: 1280px;
             margin: 2px auto;
-            padding: 0 6px;
+            padding: 0 4px;
             overflow-x: auto;
         }
 
         .navbar {
             background: #2a2a2a;
             color: white;
-            padding: 4px 10px;
+            padding: 3px 8px;
             font-size: 0.9rem;
         }
 
         .excel-row {
             display: flex;
-            gap: 3px;
-            margin-bottom: 3px;
+            gap: 2px;
+            margin-bottom: 1px;
             flex-wrap: nowrap;
             align-items: center;
         }
 
         .excel-cell {
             flex: 1;
-            min-width: 95px;
+            min-width: 90px;
         }
 
         .card {
             border: 1px solid #ccc;
             border-radius: 0;
             box-shadow: none;
-            margin-bottom: 4px;
+            margin-bottom: 3px;
         }
 
         .card-body {
-            padding: 4px 6px;
+            padding: 3px 5px;
         }
 
         .card-header {
-            padding: 4px 8px;
+            padding: 3px 6px;
             font-weight: 600;
             background: #f0f0f0;
             font-size: 0.9rem;
@@ -101,101 +89,83 @@ $usernames = getUsernames($conn);
         .search-boxes .excel-row {
             background: #fff;
             border: 1px solid #d0d0d0;
-            padding: 2px 5px;
+            padding: 2px 4px;
             border-radius: 2px;
         }
-
         @media (prefers-color-scheme: dark) {
-            .search-boxes .excel-row {
-                background: #2d2d2d;
-                border-color: #555;
-            }
+            .search-boxes .excel-row { background: #2d2d2d; border-color: #555; }
         }
 
-        /* Results row - ultra tight */
+        /* Results - ultra tight */
         .results-row {
             display: flex;
-            gap: 8px;
+            gap: 6px;
             align-items: center;
-            padding: 4px 6px;
+            padding: 3px 5px;
             font-size: 0.9rem;
         }
 
-        /* Recipe details - spreadsheet tight + labels immediately next to values */
+        /* Recipe metadata - left-aligned, extremely tight */
         #recipe_details .excel-row {
-            margin-bottom: 2px;
+            margin-bottom: 1px;
             border-bottom: 1px solid #e5e5e5;
-            padding: 2px 0;
+            padding: 1px 0;
         }
-
         @media (prefers-color-scheme: dark) {
-            #recipe_details .excel-row {
-                border-color: #444;
-            }
+            #recipe_details .excel-row { border-color: #444; }
         }
 
         #recipe_details .label-cell {
             font-weight: 600;
-            width: 130px;
+            width: 125px;
             flex-shrink: 0;
-            padding-right: 6px;
-            text-align: right;
+            padding-right: 4px;
+            text-align: left;           /* ← forced left align as requested */
         }
 
         #recipe_details .content-cell {
             flex: 1;
-            padding-left: 4px;
+            padding-left: 2px;
         }
 
-        /* Ingredients table - very tight */
+        /* Ingredients table - spreadsheet tight */
         .ingredient-table {
             border: 1px solid #ccc;
             border-collapse: collapse;
             width: 100%;
             background: white;
-            font-size: 0.85rem;
+            font-size: 0.82rem;
         }
-
         @media (prefers-color-scheme: dark) {
-            .ingredient-table {
-                background: #2d2d2d;
-                border-color: #555;
-            }
+            .ingredient-table { background: #2d2d2d; border-color: #555; }
         }
 
         .ingredient-row td {
             border: 1px solid #e5e5e5;
-            padding: 2px 5px;
+            padding: 1px 4px;
             vertical-align: middle;
         }
-
         @media (prefers-color-scheme: dark) {
-            .ingredient-row td {
-                border-color: #444;
-            }
+            .ingredient-row td { border-color: #444; }
         }
 
         .ingredient-number {
-            width: 26px;
-            text-align: right;
+            width: 24px;
+            text-align: left;           /* left justified as requested */
             font-weight: 500;
         }
 
         select.form-select, input.form-control {
-            font-size: 0.88rem;
-            padding: 2px 6px;
-            height: 30px;
+            font-size: 0.85rem;
+            padding: 2px 5px;
+            height: 28px;
             border-radius: 2px;
         }
 
         .btn {
-            padding: 3px 9px;
-            font-size: 0.85rem;
+            padding: 2px 8px;
+            font-size: 0.82rem;
             white-space: nowrap;
-        }
-
-        .header-user {
-            min-width: 150px;
         }
     </style>
 </head>
@@ -204,7 +174,7 @@ $usernames = getUsernames($conn);
     <nav class="navbar navbar-dark">
         <div class="container-fluid d-flex align-items-center">
             <div class="d-flex align-items-center">
-                <img src="images/Coldberry_01_TM.jpg" alt="Logo" style="height: 38px;" class="me-2">
+                <img src="images/Coldberry_01_TM.jpg" alt="Logo" style="height: 36px;" class="me-2">
                 <h1 class="h5 mb-0 text-white">No-Nonsense Cocktails</h1>
             </div>
 
@@ -214,8 +184,8 @@ $usernames = getUsernames($conn);
                 <button id="lucky-button" class="btn btn-outline-light">I'm Feeling Lucky</button>
                 <button id="create-qr-code" class="btn btn-outline-light">QR Code</button>
                 
-                <div class="d-flex align-items-center header-user ms-3">
-                    <strong class="me-1 text-white" style="font-size:0.85rem;">User:</strong>
+                <div class="d-flex align-items-center ms-3">
+                    <strong class="me-1 text-white" style="font-size:0.82rem;">User:</strong>
                     <select id="user-select" class="form-select">
                         <option value="">Select...</option>
                         <option value="All">All Users</option>
@@ -229,7 +199,6 @@ $usernames = getUsernames($conn);
     </nav>
 
     <div class="main-container">
-        
         <!-- Filters -->
         <div class="card">
             <div class="card-header">Filters</div>
@@ -269,13 +238,9 @@ $usernames = getUsernames($conn);
                         <div class="excel-cell">
                             <input type="text" class="value-input form-control" name="value[]" placeholder="STEP 2: Select or Type a Value">
                         </div>
-                        <div class="excel-cell" style="flex: 0 0 34px;">
-                            <button class="add-box btn btn-sm btn-outline-secondary w-100">+</button>
-                        </div>
-                        <div class="excel-cell" style="flex: 0 0 34px;">
-                            <button class="remove-box btn btn-sm btn-outline-secondary w-100" style="display:none;">–</button>
-                        </div>
-                        <div class="excel-cell logic-cell" style="flex: 0 0 68px;">
+                        <div class="excel-cell" style="flex: 0 0 32px;"><button class="add-box btn btn-sm btn-outline-secondary w-100">+</button></div>
+                        <div class="excel-cell" style="flex: 0 0 32px;"><button class="remove-box btn btn-sm btn-outline-secondary w-100" style="display:none;">–</button></div>
+                        <div class="excel-cell logic-cell" style="flex: 0 0 64px;">
                             <select class="logic-select form-select" name="logic[]" style="display:none;">
                                 <option value="AND" selected>AND</option>
                                 <option value="OR">OR</option>
@@ -301,7 +266,7 @@ $usernames = getUsernames($conn);
             </div>
         </div>
 
-        <!-- Recipe Details -->
+        <!-- Recipe Details (populated by scripts.js) -->
         <div id="recipe_details" class="card"></div>
     </div>
 
