@@ -71,7 +71,7 @@ $usernames = getUsernames($conn);
         }
 
         .card-body {
-            padding: 3px 5px;
+            padding: 2px 4px;
         }
 
         .card-header {
@@ -96,7 +96,7 @@ $usernames = getUsernames($conn);
             .search-boxes .excel-row { background: #2d2d2d; border-color: #555; }
         }
 
-        /* Results - ultra tight */
+        /* Results */
         .results-row {
             display: flex;
             gap: 6px;
@@ -105,7 +105,7 @@ $usernames = getUsernames($conn);
             font-size: 0.9rem;
         }
 
-        /* Recipe metadata - left-aligned, extremely tight */
+        /* Recipe metadata - extremely tight + left-aligned values */
         #recipe_details .excel-row {
             margin-bottom: 1px;
             border-bottom: 1px solid #e5e5e5;
@@ -117,10 +117,10 @@ $usernames = getUsernames($conn);
 
         #recipe_details .label-cell {
             font-weight: 600;
-            width: 125px;
+            width: 145px;               /* wide enough for "Shaken/Stirred" */
             flex-shrink: 0;
-            padding-right: 4px;
-            text-align: left;           /* ← forced left align as requested */
+            padding-right: 6px;
+            text-align: left;
         }
 
         #recipe_details .content-cell {
@@ -128,7 +128,7 @@ $usernames = getUsernames($conn);
             padding-left: 2px;
         }
 
-        /* Ingredients table - spreadsheet tight */
+        /* Ingredients table */
         .ingredient-table {
             border: 1px solid #ccc;
             border-collapse: collapse;
@@ -151,7 +151,7 @@ $usernames = getUsernames($conn);
 
         .ingredient-number {
             width: 24px;
-            text-align: left;           /* left justified as requested */
+            text-align: left;
             font-weight: 500;
         }
 
@@ -167,6 +167,14 @@ $usernames = getUsernames($conn);
             font-size: 0.82rem;
             white-space: nowrap;
         }
+
+        /* Header tweaks */
+        .header-buttons {
+            gap: 4px;
+        }
+        .header-user {
+            min-width: 180px;   /* slightly larger User dropdown */
+        }
     </style>
 </head>
 <body>
@@ -178,13 +186,13 @@ $usernames = getUsernames($conn);
                 <h1 class="h5 mb-0 text-white">No-Nonsense Cocktails</h1>
             </div>
 
-            <div class="ms-auto d-flex align-items-center gap-2">
+            <div class="ms-auto d-flex align-items-center gap-2 header-buttons">
                 <button id="reset-button" class="btn btn-outline-light">Reset</button>
                 <button id="copy-permalink" class="btn btn-outline-light">Share Link</button>
                 <button id="lucky-button" class="btn btn-outline-light">I'm Feeling Lucky</button>
                 <button id="create-qr-code" class="btn btn-outline-light">QR Code</button>
                 
-                <div class="d-flex align-items-center ms-3">
+                <div class="d-flex align-items-center header-user ms-2">
                     <strong class="me-1 text-white" style="font-size:0.82rem;">User:</strong>
                     <select id="user-select" class="form-select">
                         <option value="">Select...</option>
@@ -266,7 +274,7 @@ $usernames = getUsernames($conn);
             </div>
         </div>
 
-        <!-- Recipe Details (populated by scripts.js) -->
+        <!-- Recipe Details -->
         <div id="recipe_details" class="card"></div>
     </div>
 
