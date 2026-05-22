@@ -28,7 +28,7 @@ $usernames = getUsernames($conn);
             background: #f8f1e3;
             font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             font-size: 0.85rem;
-            line-height: 1.15;
+            line-height: 1.2;
             margin: 0;
             padding: 0;
         }
@@ -81,7 +81,7 @@ $usernames = getUsernames($conn);
             .card-header { background: #2d2d2d; }
         }
 
-        /* Metadata - tight & left-aligned */
+        /* Metadata - fixed alignment */
         #recipe_details .excel-row {
             margin-bottom: 1px;
             border-bottom: 1px solid #e5e5e5;
@@ -97,6 +97,7 @@ $usernames = getUsernames($conn);
             flex-shrink: 0;
             padding-right: 6px;
             text-align: left;
+            white-space: nowrap;           /* prevent label wrapping */
         }
 
         #recipe_details .content-cell {
@@ -104,45 +105,21 @@ $usernames = getUsernames($conn);
             padding-left: 2px;
         }
 
-        /* Ingredients section - fixed for scripts.js generated structure */
-        #recipe_details .ingredient-table,
-        #recipe_details .excel-row.ingredient-row {
-            border: 1px solid #ccc;
-            border-collapse: collapse;
-            width: 100%;
-            background: white;
-            font-size: 0.82rem;
-        }
-        @media (prefers-color-scheme: dark) {
-            #recipe_details .ingredient-table,
-            #recipe_details .excel-row.ingredient-row { background: #2d2d2d; border-color: #555; }
-        }
-
-        #recipe_details .ingredient-row {
-            border-bottom: 1px solid #e5e5e5;
-        }
-        @media (prefers-color-scheme: dark) {
-            #recipe_details .ingredient-row { border-bottom-color: #444; }
-        }
-
-        #recipe_details .ingredient-number,
-        #recipe_details .excel-cell:first-child {
-            width: 28px;
-            text-align: left;
-            padding-right: 4px;
-        }
-
-        /* Filter dropdowns - wide enough for placeholders */
-        .term-select, .value-input {
-            min-width: 220px !important;
-        }
-
-        /* Header fixes */
+        /* Header buttons & User dropdown */
         .header-buttons {
             gap: 4px;
         }
         .header-user {
-            min-width: 190px;   /* wider User dropdown */
+            min-width: 190px;
+        }
+        .btn {
+            padding: 3px 9px;
+            font-size: 0.82rem;
+        }
+
+        /* Filter dropdowns */
+        .term-select, .value-input {
+            min-width: 220px !important;
         }
     </style>
 </head>
