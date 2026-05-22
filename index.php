@@ -28,7 +28,7 @@ $usernames = getUsernames($conn);
             background: #f8f1e3;
             font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             font-size: 0.85rem;
-            line-height: 1.2;
+            line-height: 1.15;
             margin: 0;
             padding: 0;
         }
@@ -58,11 +58,6 @@ $usernames = getUsernames($conn);
             align-items: center;
         }
 
-        .excel-cell {
-            flex: 1;
-            min-width: 90px;
-        }
-
         .card {
             border: 1px solid #ccc;
             border-radius: 0;
@@ -86,26 +81,7 @@ $usernames = getUsernames($conn);
             .card-header { background: #2d2d2d; }
         }
 
-        .search-boxes .excel-row {
-            background: #fff;
-            border: 1px solid #d0d0d0;
-            padding: 2px 4px;
-            border-radius: 2px;
-        }
-        @media (prefers-color-scheme: dark) {
-            .search-boxes .excel-row { background: #2d2d2d; border-color: #555; }
-        }
-
-        /* Results */
-        .results-row {
-            display: flex;
-            gap: 6px;
-            align-items: center;
-            padding: 3px 5px;
-            font-size: 0.9rem;
-        }
-
-        /* Recipe metadata - extremely tight + left-aligned values */
+        /* Metadata - tight & left-aligned */
         #recipe_details .excel-row {
             margin-bottom: 1px;
             border-bottom: 1px solid #e5e5e5;
@@ -117,7 +93,7 @@ $usernames = getUsernames($conn);
 
         #recipe_details .label-cell {
             font-weight: 600;
-            width: 145px;               /* wide enough for "Shaken/Stirred" */
+            width: 145px;
             flex-shrink: 0;
             padding-right: 6px;
             text-align: left;
@@ -128,8 +104,9 @@ $usernames = getUsernames($conn);
             padding-left: 2px;
         }
 
-        /* Ingredients table */
-        .ingredient-table {
+        /* Ingredients section - fixed for scripts.js generated structure */
+        #recipe_details .ingredient-table,
+        #recipe_details .excel-row.ingredient-row {
             border: 1px solid #ccc;
             border-collapse: collapse;
             width: 100%;
@@ -137,43 +114,35 @@ $usernames = getUsernames($conn);
             font-size: 0.82rem;
         }
         @media (prefers-color-scheme: dark) {
-            .ingredient-table { background: #2d2d2d; border-color: #555; }
+            #recipe_details .ingredient-table,
+            #recipe_details .excel-row.ingredient-row { background: #2d2d2d; border-color: #555; }
         }
 
-        .ingredient-row td {
-            border: 1px solid #e5e5e5;
-            padding: 1px 4px;
-            vertical-align: middle;
+        #recipe_details .ingredient-row {
+            border-bottom: 1px solid #e5e5e5;
         }
         @media (prefers-color-scheme: dark) {
-            .ingredient-row td { border-color: #444; }
+            #recipe_details .ingredient-row { border-bottom-color: #444; }
         }
 
-        .ingredient-number {
-            width: 24px;
+        #recipe_details .ingredient-number,
+        #recipe_details .excel-cell:first-child {
+            width: 28px;
             text-align: left;
-            font-weight: 500;
+            padding-right: 4px;
         }
 
-        select.form-select, input.form-control {
-            font-size: 0.85rem;
-            padding: 2px 5px;
-            height: 28px;
-            border-radius: 2px;
+        /* Filter dropdowns - wide enough for placeholders */
+        .term-select, .value-input {
+            min-width: 220px !important;
         }
 
-        .btn {
-            padding: 2px 8px;
-            font-size: 0.82rem;
-            white-space: nowrap;
-        }
-
-        /* Header tweaks */
+        /* Header fixes */
         .header-buttons {
             gap: 4px;
         }
         .header-user {
-            min-width: 180px;   /* slightly larger User dropdown */
+            min-width: 190px;   /* wider User dropdown */
         }
     </style>
 </head>
@@ -192,7 +161,7 @@ $usernames = getUsernames($conn);
                 <button id="lucky-button" class="btn btn-outline-light">I'm Feeling Lucky</button>
                 <button id="create-qr-code" class="btn btn-outline-light">QR Code</button>
                 
-                <div class="d-flex align-items-center header-user ms-2">
+                <div class="d-flex align-items-center header-user ms-3">
                     <strong class="me-1 text-white" style="font-size:0.82rem;">User:</strong>
                     <select id="user-select" class="form-select">
                         <option value="">Select...</option>
