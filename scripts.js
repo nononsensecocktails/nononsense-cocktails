@@ -791,18 +791,13 @@ function updateRecipeDetails() {
                 if (data && typeof data === 'object') {
                     var today = new Date().toISOString().split('T')[0];
                     var detailsHtml = '';
+
+                    // Metadata - tight label/value pairs (unchanged)
                     detailsHtml += '<div class="excel-row"><div class="excel-cell label-cell">Name</div><div class="excel-cell content-cell">' + (data.Name || '') + '</div></div>';
-                    var stars = data.stars_out_of_3;
-                    var last_date = data.last_date || '';
-                    if (!isNaN(parseFloat(stars)) && isFinite(stars)) {
-                        stars = parseFloat(stars).toFixed(2);
-                    } else if (['Revisit', 'Next', 'TBD'].includes(stars)) {
-                        last_date = '';
-                    }
                     var ratingBgColor = getRatingColor(data.stars_out_of_3);
-                    detailsHtml += '<div class="excel-row"><div class="excel-cell label-cell">Stars Out of 3</div><div class="excel-cell content-cell" id="stars-display" style="background-color:' + ratingBgColor + '; color: #000000;">' + (stars || 'Not rated') + '</div></div>';
-                    detailsHtml += '<div class="excel-row"><div class="excel-cell label-cell">Last Date</div><div class="excel-cell content-cell" id="last-date-display">' + (last_date || 'Not set') + '</div></div>';
-                    detailsHtml += '<div class="excel-row" id="rate-drink-row"><div class="excel-cell">Rate this Drink:</div><div class="excel-cell"><select id="stars-select"><option value="">Select Stars</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="TBD">TBD</option><option value="Next">Next</option><option value="Revisit">Revisit</option></select></div><div class="excel-cell"><input type="date" id="last-date-input" value="' + today + '"></div><div class="excel-cell"><button id="save-rating">Save Rating</button></div></div>';
+                    detailsHtml += '<div class="excel-row"><div class="excel-cell label-cell">Stars Out of 3</div><div class="excel-cell content-cell" id="stars-display" style="background-color:' + ratingBgColor + '; color: #000000;">' + (data.stars_out_of_3 || 'Not rated') + '</div></div>';
+                    detailsHtml += '<div class="excel-row"><div class="excel-cell label-cell">Last Date</div><div class="excel-cell content-cell" id="last-date-display">' + (data.last_date || 'Not set') + '</div></div>';
+                    detailsHtml += '<div class="excel-row" id="rate-drink-row"><div class="excel-cell label-cell">Rate this Drink:</div><div class="excel-cell"><select id="stars-select"><option value="">Select Stars</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="TBD">TBD</option><option value="Next">Next</option><option value="Revisit">Revisit</option></select></div><div class="excel-cell"><input type="date" id="last-date-input" value="' + today + '"></div><div class="excel-cell"><button id="save-rating">Save Rating</button></div></div>';
                     detailsHtml += '<div class="excel-row"><div class="excel-cell label-cell">Source</div><div class="excel-cell content-cell">' + (data.Source || '') + '</div></div>';
                     detailsHtml += '<div class="excel-row"><div class="excel-cell label-cell">Page</div><div class="excel-cell content-cell">' + (data.Page || '') + '</div></div>';
                     detailsHtml += '<div class="excel-row"><div class="excel-cell label-cell">Shaken/Stirred</div><div class="excel-cell content-cell">' + (data['Shaken/Stirred'] || '') + '</div></div>';
@@ -810,44 +805,65 @@ function updateRecipeDetails() {
                     detailsHtml += '<div class="excel-row"><div class="excel-cell label-cell">Glass</div><div class="excel-cell content-cell">' + (data.Glass || '') + '</div></div>';
                     detailsHtml += '<div class="excel-row"><div class="excel-cell label-cell">Garnish</div><div class="excel-cell content-cell">' + (data.Garnish || '') + '</div></div>';
                     detailsHtml += '<div class="excel-row"><div class="excel-cell label-cell">Notes</div><div class="excel-cell content-cell">' + (data.Instructions || '') + '</div></div>';
-                    detailsHtml += '<div class="ingredient-table">';
-                    // detailsHtml += '<div class="excel-row ingredient-row"><div class="excel-cell"></div><div class="excel-cell"><strong>Ingredient</strong></div><div class="excel-cell"><strong>Volume Oz</strong></div><div class="excel-cell"><strong>% Vol</strong></div><div class="excel-cell"><strong>ABV</strong></div><div class="excel-cell"><strong>ABV%</strong></div><div class="excel-cell"><strong>Cost</strong></div><div class="excel-cell"><strong>Cost%</strong></div><div class="excel-cell"></div></div>';
-                    // detailsHtml += '<div class="excel-row ingredient-row"><div class="excel-cell">#</div><div class="excel-cell"><strong>Ingredient</strong></div><div class="excel-cell"><strong>Volume Oz</strong></div><div class="excel-cell"><strong>% Vol</strong></div><div class="excel-cell"><strong>ABV</strong></div><div class="excel-cell"><strong>ABV%</strong></div><div class="excel-cell"><strong>Cost</strong></div><div class="excel-cell"><strong>Cost%</strong></div><div class="excel-cell"></div></div>';
-		    detailsHtml += '<div class="excel-row ingredient-row"><div class="excel-cell"><strong style="font-size: smaller;">#</strong></div><div class="excel-cell"><strong>Ingredient</strong></div><div class="excel-cell"><strong>Volume Oz</strong></div><div class="excel-cell"><strong>% Vol</strong></div><div class="excel-cell"><strong>ABV</strong></div><div class="excel-cell"><strong>ABV%</strong></div><div class="excel-cell"><strong>Cost</strong></div><div class="excel-cell"><strong>Cost%</strong></div><div class="excel-cell"></div></div>';
-		    var ingredients = data.parsed_ingredients || [];
-                    ingredients.sort(function(a, b) {
-                        return b.volume_oz - a.volume_oz || (a.quantity < b.quantity ? -1 : 1);
+
+                    // ==================== INGREDIENTS - FIXED COMPACT TABLE ====================
+                    detailsHtml += '<div class="excel-row"><div class="excel-cell label-cell">Ingredients</div><div class="excel-cell content-cell"></div></div>';
+                    detailsHtml += '<table class="ingredient-table">';
+                    detailsHtml += '<thead><tr>';
+                    detailsHtml += '<th class="ingredient-number">#</th>';
+                    detailsHtml += '<th>Ingredient</th>';
+                    detailsHtml += '<th>Volume Oz</th>';
+                    detailsHtml += '<th>% Vol</th>';
+                    detailsHtml += '</tr></thead><tbody>';
+
+                    var ingredients = (data.Ingredients || '').split(';').filter(Boolean).map(function(ingredient) {
+                        var parts = ingredient.split(':');
+                        var name = parts[0] ? parts[0].trim() : '';
+                        var volumeStr = parts.length === 2 ? parts[1].trim() : '';
+                        var parsed = parseVolume(volumeStr);
+                        return {
+                            name: name,
+                            volume: parsed.display,
+                            numericVolume: parsed.numeric
+                        };
                     });
-                    var percentValues = ingredients.map(function(ingredient) {
-                        var volPercent = parseFloat(ingredient.vol_percent) || 0;
-                        return volPercent;
-                    }).filter(function(value) { return value > 0; });
-                    var minPercent = percentValues.length > 0 ? Math.min(...percentValues) : 0;
-                    var maxPercent = percentValues.length > 0 ? Math.max(...percentValues) : 0;
+
+                    ingredients.sort(function(a, b) {
+                        return b.numericVolume - a.numericVolume || (a.name < b.name ? -1 : 1);
+                    });
+
+                    var totalVolume = ingredients.reduce(function(sum, ing) {
+                        return sum + (isNaN(ing.numericVolume) ? 0 : ing.numericVolume);
+                    }, 0);
+
                     ingredients.forEach(function(ingredient, index) {
-                        var percentVol = ingredient.vol_percent || '';
+                        var percentVol = (ingredient.numericVolume && totalVolume > 0) 
+                            ? (ingredient.numericVolume / totalVolume * 100).toFixed(2) 
+                            : '';
                         var color = '';
                         if (percentVol) {
                             var value = parseFloat(percentVol);
-                            color = getColor(value, minPercent, maxPercent);
+                            color = getColor(value, 0, 100);
                         }
-                        var volumeDisplay = ingredient.quantity;
-                        var abv = ingredient.abv || 'NA';
-                        var abvPercent = ingredient.abv_percent || '0.00%';
-                        var cost = ingredient.cost || 'NA';
-                        var costPercent = ingredient.cost_percent || '0.00%';
-                        detailsHtml += '<div class="excel-row ingredient-row"><div class="excel-cell ingredient-number">' + (index + 1) + '</div><div class="excel-cell">' + ingredient.name + '</div><div class="excel-cell">' + volumeDisplay + '</div><div class="excel-cell" style="background-color:' + color + ';">' + percentVol + '</div><div class="excel-cell">' + abv + '</div><div class="excel-cell">' + abvPercent + '</div><div class="excel-cell">' + cost + '</div><div class="excel-cell">' + costPercent + '</div><div class="excel-cell"></div></div>';
+                        detailsHtml += '<tr class="ingredient-row">';
+                        detailsHtml += '<td class="ingredient-number">' + (index + 1) + '</td>';
+                        detailsHtml += '<td>' + ingredient.name + '</td>';
+                        detailsHtml += '<td>' + ingredient.volume + '</td>';
+                        detailsHtml += '<td style="background-color:' + color + '; text-align:center;">' + (percentVol ? percentVol + '%' : '') + '</td>';
+                        detailsHtml += '</tr>';
                     });
-                    var totals = data.totals || {};
-                    var totalVolumeStr = totals.volume_oz || '0.00';
-                    var totalVolPercent = totals.vol_percent || '0.00%';
-                    var totalAbv = totals.abv || '0.00%';
-                    var totalAbvPercent = totals.abv_percent || '0.00%';
-                    var totalCost = totals.cost || '$0.00';
-                    var totalCostPercent = totals.cost_percent || '0.00%';
-                    // detailsHtml += '<div class="excel-row ingredient-row"><div class="excel-cell"></div><div class="excel-cell"><strong>Total</strong></div><div class="excel-cell"><strong>' + totalVolumeStr + '</strong></div><div class="excel-cell"><strong>' + totalVolPercent + '</strong></div><div class="excel-cell"><strong>' + totalAbv + '</strong></div><div class="excel-cell"><strong>' + totalAbvPercent + '</strong></div><div class="excel-cell"><strong>' + totalCost + '</strong></div><div class="excel-cell"><strong>' + totalCostPercent + '</strong></div><div class="excel-cell"></div></div>';
-		    detailsHtml += '<div class="excel-row ingredient-row"><div class="excel-cell">&nbsp;</div><div class="excel-cell"><strong>Total</strong></div><div class="excel-cell"><strong>' + totalVolumeStr + '</strong></div><div class="excel-cell"><strong>' + totalVolPercent + '</strong></div><div class="excel-cell"><strong>' + totalAbv + '</strong></div><div class="excel-cell"><strong>' + totalAbvPercent + '</strong></div><div class="excel-cell"><strong>' + totalCost + '</strong></div><div class="excel-cell"><strong>' + totalCostPercent + '</strong></div><div class="excel-cell"></div></div>';
-                    detailsHtml += '</div>';
+
+                    // Total row
+                    detailsHtml += '<tr class="ingredient-row">';
+                    detailsHtml += '<td class="ingredient-number"><strong>Total</strong></td>';
+                    detailsHtml += '<td></td>';
+                    detailsHtml += '<td><strong>' + totalVolume.toFixed(2) + '</strong></td>';
+                    detailsHtml += '<td><strong>100.00%</strong></td>';
+                    detailsHtml += '</tr>';
+
+                    detailsHtml += '</tbody></table>';
+
+                    // Remaining metadata
                     detailsHtml += '<div class="excel-row"><div class="excel-cell label-cell">Servings</div><div class="excel-cell content-cell">' + (data.Servings || '') + '</div></div>';
                     detailsHtml += '<div class="excel-row"><div class="excel-cell label-cell">Base</div><div class="excel-cell content-cell">' + (data.Base || '') + '</div></div>';
                     detailsHtml += '<div class="excel-row"><div class="excel-cell label-cell">Family</div><div class="excel-cell content-cell">' + (data.Family || '') + '</div></div>';
@@ -857,7 +873,9 @@ function updateRecipeDetails() {
                     detailsHtml += '<div class="excel-row"><div class="excel-cell label-cell">Characteristics</div><div class="excel-cell content-cell">' + (data.Characteristics || '') + '</div></div>';
                     detailsHtml += '<div class="excel-row"><div class="excel-cell label-cell">Adaptation of</div><div class="excel-cell content-cell">' + (data['Adaptation of'] || '') + '</div></div>';
                     detailsHtml += '<div class="excel-row"><div class="excel-cell label-cell">Variations</div><div class="excel-cell content-cell">' + (data.Variations || '') + '</div></div>';
+
                     $('#recipe_details').html(detailsHtml);
+
                     if (data.stars_out_of_3) {
                         $('#stars-select').val(data.stars_out_of_3);
                     }
@@ -874,7 +892,6 @@ function updateRecipeDetails() {
         });
     }
 }
-
     function updateRateDrinkSection() {
         var user = $('#user-select').val();
         if (user && user !== 'All') {
