@@ -769,7 +769,6 @@ function getColor(value, min, max) {
         };
         return colors[rating] || '#e0e0e0';
     }
-
 function updateRecipeDetails() {
     var name = $('#name-select').val();
     var source = $('#source-select').val();
@@ -792,7 +791,7 @@ function updateRecipeDetails() {
                     var today = new Date().toISOString().split('T')[0];
                     var detailsHtml = '';
 
-                    // Metadata - tight label/value pairs (unchanged)
+                    // Metadata
                     detailsHtml += '<div class="excel-row"><div class="excel-cell label-cell">Name</div><div class="excel-cell content-cell">' + (data.Name || '') + '</div></div>';
                     var ratingBgColor = getRatingColor(data.stars_out_of_3);
                     detailsHtml += '<div class="excel-row"><div class="excel-cell label-cell">Stars Out of 3</div><div class="excel-cell content-cell" id="stars-display" style="background-color:' + ratingBgColor + '; color: #000000;">' + (data.stars_out_of_3 || 'Not rated') + '</div></div>';
@@ -806,14 +805,14 @@ function updateRecipeDetails() {
                     detailsHtml += '<div class="excel-row"><div class="excel-cell label-cell">Garnish</div><div class="excel-cell content-cell">' + (data.Garnish || '') + '</div></div>';
                     detailsHtml += '<div class="excel-row"><div class="excel-cell label-cell">Notes</div><div class="excel-cell content-cell">' + (data.Instructions || '') + '</div></div>';
 
-                    // ==================== INGREDIENTS - FIXED COMPACT TABLE ====================
+                    // ==================== COMPACT INGREDIENTS TABLE ====================
                     detailsHtml += '<div class="excel-row"><div class="excel-cell label-cell">Ingredients</div><div class="excel-cell content-cell"></div></div>';
-                    detailsHtml += '<table class="ingredient-table">';
-                    detailsHtml += '<thead><tr>';
-                    detailsHtml += '<th class="ingredient-number">#</th>';
-                    detailsHtml += '<th>Ingredient</th>';
-                    detailsHtml += '<th>Volume Oz</th>';
-                    detailsHtml += '<th>% Vol</th>';
+                    detailsHtml += '<table class="ingredient-table" style="width:100%; border-collapse:collapse; font-size:0.82rem;">';
+                    detailsHtml += '<thead><tr style="background:#f0f0f0; font-weight:600;">';
+                    detailsHtml += '<th style="width:28px; text-align:left; padding:2px 4px; border:1px solid #ccc;">#</th>';
+                    detailsHtml += '<th style="text-align:left; padding:2px 4px; border:1px solid #ccc;">Ingredient</th>';
+                    detailsHtml += '<th style="width:85px; text-align:right; padding:2px 4px; border:1px solid #ccc;">Volume Oz</th>';
+                    detailsHtml += '<th style="width:65px; text-align:center; padding:2px 4px; border:1px solid #ccc;">% Vol</th>';
                     detailsHtml += '</tr></thead><tbody>';
 
                     var ingredients = (data.Ingredients || '').split(';').filter(Boolean).map(function(ingredient) {
@@ -840,25 +839,21 @@ function updateRecipeDetails() {
                         var percentVol = (ingredient.numericVolume && totalVolume > 0) 
                             ? (ingredient.numericVolume / totalVolume * 100).toFixed(2) 
                             : '';
-                        var color = '';
-                        if (percentVol) {
-                            var value = parseFloat(percentVol);
-                            color = getColor(value, 0, 100);
-                        }
-                        detailsHtml += '<tr class="ingredient-row">';
-                        detailsHtml += '<td class="ingredient-number">' + (index + 1) + '</td>';
-                        detailsHtml += '<td>' + ingredient.name + '</td>';
-                        detailsHtml += '<td>' + ingredient.volume + '</td>';
-                        detailsHtml += '<td style="background-color:' + color + '; text-align:center;">' + (percentVol ? percentVol + '%' : '') + '</td>';
+                        var color = percentVol ? getColor(parseFloat(percentVol), 0, 100) : '';
+                        detailsHtml += '<tr style="border-bottom:1px solid #e5e5e5;">';
+                        detailsHtml += '<td style="width:28px; text-align:left; padding:2px 4px;">' + (index + 1) + '</td>';
+                        detailsHtml += '<td style="padding:2px 4px;">' + ingredient.name + '</td>';
+                        detailsHtml += '<td style="width:85px; text-align:right; padding:2px 4px;">' + ingredient.volume + '</td>';
+                        detailsHtml += '<td style="width:65px; text-align:center; background-color:' + color + '; padding:2px 4px;">' + (percentVol ? percentVol + '%' : '') + '</td>';
                         detailsHtml += '</tr>';
                     });
 
                     // Total row
-                    detailsHtml += '<tr class="ingredient-row">';
-                    detailsHtml += '<td class="ingredient-number"><strong>Total</strong></td>';
+                    detailsHtml += '<tr style="font-weight:bold; border-bottom:1px solid #e5e5e5;">';
+                    detailsHtml += '<td style="text-align:left; padding:2px 4px;">Total</td>';
                     detailsHtml += '<td></td>';
-                    detailsHtml += '<td><strong>' + totalVolume.toFixed(2) + '</strong></td>';
-                    detailsHtml += '<td><strong>100.00%</strong></td>';
+                    detailsHtml += '<td style="text-align:right; padding:2px 4px;">' + totalVolume.toFixed(2) + '</td>';
+                    detailsHtml += '<td style="text-align:center; padding:2px 4px;">100.00%</td>';
                     detailsHtml += '</tr>';
 
                     detailsHtml += '</tbody></table>';
@@ -892,7 +887,8 @@ function updateRecipeDetails() {
         });
     }
 }
-    function updateRateDrinkSection() {
+
+	function updateRateDrinkSection() {
         var user = $('#user-select').val();
         if (user && user !== 'All') {
             $('#rate-drink-row select, #rate-drink-row input, #rate-drink-row button').prop('disabled', false);
