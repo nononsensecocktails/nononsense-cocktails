@@ -50,14 +50,6 @@ $usernames = getUsernames($conn);
             font-size: 0.9rem;
         }
 
-        .excel-row {
-            display: flex;
-            gap: 2px;
-            margin-bottom: 1px;
-            flex-wrap: nowrap;
-            align-items: center;
-        }
-
         .card {
             border: 1px solid #ccc;
             border-radius: 0;
@@ -81,7 +73,7 @@ $usernames = getUsernames($conn);
             .card-header { background: #2d2d2d; }
         }
 
-        /* Metadata */
+        /* Metadata - already good */
         #recipe_details .excel-row {
             margin-bottom: 1px;
             border-bottom: 1px solid #e5e5e5;
@@ -105,7 +97,7 @@ $usernames = getUsernames($conn);
             padding-left: 2px;
         }
 
-        /* ==================== INGREDIENTS TABLE ==================== */
+        /* ==================== TIGHT INGREDIENTS TABLE ==================== */
         .ingredient-table {
             width: 100%;
             border-collapse: collapse;
@@ -117,8 +109,8 @@ $usernames = getUsernames($conn);
         .ingredient-table th,
         .ingredient-table td {
             border: 1px solid #ccc;
-            padding: 2px 5px;
-            text-align: left;
+            padding: 2px 4px;
+            vertical-align: middle;
         }
 
         .ingredient-table th {
@@ -127,25 +119,23 @@ $usernames = getUsernames($conn);
         }
 
         @media (prefers-color-scheme: dark) {
-            .ingredient-table {
-                border-color: #555;
-            }
+            .ingredient-table { border-color: #555; }
             .ingredient-table th,
-            .ingredient-table td {
-                border-color: #555;
-            }
-            .ingredient-table th {
-                background: #2d2d2d;
-            }
+            .ingredient-table td { border-color: #555; }
+            .ingredient-table th { background: #2d2d2d; }
         }
 
-        .ingredient-table .ingredient-number {
-            width: 28px;
-            text-align: left;
-        }
+        .ingredient-table th:nth-child(1),
+        .ingredient-table td:nth-child(1) { width: 28px; text-align: left; }   /* # */
 
-        .ingredient-table td:nth-child(3) { text-align: right; }   /* Volume Oz */
-        .ingredient-table td:nth-child(4) { text-align: center; }  /* % Vol */
+        .ingredient-table th:nth-child(2),
+        .ingredient-table td:nth-child(2) { text-align: left; }                /* Ingredient */
+
+        .ingredient-table th:nth-child(3),
+        .ingredient-table td:nth-child(3) { width: 85px; text-align: right; }  /* Volume Oz */
+
+        .ingredient-table th:nth-child(4),
+        .ingredient-table td:nth-child(4) { width: 70px; text-align: center; } /* % Vol */
 
         /* Header buttons & dropdowns */
         .btn {
@@ -161,7 +151,7 @@ $usernames = getUsernames($conn);
     </style>
 </head>
 <body>
-    <!-- Header -->
+    <!-- Header (unchanged) -->
     <nav class="navbar navbar-dark">
         <div class="container-fluid d-flex align-items-center">
             <div class="d-flex align-items-center">
@@ -190,7 +180,7 @@ $usernames = getUsernames($conn);
     </nav>
 
     <div class="main-container">
-        <!-- Filters, Results, Recipe Details remain unchanged -->
+        <!-- Filters, Results, Recipe Details -->
         <div class="card">
             <div class="card-header">Filters</div>
             <div class="card-body">
@@ -199,10 +189,44 @@ $usernames = getUsernames($conn);
                         <div class="excel-cell term-select-cell">
                             <select class="term-select form-select" name="term[]">
                                 <option value="" selected>STEP 1: Select a Filter</option>
-                                <!-- ... rest of options ... -->
+                                <option value="All">All</option>
+                                <option value="adaption_of">Adaptation of</option>
+                                <option value="base">Base</option>
+                                <option value="characteristics">Characteristics</option>
+                                <option value="color">Color</option>
+                                <option value="family">Family</option>
+                                <option value="garnish">Garnish</option>
+                                <option value="glass">Glass</option>
+                                <option value="ice">Ice</option>
+                                <option value="ingredients">Ingredients</option>
+                                <option value="instructions">Instructions</option>
+                                <option value="last_date">Last Date</option>
+                                <option value="mixer">Mixer</option>
+                                <option value="name">Name</option>
+                                <option value="servings">Servings</option>
+                                <option value="shaken_stirred">Shaken/Stirred</option>
+                                <option value="source">Source</option>
+                                <option value="stars_out_of_3">Stars out of 3</option>
+                                <option value="variations">Variations</option>
                             </select>
                         </div>
-                        <!-- operator, value, buttons remain the same -->
+                        <div class="excel-cell">
+                            <select class="operator-select form-select" name="operator[]">
+                                <option value="=" selected>=</option>
+                                <option value="<>">≠</option>
+                            </select>
+                        </div>
+                        <div class="excel-cell">
+                            <input type="text" class="value-input form-control" name="value[]" placeholder="STEP 2: Select or Type a Value">
+                        </div>
+                        <div class="excel-cell" style="flex: 0 0 32px;"><button class="add-box btn btn-sm btn-outline-secondary w-100">+</button></div>
+                        <div class="excel-cell" style="flex: 0 0 32px;"><button class="remove-box btn btn-sm btn-outline-secondary w-100" style="display:none;">–</button></div>
+                        <div class="excel-cell logic-cell" style="flex: 0 0 64px;">
+                            <select class="logic-select form-select" name="logic[]" style="display:none;">
+                                <option value="AND" selected>AND</option>
+                                <option value="OR">OR</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -214,6 +238,7 @@ $usernames = getUsernames($conn);
                     <strong>Possible Cocktails:</strong>
                     <span id="name-count" class="badge bg-primary ms-1">0</span>
                     <select id="name-select" class="form-select flex-grow-1 mx-2"></select>
+                    
                     <strong class="ms-2">Sources:</strong>
                     <span id="source-count" class="badge bg-primary ms-1">0</span>
                     <select id="source-select" class="form-select flex-grow-1 mx-2"></select>
