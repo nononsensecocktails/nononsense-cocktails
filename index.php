@@ -15,7 +15,6 @@ $usernames = getUsernames($conn);
     <title>No-Nonsense Cocktails</title>
    
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-    <!-- === TAILWIND CDN (new) === -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -81,12 +80,13 @@ $usernames = getUsernames($conn);
         .excel-cell {
             padding: 2px 4px !important;
         }
-        /* METADATA - tight two-column spreadsheet style */
+        /* METADATA - ABSOLUTE MINIMUM PADDING */
         #recipe_details .excel-row {
             display: flex !important;
             margin-bottom: 1px;
             border-bottom: 1px solid #e5e5e5;
-            padding: 2px 0;
+            padding: 0;           /* absolute minimum */
+            line-height: 1;       /* absolute minimum */
         }
         @media (prefers-color-scheme: dark) {
             #recipe_details .excel-row { border-color: #444; }
@@ -104,13 +104,14 @@ $usernames = getUsernames($conn);
             padding-left: 4px;
             min-width: 0;
         }
-        /* INGREDIENTS TABLE - Volume Oz sits right next to Ingredient */
+        /* INGREDIENTS TABLE - fixed widths */
         .ingredient-table {
             width: 100%;
             border-collapse: collapse;
             font-size: 0.82rem;
             margin-top: 2px;
             margin-bottom: 4px;
+            table-layout: fixed;
         }
         .ingredient-table th,
         .ingredient-table td {
@@ -130,8 +131,11 @@ $usernames = getUsernames($conn);
         }
         .ingredient-table th:nth-child(1), .ingredient-table td:nth-child(1) { width: 28px; text-align: left; }
         .ingredient-table th:nth-child(2), .ingredient-table td:nth-child(2) { 
+            width: 170px;           /* exactly as requested */
             text-align: left; 
             padding-right: 4px;
+            word-break: break-word;
+            white-space: normal;
         }
         .ingredient-table th:nth-child(3), .ingredient-table td:nth-child(3) { 
             width: 82px; 
