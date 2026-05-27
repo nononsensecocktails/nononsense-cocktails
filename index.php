@@ -106,7 +106,7 @@ $usernames = getUsernames($conn);
         }
         /* INGREDIENTS TABLE - fixed widths */
         .ingredient-table {
-            width: 100%;
+            width: 520px;
             border-collapse: collapse;
             font-size: 0.82rem;
             margin-top: 2px;
@@ -144,7 +144,7 @@ $usernames = getUsernames($conn);
         }
         .ingredient-table th:nth-child(4), .ingredient-table td:nth-child(4) { 
             width: 65px; 
-            text-align: center;
+            text-align: right;
         }
         .btn { padding: 2px 8px; font-size: 0.82rem; }
         .term-select, .value-input { min-width: 220px !important; }
