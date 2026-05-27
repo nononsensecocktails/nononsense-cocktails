@@ -777,50 +777,79 @@ function updateRecipeDetails() {
         $.ajax({
             url: 'filter.php',
             method: 'GET',
-            data: { action: 'getRecipeDetails', name: name, source: source, user: user },
+            data: {
+                action: 'getRecipeDetails',
+                name: name,
+                source: source,
+                user: user
+            },
             dataType: 'json',
             success: function(data) {
                 if (data && typeof data === 'object') {
                     var today = new Date().toISOString().split('T')[0];
-
                     var detailsHtml = `
-                        <div class="p-2 bg-white border border-gray-400">
-                            <div class="flex justify-between items-center border-b border-gray-300 pb-2 mb-2">
-                                <div class="text-2xl font-bold">${data.Name || ''}</div>
-                                <div id="stars-display" class="px-4 py-1 text-xl font-bold border border-black rounded" style="background-color: ${getRatingColor(data.stars_out_of_3)}; color: #000000;">
-                                    ${data.stars_out_of_3 || 'Not rated'}
+                        <div class="card-body">
+                            <div class="excel-row">
+                                <div class="excel-cell label-cell">Name</div>
+                                <div class="excel-cell content-cell"><strong>${data.Name || ''}</strong></div>
+                            </div>
+                            <div class="excel-row">
+                                <div class="excel-cell label-cell">Stars Out of 3</div>
+                                <div class="excel-cell content-cell" id="stars-display">${data.stars_out_of_3 || 'Not rated'}</div>
+                            </div>
+                            <div class="excel-row">
+                                <div class="excel-cell label-cell">Last Date</div>
+                                <div class="excel-cell content-cell" id="last-date-display">${data.last_date || 'Not set'}</div>
+                            </div>
+                            <div class="excel-row" id="rate-drink-row">
+                                <div class="excel-cell">Rate this Drink:</div>
+                                <div class="excel-cell">
+                                    <select id="stars-select">
+                                        <option value="">Select Stars</option>
+                                        <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+                                        <option value="4">4</option><option value="5">5</option>
+                                        <option value="TBD">TBD</option><option value="Next">Next</option><option value="Revisit">Revisit</option>
+                                    </select>
+                                </div>
+                                <div class="excel-cell">
+                                    <input type="date" id="last-date-input" value="${today}">
+                                </div>
+                                <div class="excel-cell">
+                                    <button id="save-rating" class="btn btn-success btn-sm">Save Rating</button>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-x-2 mb-3 text-sm">
-                                <span class="font-medium text-gray-600">Last Date:</span>
-                                <span id="last-date-display" class="font-semibold">${data.last_date || 'Not set'}</span>
-                            </div>
-                            <div id="rate-drink-row" class="flex flex-wrap items-end gap-2 mb-4 p-2 bg-gray-50 border border-gray-300 rounded">
-                                <span class="font-medium whitespace-nowrap">Rate this Drink:</span>
-                                <select id="stars-select" class="border border-gray-400 bg-white rounded px-2 py-px text-sm"></select>
-                                <input type="date" id="last-date-input" value="${today}" class="border border-gray-400 bg-white rounded px-2 py-px text-sm">
-                                <button id="save-rating" class="bg-teal-700 hover:bg-teal-800 text-white px-4 py-px rounded text-sm font-medium">Save Rating</button>
-                            </div>
-                            <div class="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-1 text-sm mb-6">
-                                <!-- metadata rows (Source, Page, etc.) - unchanged content, minimal gap-y-1 -->
-                            </div>
-                            <div>
-                                <div class="font-semibold text-gray-700 mb-1 border-b">Ingredients</div>
-                                <table class="w-full border-collapse text-sm" id="ingredients-table">
+                            <!-- All other metadata rows -->
+                            <div class="excel-row"><div class="excel-cell label-cell">Source</div><div class="excel-cell content-cell">${data.Source || ''}</div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Page</div><div class="excel-cell content-cell">${data.Page || ''}</div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Shaken/Stirred</div><div class="excel-cell content-cell">${data['Shaken/Stirred'] || ''}</div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Ice</div><div class="excel-cell content-cell">${data.Ice || ''}</div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Glass</div><div class="excel-cell content-cell">${data.Glass || ''}</div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Garnish</div><div class="excel-cell content-cell">${data.Garnish || ''}</div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Notes</div><div class="excel-cell content-cell">${data.Instructions || ''}</div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Servings</div><div class="excel-cell content-cell">${data.Servings || ''}</div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Base</div><div class="excel-cell content-cell">${data.Base || ''}</div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Family</div><div class="excel-cell content-cell">${data.Family || ''}</div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Link</div><div class="excel-cell content-cell"><a href="${data.Link || '#'}" target="_blank">${data.Link || ''}</a></div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Mixer</div><div class="excel-cell content-cell">${data.Mixer || ''}</div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Color</div><div class="excel-cell content-cell">${data.Color || ''}</div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Characteristics</div><div class="excel-cell content-cell">${data.Characteristics || ''}</div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Adaptation of</div><div class="excel-cell content-cell">${data['Adaptation of'] || ''}</div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Variations</div><div class="excel-cell content-cell">${data.Variations || ''}</div></div>
+
+                            <!-- Ingredients Table -->
+                            <div class="mt-3">
+                                <strong>Ingredients</strong>
+                                <table class="ingredient-table">
                                     <thead>
-                                        <tr class="bg-gray-100 border-b">
-                                            <th class="text-left py-1 px-1 font-medium w-8">#</th>
-                                            <th class="text-left py-1 px-1 font-medium">Ingredient</th>
-                                            <th class="text-right py-1 px-1 font-medium w-16">Volume Oz</th>
-                                            <th class="text-right py-1 px-1 font-medium w-20">% Vol</th>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Ingredient</th>
+                                            <th>Volume Oz</th>
+                                            <th>% Vol</th>
                                         </tr>
                                     </thead>
-                                    <tbody class="text-sm"></tbody>
+                                    <tbody></tbody>
                                 </table>
-                            </div>
-                            <div class="mt-4">
-                                <div class="font-medium text-gray-600 mb-1">Notes / Instructions</div>
-                                <div class="p-3 bg-gray-50 border border-gray-300 text-sm leading-tight">${data.Instructions || ''}</div>
                             </div>
                         </div>
                     `;
@@ -840,11 +869,7 @@ function renderIngredientsTable(data) {
         var name = parts[0] ? parts[0].trim() : '';
         var volumeStr = parts.length === 2 ? parts[1].trim() : '';
         var parsed = parseVolume(volumeStr);
-        return {
-            name: name,
-            volume: parsed.display,
-            numericVolume: parsed.numeric
-        };
+        return { name: name, volume: parsed.display, numericVolume: parsed.numeric };
     });
 
     ingredients.sort(function(a, b) {
@@ -861,28 +886,25 @@ function renderIngredientsTable(data) {
             ? (ingredient.numericVolume / totalVolume * 100).toFixed(2) 
             : '';
         var colorStyle = percentVol ? `background-color: ${getColor(parseFloat(percentVol), 0, 100)};` : '';
-        
         tbodyHtml += `
-            <tr class="border-b">
-                <td class="py-1 px-1 text-center font-medium">${index + 1}</td>
-                <td class="py-1 px-1">${ingredient.name}</td>
-                <td class="py-1 px-1 text-right font-medium">${ingredient.volume}</td>
-                <td class="py-1 px-1 text-right" style="${colorStyle}">${percentVol ? percentVol + '%' : ''}</td>
+            <tr>
+                <td>${index + 1}</td>
+                <td>${ingredient.name}</td>
+                <td class="text-end">${ingredient.volume}</td>
+                <td class="text-end" style="${colorStyle}">${percentVol ? percentVol + '%' : ''}</td>
             </tr>`;
     });
 
-    // Total row
     tbodyHtml += `
-        <tr class="font-semibold bg-gray-100">
-            <td class="py-1 px-1"></td>
-            <td class="py-1 px-1">Total</td>
-            <td class="py-1 px-1 text-right">${totalVolume.toFixed(2)}</td>
-            <td class="py-1 px-1 text-right">100.00%</td>
+        <tr>
+            <td></td>
+            <td><strong>Total</strong></td>
+            <td class="text-end"><strong>${totalVolume.toFixed(2)}</strong></td>
+            <td class="text-end"><strong>100.00%</strong></td>
         </tr>`;
 
-    $('#ingredients-table tbody').html(tbodyHtml);
-}
-	
+    $('#recipe_details .ingredient-table tbody').html(tbodyHtml);
+}	
 	function updateRateDrinkSection() {
         var user = $('#user-select').val();
         if (user && user !== 'All') {
