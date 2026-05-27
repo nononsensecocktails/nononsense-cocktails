@@ -17,6 +17,22 @@ $usernames = getUsernames($conn);
     <title>No-Nonsense Cocktails</title>
     
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<!-- === TAILWIND CDN (new) === -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Tailwind CDN initialization (standard pattern)
+        document.addEventListener('DOMContentLoaded', () => {
+            tailwind.config = {
+                content: [],
+                theme: {
+                    extend: {
+                        // We can add custom colors/fonts later to perfectly match the teal #008080 theme
+                    }
+                }
+            };
+        });
+    </script>
+    
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     
