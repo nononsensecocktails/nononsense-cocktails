@@ -1042,8 +1042,8 @@ function generateCurrentUrl() {
         updateValueInput($('.search-boxes .excel-row:first'), $('.term-select').val());
         updateLogicVisibility();
     });
-});
 
+	
 function updateRecipeDetails() {
     var name = $('#name-select').val();
     var source = $('#source-select').val();
@@ -1153,3 +1153,7 @@ function renderIngredientsTable(data) {
 
     $('#recipe_details .ingredient-table tbody').html(tbodyHtml);
 }
+
+
+	
+});
