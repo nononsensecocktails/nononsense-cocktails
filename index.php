@@ -70,7 +70,7 @@ $usernames = getUsernames($conn);
             .card { border-color: #555; }
             .card-header { background: #2d2d2d; }
         }
-        /* FILTERS - stay horizontal + ultra-tight */
+        /* FILTERS */
         .search-boxes .excel-row {
             display: flex !important;
             gap: 2px;
@@ -81,28 +81,30 @@ $usernames = getUsernames($conn);
         .excel-cell {
             padding: 2px 4px !important;
         }
-        /* METADATA - tight label + value side-by-side */
+        /* METADATA - tight two-column spreadsheet style */
         #recipe_details .excel-row {
+            display: flex !important;
             margin-bottom: 1px;
             border-bottom: 1px solid #e5e5e5;
-            padding: 1px 0;
+            padding: 2px 0;
         }
         @media (prefers-color-scheme: dark) {
             #recipe_details .excel-row { border-color: #444; }
         }
         #recipe_details .label-cell {
             font-weight: 600;
-            width: 145px;
+            width: 160px;
             flex-shrink: 0;
-            padding-right: 6px;
-            text-align: left;
+            padding-right: 8px;
+            text-align: right;
             white-space: nowrap;
         }
         #recipe_details .content-cell {
             flex: 1;
-            padding-left: 2px;
+            padding-left: 4px;
+            min-width: 0;
         }
-        /* ==================== INGREDIENTS TABLE - MAXIMUM TIGHTNESS ==================== */
+        /* INGREDIENTS TABLE - Volume Oz sits right next to Ingredient */
         .ingredient-table {
             width: 100%;
             border-collapse: collapse;
@@ -129,11 +131,17 @@ $usernames = getUsernames($conn);
         .ingredient-table th:nth-child(1), .ingredient-table td:nth-child(1) { width: 28px; text-align: left; }
         .ingredient-table th:nth-child(2), .ingredient-table td:nth-child(2) { 
             text-align: left; 
-            padding-right: 2px;
+            padding-right: 4px;
         }
-        .ingredient-table th:nth-child(3), .ingredient-table td:nth-child(3) { width: 78px; text-align: right; }
-        .ingredient-table th:nth-child(4), .ingredient-table td:nth-child(4) { width: 65px; text-align: center; }
-
+        .ingredient-table th:nth-child(3), .ingredient-table td:nth-child(3) { 
+            width: 82px; 
+            text-align: right; 
+            padding-left: 4px;
+        }
+        .ingredient-table th:nth-child(4), .ingredient-table td:nth-child(4) { 
+            width: 65px; 
+            text-align: center;
+        }
         .btn { padding: 2px 8px; font-size: 0.82rem; }
         .term-select, .value-input { min-width: 220px !important; }
         #recipe_details .card-body { padding: 4px 6px !important; }
