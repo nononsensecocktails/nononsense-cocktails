@@ -777,48 +777,22 @@ function updateRecipeDetails() {
         $.ajax({
             url: 'filter.php',
             method: 'GET',
-            data: {
-                action: 'getRecipeDetails',
-                name: name,
-                source: source,
-                user: user
-            },
+            data: { action: 'getRecipeDetails', name: name, source: source, user: user },
             dataType: 'json',
             success: function(data) {
                 if (data && typeof data === 'object') {
                     var today = new Date().toISOString().split('T')[0];
                     var detailsHtml = `
                         <div class="card-body">
-                            <div class="excel-row">
-                                <div class="excel-cell label-cell">Name</div>
-                                <div class="excel-cell content-cell"><strong>${data.Name || ''}</strong></div>
-                            </div>
-                            <div class="excel-row">
-                                <div class="excel-cell label-cell">Stars Out of 3</div>
-                                <div class="excel-cell content-cell" id="stars-display">${data.stars_out_of_3 || 'Not rated'}</div>
-                            </div>
-                            <div class="excel-row">
-                                <div class="excel-cell label-cell">Last Date</div>
-                                <div class="excel-cell content-cell" id="last-date-display">${data.last_date || 'Not set'}</div>
-                            </div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Name</div><div class="excel-cell content-cell"><strong>${data.Name || ''}</strong></div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Stars Out of 3</div><div class="excel-cell content-cell" id="stars-display">${data.stars_out_of_3 || 'Not rated'}</div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Last Date</div><div class="excel-cell content-cell" id="last-date-display">${data.last_date || 'Not set'}</div></div>
                             <div class="excel-row" id="rate-drink-row">
                                 <div class="excel-cell">Rate this Drink:</div>
-                                <div class="excel-cell">
-                                    <select id="stars-select">
-                                        <option value="">Select Stars</option>
-                                        <option value="1">1</option><option value="2">2</option><option value="3">3</option>
-                                        <option value="4">4</option><option value="5">5</option>
-                                        <option value="TBD">TBD</option><option value="Next">Next</option><option value="Revisit">Revisit</option>
-                                    </select>
-                                </div>
-                                <div class="excel-cell">
-                                    <input type="date" id="last-date-input" value="${today}">
-                                </div>
-                                <div class="excel-cell">
-                                    <button id="save-rating" class="btn btn-success btn-sm">Save Rating</button>
-                                </div>
+                                <div class="excel-cell"><select id="stars-select"><option value="">Select Stars</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="TBD">TBD</option><option value="Next">Next</option><option value="Revisit">Revisit</option></select></div>
+                                <div class="excel-cell"><input type="date" id="last-date-input" value="${today}"></div>
+                                <div class="excel-cell"><button id="save-rating" class="btn btn-success btn-sm">Save Rating</button></div>
                             </div>
-                            <!-- All other metadata rows -->
                             <div class="excel-row"><div class="excel-cell label-cell">Source</div><div class="excel-cell content-cell">${data.Source || ''}</div></div>
                             <div class="excel-row"><div class="excel-cell label-cell">Page</div><div class="excel-cell content-cell">${data.Page || ''}</div></div>
                             <div class="excel-row"><div class="excel-cell label-cell">Shaken/Stirred</div><div class="excel-cell content-cell">${data['Shaken/Stirred'] || ''}</div></div>
@@ -836,7 +810,6 @@ function updateRecipeDetails() {
                             <div class="excel-row"><div class="excel-cell label-cell">Adaptation of</div><div class="excel-cell content-cell">${data['Adaptation of'] || ''}</div></div>
                             <div class="excel-row"><div class="excel-cell label-cell">Variations</div><div class="excel-cell content-cell">${data.Variations || ''}</div></div>
 
-                            <!-- Ingredients Table -->
                             <div class="mt-3">
                                 <strong>Ingredients</strong>
                                 <table class="ingredient-table">
@@ -904,8 +877,8 @@ function renderIngredientsTable(data) {
         </tr>`;
 
     $('#recipe_details .ingredient-table tbody').html(tbodyHtml);
-}	
-	function updateRateDrinkSection() {
+}
+		function updateRateDrinkSection() {
         var user = $('#user-select').val();
         if (user && user !== 'All') {
             $('#rate-drink-row select, #rate-drink-row input, #rate-drink-row button').prop('disabled', false);
