@@ -73,7 +73,7 @@ $usernames = getUsernames($conn);
             .card-header { background: #2d2d2d; }
         }
 
-        /* ==================== FILTERS - STAY HORIZONTAL ==================== */
+        /* FILTERS - stay horizontal */
         .search-boxes .excel-row {
             display: flex !important;
             gap: 2px;
@@ -82,7 +82,7 @@ $usernames = getUsernames($conn);
             align-items: center;
         }
 
-        /* ==================== METADATA - LABEL + VALUE SIDE-BY-SIDE (tight) ==================== */
+        /* METADATA - tight label + value side-by-side */
         #recipe_details .excel-row {
             margin-bottom: 1px;
             border-bottom: 1px solid #e5e5e5;
@@ -106,7 +106,7 @@ $usernames = getUsernames($conn);
             padding-left: 2px;
         }
 
-        /* ==================== INGREDIENTS TABLE - TIGHT COLUMNS ==================== */
+        /* ==================== INGREDIENTS TABLE - TIGHTER GAP ==================== */
         .ingredient-table {
             width: 100%;
             border-collapse: collapse;
@@ -135,7 +135,10 @@ $usernames = getUsernames($conn);
         }
 
         .ingredient-table th:nth-child(1), .ingredient-table td:nth-child(1) { width: 28px; text-align: left; }
-        .ingredient-table th:nth-child(2), .ingredient-table td:nth-child(2) { text-align: left; padding-right: 4px; } /* tight gap to Volume Oz */
+        .ingredient-table th:nth-child(2), .ingredient-table td:nth-child(2) { 
+            text-align: left; 
+            padding-right: 2px;     /* tightened even further */
+        }
         .ingredient-table th:nth-child(3), .ingredient-table td:nth-child(3) { width: 85px; text-align: right; }
         .ingredient-table th:nth-child(4), .ingredient-table td:nth-child(4) { width: 70px; text-align: center; }
 
