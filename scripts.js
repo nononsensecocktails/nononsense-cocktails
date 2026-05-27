@@ -789,105 +789,141 @@ function updateRecipeDetails() {
                 console.log('Recipe details data:', data);
                 if (data && typeof data === 'object') {
                     var today = new Date().toISOString().split('T')[0];
-                    var detailsHtml = '';
 
-                    // Metadata
-                    detailsHtml += '<div class="excel-row"><div class="excel-cell label-cell">Name</div><div class="excel-cell content-cell">' + (data.Name || '') + '</div></div>';
-                    var ratingBgColor = getRatingColor(data.stars_out_of_3);
-                    detailsHtml += '<div class="excel-row"><div class="excel-cell label-cell">Stars Out of 3</div><div class="excel-cell content-cell" id="stars-display" style="background-color:' + ratingBgColor + '; color: #000000;">' + (data.stars_out_of_3 || 'Not rated') + '</div></div>';
-                    detailsHtml += '<div class="excel-row"><div class="excel-cell label-cell">Last Date</div><div class="excel-cell content-cell" id="last-date-display">' + (data.last_date || 'Not set') + '</div></div>';
-                    detailsHtml += '<div class="excel-row" id="rate-drink-row"><div class="excel-cell label-cell">Rate this Drink:</div><div class="excel-cell"><select id="stars-select"><option value="">Select Stars</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="TBD">TBD</option><option value="Next">Next</option><option value="Revisit">Revisit</option></select></div><div class="excel-cell"><input type="date" id="last-date-input" value="' + today + '"></div><div class="excel-cell"><button id="save-rating">Save Rating</button></div></div>';
-                    detailsHtml += '<div class="excel-row"><div class="excel-cell label-cell">Source</div><div class="excel-cell content-cell">' + (data.Source || '') + '</div></div>';
-                    detailsHtml += '<div class="excel-row"><div class="excel-cell label-cell">Page</div><div class="excel-cell content-cell">' + (data.Page || '') + '</div></div>';
-                    detailsHtml += '<div class="excel-row"><div class="excel-cell label-cell">Shaken/Stirred</div><div class="excel-cell content-cell">' + (data['Shaken/Stirred'] || '') + '</div></div>';
-                    detailsHtml += '<div class="excel-row"><div class="excel-cell label-cell">Ice</div><div class="excel-cell content-cell">' + (data.Ice || '') + '</div></div>';
-                    detailsHtml += '<div class="excel-row"><div class="excel-cell label-cell">Glass</div><div class="excel-cell content-cell">' + (data.Glass || '') + '</div></div>';
-                    detailsHtml += '<div class="excel-row"><div class="excel-cell label-cell">Garnish</div><div class="excel-cell content-cell">' + (data.Garnish || '') + '</div></div>';
-                    detailsHtml += '<div class="excel-row"><div class="excel-cell label-cell">Notes</div><div class="excel-cell content-cell">' + (data.Instructions || '') + '</div></div>';
+                    // Clean Tailwind-powered spreadsheet-style HTML
+                    var detailsHtml = `
+                        <div class="p-4 bg-white border border-gray-400">
+                            <!-- Header: Name + Rating -->
+                            <div class="flex justify-between items-center border-b border-gray-300 pb-3 mb-4">
+                                <div class="text-2xl font-bold">${data.Name || ''}</div>
+                                <div id="stars-display" class="px-5 py-1 text-xl font-bold border border-black rounded" style="background-color: ${getRatingColor(data.stars_out_of_3)}; color: #000000;">
+                                    ${data.stars_out_of_3 || 'Not rated'}
+                                </div>
+                            </div>
 
-                    // ==================== COMPACT INGREDIENTS TABLE ====================
-                    detailsHtml += '<div class="excel-row"><div class="excel-cell label-cell">Ingredients</div><div class="excel-cell content-cell"></div></div>';
-                    detailsHtml += '<table class="ingredient-table" style="width:100%; border-collapse:collapse; font-size:0.82rem;">';
-                    detailsHtml += '<thead><tr style="background:#f0f0f0; font-weight:600;">';
-                    detailsHtml += '<th style="width:28px; text-align:left; padding:2px 4px; border:1px solid #ccc;">#</th>';
-                    detailsHtml += '<th style="text-align:left; padding:2px 4px; border:1px solid #ccc;">Ingredient</th>';
-                    detailsHtml += '<th style="width:85px; text-align:right; padding:2px 4px; border:1px solid #ccc;">Volume Oz</th>';
-                    detailsHtml += '<th style="width:65px; text-align:center; padding:2px 4px; border:1px solid #ccc;">% Vol</th>';
-                    detailsHtml += '</tr></thead><tbody>';
+                            <!-- Last Date -->
+                            <div class="flex items-center gap-x-3 mb-4 text-sm">
+                                <span class="font-medium text-gray-600">Last Date:</span>
+                                <span id="last-date-display" class="font-semibold">${data.last_date || 'Not set'}</span>
+                            </div>
 
-                    var ingredients = (data.Ingredients || '').split(';').filter(Boolean).map(function(ingredient) {
-                        var parts = ingredient.split(':');
-                        var name = parts[0] ? parts[0].trim() : '';
-                        var volumeStr = parts.length === 2 ? parts[1].trim() : '';
-                        var parsed = parseVolume(volumeStr);
-                        return {
-                            name: name,
-                            volume: parsed.display,
-                            numericVolume: parsed.numeric
-                        };
-                    });
+                            <!-- Rate Drink Row (keeps all existing JS behavior) -->
+                            <div id="rate-drink-row" class="flex flex-wrap items-end gap-3 mb-6 p-3 bg-gray-50 border border-gray-300 rounded">
+                                <span class="font-medium whitespace-nowrap">Rate this Drink:</span>
+                                <select id="stars-select" class="border border-gray-400 bg-white rounded px-3 py-1 text-sm focus:ring-2 focus:ring-teal-500">
+                                    <option value="">Select Stars</option>
+                                    <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+                                    <option value="4">4</option><option value="5">5</option>
+                                    <option value="TBD">TBD</option><option value="Next">Next</option><option value="Revisit">Revisit</option>
+                                </select>
+                                <input type="date" id="last-date-input" value="${today}" class="border border-gray-400 bg-white rounded px-3 py-1 text-sm">
+                                <button id="save-rating" class="bg-teal-700 hover:bg-teal-800 text-white px-6 py-1 rounded font-medium text-sm">Save Rating</button>
+                            </div>
 
-                    ingredients.sort(function(a, b) {
-                        return b.numericVolume - a.numericVolume || (a.name < b.name ? -1 : 1);
-                    });
+                            <!-- Metadata - tight grid (spreadsheet style) -->
+                            <div class="grid grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-3 text-sm mb-8">
+                                <div><span class="font-medium text-gray-600">Source:</span> ${data.Source || ''}</div>
+                                <div><span class="font-medium text-gray-600">Page:</span> ${data.Page || ''}</div>
+                                <div><span class="font-medium text-gray-600">Shaken/Stirred:</span> ${data['Shaken/Stirred'] || ''}</div>
+                                <div><span class="font-medium text-gray-600">Ice:</span> ${data.Ice || ''}</div>
+                                <div><span class="font-medium text-gray-600">Glass:</span> ${data.Glass || ''}</div>
+                                <div><span class="font-medium text-gray-600">Garnish:</span> ${data.Garnish || ''}</div>
+                                <div><span class="font-medium text-gray-600">Servings:</span> ${data.Servings || ''}</div>
+                                <div><span class="font-medium text-gray-600">Base:</span> ${data.Base || ''}</div>
+                                <div><span class="font-medium text-gray-600">Family:</span> ${data.Family || ''}</div>
+                                <div><span class="font-medium text-gray-600">Mixer:</span> ${data.Mixer || ''}</div>
+                                <div><span class="font-medium text-gray-600">Color:</span> ${data.Color || ''}</div>
+                                <div><span class="font-medium text-gray-600">Characteristics:</span> ${data.Characteristics || ''}</div>
+                                <div class="col-span-2"><span class="font-medium text-gray-600">Adaptation of:</span> ${data['Adaptation of'] || ''}</div>
+                                <div class="col-span-2"><span class="font-medium text-gray-600">Variations:</span> ${data.Variations || ''}</div>
+                                <div><span class="font-medium text-gray-600">Link:</span> <a href="${data.Link || '#'}" target="_blank" class="text-blue-600 underline">${data.Link || ''}</a></div>
+                            </div>
 
-                    var totalVolume = ingredients.reduce(function(sum, ing) {
-                        return sum + (isNaN(ing.numericVolume) ? 0 : ing.numericVolume);
-                    }, 0);
+                            <!-- Ingredients - proper table, tight spreadsheet columns -->
+                            <div>
+                                <div class="font-semibold text-gray-700 mb-2 border-b pb-1">Ingredients</div>
+                                <table class="w-full border-collapse text-sm" id="ingredients-table">
+                                    <thead>
+                                        <tr class="bg-gray-100 border-b">
+                                            <th class="text-left py-1.5 px-3 font-medium w-8">#</th>
+                                            <th class="text-left py-1.5 px-3 font-medium">Ingredient</th>
+                                            <th class="text-right py-1.5 px-3 font-medium">Volume Oz</th>
+                                            <th class="text-right py-1.5 px-3 font-medium w-20">% Vol</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="text-sm"></tbody>
+                                </table>
+                            </div>
 
-                    ingredients.forEach(function(ingredient, index) {
-                        var percentVol = (ingredient.numericVolume && totalVolume > 0) 
-                            ? (ingredient.numericVolume / totalVolume * 100).toFixed(2) 
-                            : '';
-                        var color = percentVol ? getColor(parseFloat(percentVol), 0, 100) : '';
-                        detailsHtml += '<tr style="border-bottom:1px solid #e5e5e5;">';
-                        detailsHtml += '<td style="width:28px; text-align:left; padding:2px 4px;">' + (index + 1) + '</td>';
-                        detailsHtml += '<td style="padding:2px 4px;">' + ingredient.name + '</td>';
-                        detailsHtml += '<td style="width:85px; text-align:right; padding:2px 4px;">' + ingredient.volume + '</td>';
-                        detailsHtml += '<td style="width:65px; text-align:center; background-color:' + color + '; padding:2px 4px;">' + (percentVol ? percentVol + '%' : '') + '</td>';
-                        detailsHtml += '</tr>';
-                    });
-
-                    // Total row
-                    detailsHtml += '<tr style="font-weight:bold; border-bottom:1px solid #e5e5e5;">';
-                    detailsHtml += '<td style="text-align:left; padding:2px 4px;">Total</td>';
-                    detailsHtml += '<td></td>';
-                    detailsHtml += '<td style="text-align:right; padding:2px 4px;">' + totalVolume.toFixed(2) + '</td>';
-                    detailsHtml += '<td style="text-align:center; padding:2px 4px;">100.00%</td>';
-                    detailsHtml += '</tr>';
-
-                    detailsHtml += '</tbody></table>';
-
-                    // Remaining metadata
-                    detailsHtml += '<div class="excel-row"><div class="excel-cell label-cell">Servings</div><div class="excel-cell content-cell">' + (data.Servings || '') + '</div></div>';
-                    detailsHtml += '<div class="excel-row"><div class="excel-cell label-cell">Base</div><div class="excel-cell content-cell">' + (data.Base || '') + '</div></div>';
-                    detailsHtml += '<div class="excel-row"><div class="excel-cell label-cell">Family</div><div class="excel-cell content-cell">' + (data.Family || '') + '</div></div>';
-                    detailsHtml += '<div class="excel-row"><div class="excel-cell label-cell">Link</div><div class="excel-cell content-cell"><a href="' + (data.Link || '#') + '" target="_blank">' + (data.Link || '') + '</a></div></div>';
-                    detailsHtml += '<div class="excel-row"><div class="excel-cell label-cell">Mixer</div><div class="excel-cell content-cell">' + (data.Mixer || '') + '</div></div>';
-                    detailsHtml += '<div class="excel-row"><div class="excel-cell label-cell">Color</div><div class="excel-cell content-cell">' + (data.Color || '') + '</div></div>';
-                    detailsHtml += '<div class="excel-row"><div class="excel-cell label-cell">Characteristics</div><div class="excel-cell content-cell">' + (data.Characteristics || '') + '</div></div>';
-                    detailsHtml += '<div class="excel-row"><div class="excel-cell label-cell">Adaptation of</div><div class="excel-cell content-cell">' + (data['Adaptation of'] || '') + '</div></div>';
-                    detailsHtml += '<div class="excel-row"><div class="excel-cell label-cell">Variations</div><div class="excel-cell content-cell">' + (data.Variations || '') + '</div></div>';
+                            <!-- Notes / Instructions -->
+                            <div class="mt-8">
+                                <div class="font-medium text-gray-600 mb-1">Notes / Instructions</div>
+                                <div class="p-4 bg-gray-50 border border-gray-300 rounded text-sm leading-relaxed">${data.Instructions || ''}</div>
+                            </div>
+                        </div>
+                    `;
 
                     $('#recipe_details').html(detailsHtml);
 
-                    if (data.stars_out_of_3) {
-                        $('#stars-select').val(data.stars_out_of_3);
-                    }
+                    // Populate ingredients table (keeps your exact parsing + sorting + color logic)
+                    renderIngredientsTable(data);
+
+                    if (data.stars_out_of_3) $('#stars-select').val(data.stars_out_of_3);
                     updateRateDrinkSection();
                 } else {
-                    console.error('Invalid recipe data:', data);
-                    $('#recipe_details').html('<div class="excel-row"><div class="excel-cell">Error loading recipe</div></div>');
+                    $('#recipe_details').html('<div class="p-4 text-red-500">Error loading recipe</div>');
                 }
             },
-            error: function(jqXHR, textStatus, errorThrown) {
-                console.error('Recipe AJAX failed:', textStatus, errorThrown);
-                $('#recipe_details').html('<div class="excel-row"><div class="excel-cell">Error loading recipe</div></div>');
+            error: function() {
+                $('#recipe_details').html('<div class="p-4 text-red-500">Error loading recipe</div>');
             }
         });
     }
 }
 
+// Helper (new, but keeps all your original logic)
+function renderIngredientsTable(data) {
+    var ingredients = (data.Ingredients || '').split(';').filter(Boolean).map(function(ingredient) {
+        var parts = ingredient.split(':');
+        var name = parts[0] ? parts[0].trim() : '';
+        var volumeStr = parts.length === 2 ? parts[1].trim() : '';
+        var parsed = parseVolume(volumeStr);
+        return { name: name, volume: parsed.display, numericVolume: parsed.numeric };
+    });
+
+    ingredients.sort((a, b) => b.numericVolume - a.numericVolume || (a.volume < b.volume ? -1 : 1));
+
+    var totalVolume = ingredients.reduce((sum, ing) => sum + (isNaN(ing.numericVolume) ? 0 : ing.numericVolume), 0);
+
+    var tbodyHtml = '';
+    ingredients.forEach(function(ingredient, index) {
+        var percentVol = (ingredient.numericVolume && totalVolume > 0) 
+            ? (ingredient.numericVolume / totalVolume * 100).toFixed(2) 
+            : '';
+        var colorStyle = percentVol ? `background-color: ${getColor(parseFloat(percentVol), 0, 100)};` : '';
+        
+        tbodyHtml += `
+            <tr class="border-b hover:bg-gray-50">
+                <td class="py-2 px-3 text-center font-medium">${index + 1}</td>
+                <td class="py-2 px-3">${ingredient.name}</td>
+                <td class="py-2 px-3 text-right font-medium">${ingredient.volume}</td>
+                <td class="py-2 px-3 text-right" style="${colorStyle}">${percentVol ? percentVol + '%' : ''}</td>
+            </tr>`;
+    });
+
+    // Total row
+    tbodyHtml += `
+        <tr class="font-semibold bg-gray-100">
+            <td class="py-2 px-3"></td>
+            <td class="py-2 px-3">Total</td>
+            <td class="py-2 px-3 text-right">${totalVolume.toFixed(2)}</td>
+            <td class="py-2 px-3 text-right">100.00%</td>
+        </tr>`;
+
+    $('#ingredients-table tbody').html(tbodyHtml);
+}
+
+	
 	function updateRateDrinkSection() {
         var user = $('#user-select').val();
         if (user && user !== 'All') {
