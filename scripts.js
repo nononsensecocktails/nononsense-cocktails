@@ -769,115 +769,7 @@ function getColor(value, min, max) {
         };
         return colors[rating] || '#e0e0e0';
     }
-function updateRecipeDetails() {
-    var name = $('#name-select').val();
-    var source = $('#source-select').val();
-    var user = $('#user-select').val();
-    if (name && source) {
-        $.ajax({
-            url: 'filter.php',
-            method: 'GET',
-            data: { action: 'getRecipeDetails', name: name, source: source, user: user },
-            dataType: 'json',
-            success: function(data) {
-                if (data && typeof data === 'object') {
-                    var today = new Date().toISOString().split('T')[0];
-                    var detailsHtml = `
-                        <div class="card-body">
-                            <div class="excel-row"><div class="excel-cell label-cell">Name</div><div class="excel-cell content-cell"><strong>${data.Name || ''}</strong></div></div>
-                            <div class="excel-row"><div class="excel-cell label-cell">Stars Out of 3</div><div class="excel-cell content-cell" id="stars-display">${data.stars_out_of_3 || 'Not rated'}</div></div>
-                            <div class="excel-row"><div class="excel-cell label-cell">Last Date</div><div class="excel-cell content-cell" id="last-date-display">${data.last_date || 'Not set'}</div></div>
-                            <div class="excel-row" id="rate-drink-row">
-                                <div class="excel-cell">Rate this Drink:</div>
-                                <div class="excel-cell"><select id="stars-select"><option value="">Select Stars</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="TBD">TBD</option><option value="Next">Next</option><option value="Revisit">Revisit</option></select></div>
-                                <div class="excel-cell"><input type="date" id="last-date-input" value="${today}"></div>
-                                <div class="excel-cell"><button id="save-rating" class="btn btn-success btn-sm">Save Rating</button></div>
-                            </div>
-                            <div class="excel-row"><div class="excel-cell label-cell">Source</div><div class="excel-cell content-cell">${data.Source || ''}</div></div>
-                            <div class="excel-row"><div class="excel-cell label-cell">Page</div><div class="excel-cell content-cell">${data.Page || ''}</div></div>
-                            <div class="excel-row"><div class="excel-cell label-cell">Shaken/Stirred</div><div class="excel-cell content-cell">${data['Shaken/Stirred'] || ''}</div></div>
-                            <div class="excel-row"><div class="excel-cell label-cell">Ice</div><div class="excel-cell content-cell">${data.Ice || ''}</div></div>
-                            <div class="excel-row"><div class="excel-cell label-cell">Glass</div><div class="excel-cell content-cell">${data.Glass || ''}</div></div>
-                            <div class="excel-row"><div class="excel-cell label-cell">Garnish</div><div class="excel-cell content-cell">${data.Garnish || ''}</div></div>
-                            <div class="excel-row"><div class="excel-cell label-cell">Notes</div><div class="excel-cell content-cell">${data.Instructions || ''}</div></div>
-                            <div class="excel-row"><div class="excel-cell label-cell">Servings</div><div class="excel-cell content-cell">${data.Servings || ''}</div></div>
-                            <div class="excel-row"><div class="excel-cell label-cell">Base</div><div class="excel-cell content-cell">${data.Base || ''}</div></div>
-                            <div class="excel-row"><div class="excel-cell label-cell">Family</div><div class="excel-cell content-cell">${data.Family || ''}</div></div>
-                            <div class="excel-row"><div class="excel-cell label-cell">Link</div><div class="excel-cell content-cell"><a href="${data.Link || '#'}" target="_blank">${data.Link || ''}</a></div></div>
-                            <div class="excel-row"><div class="excel-cell label-cell">Mixer</div><div class="excel-cell content-cell">${data.Mixer || ''}</div></div>
-                            <div class="excel-row"><div class="excel-cell label-cell">Color</div><div class="excel-cell content-cell">${data.Color || ''}</div></div>
-                            <div class="excel-row"><div class="excel-cell label-cell">Characteristics</div><div class="excel-cell content-cell">${data.Characteristics || ''}</div></div>
-                            <div class="excel-row"><div class="excel-cell label-cell">Adaptation of</div><div class="excel-cell content-cell">${data['Adaptation of'] || ''}</div></div>
-                            <div class="excel-row"><div class="excel-cell label-cell">Variations</div><div class="excel-cell content-cell">${data.Variations || ''}</div></div>
-
-                            <div class="mt-3">
-                                <strong>Ingredients</strong>
-                                <table class="ingredient-table">
-                                    <thead>
-                                        <tr>
-                                            <th>#</th>
-                                            <th>Ingredient</th>
-                                            <th>Volume Oz</th>
-                                            <th>% Vol</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody></tbody>
-                                </table>
-                            </div>
-                        </div>
-                    `;
-                    $('#recipe_details').html(detailsHtml);
-                    renderIngredientsTable(data);
-                    if (data.stars_out_of_3) $('#stars-select').val(data.stars_out_of_3);
-                    updateRateDrinkSection();
-                }
-            }
-        });
-    }
-}
-
-function renderIngredientsTable(data) {
-    var ingredients = (data.Ingredients || '').split(';').filter(Boolean).map(function(ingredient) {
-        var parts = ingredient.split(':');
-        var name = parts[0] ? parts[0].trim() : '';
-        var volumeStr = parts.length === 2 ? parts[1].trim() : '';
-        var parsed = parseVolume(volumeStr);
-        return { name: name, volume: parsed.display, numericVolume: parsed.numeric };
-    });
-
-    ingredients.sort(function(a, b) {
-        return b.numericVolume - a.numericVolume || (a.volume < b.volume ? -1 : 1);
-    });
-
-    var totalVolume = ingredients.reduce(function(sum, ingredient) {
-        return sum + (isNaN(ingredient.numericVolume) ? 0 : ingredient.numericVolume);
-    }, 0);
-
-    var tbodyHtml = '';
-    ingredients.forEach(function(ingredient, index) {
-        var percentVol = (ingredient.numericVolume && totalVolume > 0) 
-            ? (ingredient.numericVolume / totalVolume * 100).toFixed(2) 
-            : '';
-        var colorStyle = percentVol ? `background-color: ${getColor(parseFloat(percentVol), 0, 100)};` : '';
-        tbodyHtml += `
-            <tr>
-                <td>${index + 1}</td>
-                <td>${ingredient.name}</td>
-                <td class="text-end">${ingredient.volume}</td>
-                <td class="text-end" style="${colorStyle}">${percentVol ? percentVol + '%' : ''}</td>
-            </tr>`;
-    });
-
-    tbodyHtml += `
-        <tr>
-            <td></td>
-            <td><strong>Total</strong></td>
-            <td class="text-end"><strong>${totalVolume.toFixed(2)}</strong></td>
-            <td class="text-end"><strong>100.00%</strong></td>
-        </tr>`;
-
-    $('#recipe_details .ingredient-table tbody').html(tbodyHtml);
-}
+	
 		function updateRateDrinkSection() {
         var user = $('#user-select').val();
         if (user && user !== 'All') {
@@ -1151,3 +1043,113 @@ function generateCurrentUrl() {
         updateLogicVisibility();
     });
 });
+
+function updateRecipeDetails() {
+    var name = $('#name-select').val();
+    var source = $('#source-select').val();
+    var user = $('#user-select').val();
+    if (name && source) {
+        $.ajax({
+            url: 'filter.php',
+            method: 'GET',
+            data: { action: 'getRecipeDetails', name: name, source: source, user: user },
+            dataType: 'json',
+            success: function(data) {
+                if (data && typeof data === 'object') {
+                    var today = new Date().toISOString().split('T')[0];
+                    var detailsHtml = `
+                        <div class="card-body">
+                            <div class="excel-row"><div class="excel-cell label-cell">Name</div><div class="excel-cell content-cell"><strong>${data.Name || ''}</strong></div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Stars Out of 3</div><div class="excel-cell content-cell" id="stars-display">${data.stars_out_of_3 || 'Not rated'}</div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Last Date</div><div class="excel-cell content-cell" id="last-date-display">${data.last_date || 'Not set'}</div></div>
+                            <div class="excel-row" id="rate-drink-row">
+                                <div class="excel-cell">Rate this Drink:</div>
+                                <div class="excel-cell"><select id="stars-select"><option value="">Select Stars</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="TBD">TBD</option><option value="Next">Next</option><option value="Revisit">Revisit</option></select></div>
+                                <div class="excel-cell"><input type="date" id="last-date-input" value="${today}"></div>
+                                <div class="excel-cell"><button id="save-rating" class="btn btn-success btn-sm">Save Rating</button></div>
+                            </div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Source</div><div class="excel-cell content-cell">${data.Source || ''}</div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Page</div><div class="excel-cell content-cell">${data.Page || ''}</div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Shaken/Stirred</div><div class="excel-cell content-cell">${data['Shaken/Stirred'] || ''}</div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Ice</div><div class="excel-cell content-cell">${data.Ice || ''}</div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Glass</div><div class="excel-cell content-cell">${data.Glass || ''}</div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Garnish</div><div class="excel-cell content-cell">${data.Garnish || ''}</div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Notes</div><div class="excel-cell content-cell">${data.Instructions || ''}</div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Servings</div><div class="excel-cell content-cell">${data.Servings || ''}</div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Base</div><div class="excel-cell content-cell">${data.Base || ''}</div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Family</div><div class="excel-cell content-cell">${data.Family || ''}</div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Link</div><div class="excel-cell content-cell"><a href="${data.Link || '#'}" target="_blank">${data.Link || ''}</a></div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Mixer</div><div class="excel-cell content-cell">${data.Mixer || ''}</div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Color</div><div class="excel-cell content-cell">${data.Color || ''}</div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Characteristics</div><div class="excel-cell content-cell">${data.Characteristics || ''}</div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Adaptation of</div><div class="excel-cell content-cell">${data['Adaptation of'] || ''}</div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Variations</div><div class="excel-cell content-cell">${data.Variations || ''}</div></div>
+
+                            <div class="mt-3">
+                                <strong>Ingredients</strong>
+                                <table class="ingredient-table">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Ingredient</th>
+                                            <th>Volume Oz</th>
+                                            <th>% Vol</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    `;
+                    $('#recipe_details').html(detailsHtml);
+                    renderIngredientsTable(data);
+                    if (data.stars_out_of_3) $('#stars-select').val(data.stars_out_of_3);
+                    updateRateDrinkSection();
+                }
+            }
+        });
+    }
+}
+
+function renderIngredientsTable(data) {
+    var ingredients = (data.Ingredients || '').split(';').filter(Boolean).map(function(ingredient) {
+        var parts = ingredient.split(':');
+        var name = parts[0] ? parts[0].trim() : '';
+        var volumeStr = parts.length === 2 ? parts[1].trim() : '';
+        var parsed = parseVolume(volumeStr);
+        return { name: name, volume: parsed.display, numericVolume: parsed.numeric };
+    });
+
+    ingredients.sort(function(a, b) {
+        return b.numericVolume - a.numericVolume || (a.volume < b.volume ? -1 : 1);
+    });
+
+    var totalVolume = ingredients.reduce(function(sum, ingredient) {
+        return sum + (isNaN(ingredient.numericVolume) ? 0 : ingredient.numericVolume);
+    }, 0);
+
+    var tbodyHtml = '';
+    ingredients.forEach(function(ingredient, index) {
+        var percentVol = (ingredient.numericVolume && totalVolume > 0) 
+            ? (ingredient.numericVolume / totalVolume * 100).toFixed(2) 
+            : '';
+        var colorStyle = percentVol ? `background-color: ${getColor(parseFloat(percentVol), 0, 100)};` : '';
+        tbodyHtml += `
+            <tr>
+                <td>${index + 1}</td>
+                <td style="word-break: break-word; white-space: normal;">${ingredient.name}</td>
+                <td class="text-end">${ingredient.volume}</td>
+                <td class="text-end" style="${colorStyle}">${percentVol ? percentVol + '%' : ''}</td>
+            </tr>`;
+    });
+
+    tbodyHtml += `
+        <tr>
+            <td></td>
+            <td><strong>Total</strong></td>
+            <td class="text-end"><strong>${totalVolume.toFixed(2)}</strong></td>
+            <td class="text-end"><strong>100.00%</strong></td>
+        </tr>`;
+
+    $('#recipe_details .ingredient-table tbody').html(tbodyHtml);
+}
