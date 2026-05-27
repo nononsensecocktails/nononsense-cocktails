@@ -73,7 +73,16 @@ $usernames = getUsernames($conn);
             .card-header { background: #2d2d2d; }
         }
 
-        /* Metadata - already good */
+        /* ==================== FILTER ROWS - MUST STAY HORIZONTAL ==================== */
+        .search-boxes .excel-row {
+            display: flex;
+            gap: 2px;
+            margin-bottom: 2px;
+            flex-wrap: nowrap !important;   /* critical - prevents wrapping */
+            align-items: center;
+        }
+
+        /* ==================== METADATA - TIGHT LABEL + VALUE ==================== */
         #recipe_details .excel-row {
             margin-bottom: 1px;
             border-bottom: 1px solid #e5e5e5;
@@ -97,7 +106,7 @@ $usernames = getUsernames($conn);
             padding-left: 2px;
         }
 
-        /* ==================== TIGHT INGREDIENTS TABLE ==================== */
+        /* ==================== INGREDIENTS TABLE - VERY TIGHT COLUMNS ==================== */
         .ingredient-table {
             width: 100%;
             border-collapse: collapse;
@@ -125,33 +134,19 @@ $usernames = getUsernames($conn);
             .ingredient-table th { background: #2d2d2d; }
         }
 
-        .ingredient-table th:nth-child(1),
-        .ingredient-table td:nth-child(1) { width: 28px; text-align: left; }   /* # */
-
-        .ingredient-table th:nth-child(2),
-        .ingredient-table td:nth-child(2) { text-align: left; }                /* Ingredient */
-
-        .ingredient-table th:nth-child(3),
-        .ingredient-table td:nth-child(3) { width: 85px; text-align: right; }  /* Volume Oz */
-
-        .ingredient-table th:nth-child(4),
-        .ingredient-table td:nth-child(4) { width: 70px; text-align: center; } /* % Vol */
+        .ingredient-table th:nth-child(1), .ingredient-table td:nth-child(1) { width: 28px; text-align: left; }     /* # */
+        .ingredient-table th:nth-child(2), .ingredient-table td:nth-child(2) { text-align: left; padding-right: 4px; } /* Ingredient */
+        .ingredient-table th:nth-child(3), .ingredient-table td:nth-child(3) { width: 85px; text-align: right; }     /* Volume Oz */
+        .ingredient-table th:nth-child(4), .ingredient-table td:nth-child(4) { width: 70px; text-align: center; }    /* % Vol */
 
         /* Header buttons & dropdowns */
-        .btn {
-            padding: 3px 9px;
-            font-size: 0.82rem;
-        }
-        .header-user {
-            min-width: 190px;
-        }
-        .term-select, .value-input {
-            min-width: 220px !important;
-        }
+        .btn { padding: 3px 9px; font-size: 0.82rem; }
+        .header-user { min-width: 190px; }
+        .term-select, .value-input { min-width: 220px !important; }
     </style>
 </head>
 <body>
-    <!-- Header (unchanged) -->
+    <!-- Header -->
     <nav class="navbar navbar-dark">
         <div class="container-fluid d-flex align-items-center">
             <div class="d-flex align-items-center">
@@ -180,7 +175,7 @@ $usernames = getUsernames($conn);
     </nav>
 
     <div class="main-container">
-        <!-- Filters, Results, Recipe Details -->
+        <!-- Filters -->
         <div class="card">
             <div class="card-header">Filters</div>
             <div class="card-body">
@@ -232,6 +227,7 @@ $usernames = getUsernames($conn);
             </div>
         </div>
 
+        <!-- Results -->
         <div class="card">
             <div class="card-body">
                 <div class="results-row">
