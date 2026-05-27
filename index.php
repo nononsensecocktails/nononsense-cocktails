@@ -1,12 +1,10 @@
 <?php
 require_once 'db.php';
 require_once 'functions.php';
-
 $conn = getDBConnection();
 if (!$conn) {
     die('Database connection failed');
 }
-
 $usernames = getUsernames($conn);
 ?>
 <!DOCTYPE html>
@@ -15,32 +13,21 @@ $usernames = getUsernames($conn);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>No-Nonsense Cocktails</title>
-    
+   
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-
-<!-- === TAILWIND CDN (new) === -->
+    <!-- === TAILWIND CDN (new) === -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        // Tailwind CDN initialization (standard pattern)
         document.addEventListener('DOMContentLoaded', () => {
-            tailwind.config = {
-                content: [],
-                theme: {
-                    extend: {
-                        // We can add custom colors/fonts later to perfectly match the teal #008080 theme
-                    }
-                }
-            };
+            tailwind.config = { content: [], theme: { extend: {} } };
         });
     </script>
-
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    
+   
     <style>
         :root { --accent: #e76f51; }
         @media (prefers-color-scheme: dark) { :root { --accent: #f4a261; } }
-
         body {
             background: #f8f1e3;
             font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -52,45 +39,38 @@ $usernames = getUsernames($conn);
         @media (prefers-color-scheme: dark) {
             body { background: #1e1e1e; color: #e0e0e0; }
         }
-
         .main-container {
             min-width: 1280px;
             margin: 2px auto;
-            padding: 0 4px;
+            padding: 0 2px;
             overflow-x: auto;
         }
-
         .navbar {
             background: #2a2a2a;
             color: white;
-            padding: 3px 8px;
+            padding: 2px 6px;
             font-size: 0.9rem;
         }
-
         .card {
             border: 1px solid #ccc;
             border-radius: 0;
             box-shadow: none;
             margin-bottom: 3px;
         }
-
         .card-body {
-            padding: 2px 4px;
-        }
-
-        .card-header {
             padding: 3px 6px;
+        }
+        .card-header {
+            padding: 2px 6px;
             font-weight: 600;
             background: #f0f0f0;
             font-size: 0.9rem;
         }
-
         @media (prefers-color-scheme: dark) {
             .card { border-color: #555; }
             .card-header { background: #2d2d2d; }
         }
-
-        /* FILTERS - stay horizontal */
+        /* FILTERS - stay horizontal + ultra-tight */
         .search-boxes .excel-row {
             display: flex !important;
             gap: 2px;
@@ -98,7 +78,9 @@ $usernames = getUsernames($conn);
             flex-wrap: nowrap !important;
             align-items: center;
         }
-
+        .excel-cell {
+            padding: 2px 4px !important;
+        }
         /* METADATA - tight label + value side-by-side */
         #recipe_details .excel-row {
             margin-bottom: 1px;
@@ -108,7 +90,6 @@ $usernames = getUsernames($conn);
         @media (prefers-color-scheme: dark) {
             #recipe_details .excel-row { border-color: #444; }
         }
-
         #recipe_details .label-cell {
             font-weight: 600;
             width: 145px;
@@ -117,52 +98,45 @@ $usernames = getUsernames($conn);
             text-align: left;
             white-space: nowrap;
         }
-
         #recipe_details .content-cell {
             flex: 1;
             padding-left: 2px;
         }
-
-        /* ==================== INGREDIENTS TABLE - TIGHTER GAP ==================== */
+        /* ==================== INGREDIENTS TABLE - MAXIMUM TIGHTNESS ==================== */
         .ingredient-table {
             width: 100%;
             border-collapse: collapse;
             font-size: 0.82rem;
-            margin-top: 4px;
-            margin-bottom: 8px;
+            margin-top: 2px;
+            margin-bottom: 4px;
         }
-
         .ingredient-table th,
         .ingredient-table td {
             border: 1px solid #ccc;
-            padding: 2px 4px;
+            padding: 1px 3px !important;
             vertical-align: middle;
         }
-
         .ingredient-table th {
             background: #f0f0f0;
             font-weight: 600;
         }
-
         @media (prefers-color-scheme: dark) {
             .ingredient-table { border-color: #555; }
             .ingredient-table th,
             .ingredient-table td { border-color: #555; }
             .ingredient-table th { background: #2d2d2d; }
         }
-
         .ingredient-table th:nth-child(1), .ingredient-table td:nth-child(1) { width: 28px; text-align: left; }
         .ingredient-table th:nth-child(2), .ingredient-table td:nth-child(2) { 
             text-align: left; 
-            padding-right: 2px;     /* tightened even further */
+            padding-right: 2px;
         }
-        .ingredient-table th:nth-child(3), .ingredient-table td:nth-child(3) { width: 85px; text-align: right; }
-        .ingredient-table th:nth-child(4), .ingredient-table td:nth-child(4) { width: 70px; text-align: center; }
+        .ingredient-table th:nth-child(3), .ingredient-table td:nth-child(3) { width: 78px; text-align: right; }
+        .ingredient-table th:nth-child(4), .ingredient-table td:nth-child(4) { width: 65px; text-align: center; }
 
-        /* Header / dropdowns */
-        .btn { padding: 3px 9px; font-size: 0.82rem; }
-        .header-user { min-width: 190px; }
+        .btn { padding: 2px 8px; font-size: 0.82rem; }
         .term-select, .value-input { min-width: 220px !important; }
+        #recipe_details .card-body { padding: 4px 6px !important; }
     </style>
 </head>
 <body>
@@ -173,7 +147,6 @@ $usernames = getUsernames($conn);
                 <img src="images/Coldberry_01_TM.jpg" alt="Logo" style="height: 36px;" class="me-2">
                 <h1 class="h5 mb-0 text-white">No-Nonsense Cocktails</h1>
             </div>
-
             <div class="ms-auto d-flex align-items-center gap-2">
                 <button id="reset-button" class="btn btn-outline-light">Reset</button>
                 <button id="copy-permalink" class="btn btn-outline-light">Share Link</button>
@@ -250,11 +223,11 @@ $usernames = getUsernames($conn);
         <!-- Results -->
         <div class="card">
             <div class="card-body">
-                <div class="results-row">
+                <div class="results-row d-flex align-items-center">
                     <strong>Possible Cocktails:</strong>
                     <span id="name-count" class="badge bg-primary ms-1">0</span>
                     <select id="name-select" class="form-select flex-grow-1 mx-2"></select>
-                    
+                   
                     <strong class="ms-2">Sources:</strong>
                     <span id="source-count" class="badge bg-primary ms-1">0</span>
                     <select id="source-select" class="form-select flex-grow-1 mx-2"></select>
