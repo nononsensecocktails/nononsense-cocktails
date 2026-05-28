@@ -69,7 +69,7 @@ $usernames = getUsernames($conn);
             .card { border-color: #555; }
             .card-header { background: #2d2d2d; }
         }
-        /* FILTERS */
+        /* FILTERS - all 4 dropdowns identical */
         .search-boxes .excel-row {
             display: flex !important;
             gap: 2px;
@@ -80,13 +80,24 @@ $usernames = getUsernames($conn);
         .excel-cell {
             padding: 2px 4px !important;
         }
+        /* This rule forces Step 1 and Step 2 to look exactly like Step 3 and Step 4 */
+        .term-select, .operator-select, .logic-select {
+            border: 1px solid #ccc !important;
+            background-color: #ffffff !important;
+            font-size: 0.85rem !important;
+            padding: 4px 8px !important;
+            height: auto !important;
+        }
+        .value-input {
+            border: 1px solid #ccc;
+        }
         /* METADATA - ABSOLUTE MINIMUM PADDING */
         #recipe_details .excel-row {
             display: flex !important;
             margin-bottom: 1px;
             border-bottom: 1px solid #e5e5e5;
-            padding: 0;           /* absolute minimum */
-            line-height: 1;       /* absolute minimum */
+            padding: 0;
+            line-height: 1;
         }
         @media (prefers-color-scheme: dark) {
             #recipe_details .excel-row { border-color: #444; }
@@ -104,7 +115,7 @@ $usernames = getUsernames($conn);
             padding-left: 4px;
             min-width: 0;
         }
-        /* INGREDIENTS TABLE - fixed widths */
+        /* INGREDIENTS TABLE */
         .ingredient-table {
             width: 520px;
             border-collapse: collapse;
@@ -131,7 +142,7 @@ $usernames = getUsernames($conn);
         }
         .ingredient-table th:nth-child(1), .ingredient-table td:nth-child(1) { width: 28px; text-align: left; }
         .ingredient-table th:nth-child(2), .ingredient-table td:nth-child(2) { 
-            width: 170px;           /* exactly as requested */
+            width: 170px;
             text-align: left; 
             padding-right: 4px;
             word-break: break-word;
@@ -147,7 +158,9 @@ $usernames = getUsernames($conn);
             text-align: right;
         }
         .btn { padding: 2px 8px; font-size: 0.82rem; }
-        .term-select, .value-input { min-width: 220px !important; }
+        #user-select {
+            font-size: 0.82rem;
+        }
         #recipe_details .card-body { padding: 4px 6px !important; }
     </style>
 </head>
@@ -182,7 +195,6 @@ $usernames = getUsernames($conn);
     <div class="main-container">
         <!-- Filters -->
         <div class="card">
-            <div class="card-header">Filters</div>
             <div class="card-body">
                 <div class="search-boxes">
                     <div class="excel-row">
@@ -238,11 +250,11 @@ $usernames = getUsernames($conn);
                 <div class="results-row d-flex align-items-center">
                     <strong>Possible Cocktails:</strong>
                     <span id="name-count" class="badge bg-primary ms-1">0</span>
-                    <select id="name-select" class="form-select flex-grow-1 mx-2"></select>
+                    <select id="name-select" class="form-select mx-1" style="max-width: 260px;"></select>
                    
                     <strong class="ms-2">Sources:</strong>
                     <span id="source-count" class="badge bg-primary ms-1">0</span>
-                    <select id="source-select" class="form-select flex-grow-1 mx-2"></select>
+                    <select id="source-select" class="form-select mx-1" style="max-width: 260px;"></select>
                 </div>
             </div>
         </div>
