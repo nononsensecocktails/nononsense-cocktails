@@ -69,7 +69,7 @@ $usernames = getUsernames($conn);
             .card { border-color: #555; }
             .card-header { background: #2d2d2d; }
         }
-        /* FILTERS - all 4 dropdowns identical */
+        /* FILTERS - all dropdowns identical */
         .search-boxes .excel-row {
             display: flex !important;
             gap: 2px;
@@ -80,13 +80,14 @@ $usernames = getUsernames($conn);
         .excel-cell {
             padding: 2px 4px !important;
         }
-        /* This rule forces Step 1 and Step 2 to look exactly like Step 3 and Step 4 */
+        /* Force Step 1 and Step 2 to look exactly like Step 3 and Step 4 */
         .term-select, .operator-select, .logic-select {
             border: 1px solid #ccc !important;
             background-color: #ffffff !important;
             font-size: 0.85rem !important;
             padding: 4px 8px !important;
             height: auto !important;
+            border-radius: 4px !important;   /* rounded corners */
         }
         .value-input {
             border: 1px solid #ccc;
