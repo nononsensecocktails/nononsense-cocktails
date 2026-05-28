@@ -34,21 +34,29 @@ $usernames = getUsernames($conn);
             line-height: 1.2;
             margin: 0;
             padding: 0;
+	    overflow-x: hidden;
         }
         @media (prefers-color-scheme: dark) {
             body { background: #1e1e1e; color: #e0e0e0; }
         }
+        /* MAIN CONTAINER - 800px left-aligned + no horizontal scrollbar */
         .main-container {
-            min-width: 1280px;
-            margin: 2px auto;
-            padding: 0 2px;
-            overflow-x: auto;
+            width: 800px !important;
+            max-width: 800px !important;
+            min-width: 800px !important;
+            margin: 2px 0 2px 0px !important;
+            padding: 0;
+            overflow-x: hidden;
         }
+        /* NAVBAR - 800px left-aligned (removes black spillover on the right) */
         .navbar {
             background: #2a2a2a;
             color: white;
             padding: 2px 6px;
             font-size: 0.9rem;
+            width: 800px !important;
+            max-width: 800px !important;
+            margin: 0 0 0 0px !important;
         }
         .card {
             border: 1px solid #ccc;
@@ -116,6 +124,123 @@ $usernames = getUsernames($conn);
             padding-left: 4px;
             min-width: 0;
         }
+
+/* STATIC FIXED WIDTH FOR ENTIRE METADATA SECTION - LEFT ALIGNED */
+        #recipe_details {
+            width: 800px !important;
+            max-width: 800px !important;
+            margin: 0 0 0 0px !important;   /* left-aligned with tiny page padding */
+            border: 1px solid #ccc;
+            background-color: #ffffff;
+        }
+        @media (prefers-color-scheme: dark) {
+            #recipe_details {
+                border-color: #555;
+                background-color: #2a2a2a;
+            }
+        }
+/* NAVBAR / HEADER WITH 4 BUTTONS - match metadata 800px left-aligned */
+        .navbar .container-fluid {
+            width: 800px !important;
+            max-width: 800px !important;
+            margin: 0 0 0 0px !important;
+        }
+/* FILTERS CARD (the two rows with Step dropdowns) - match 800px left-aligned */
+        .main-container > .card:first-of-type {
+            width: 800px !important;
+            max-width: 800px !important;
+            margin: 0 0 0 0px !important;
+        }
+
+        /* DARK MODE - Full text visibility for metadata + ingredients (fixes black text) */
+        @media (prefers-color-scheme: dark) {
+            #recipe_details,
+            #recipe_details .label-cell,
+            #recipe_details .content-cell,
+            #recipe_details .card-body,
+            #recipe_details *,
+            .ingredient-table,
+            .ingredient-table th,
+            .ingredient-table td {
+                color: #e0e0e0 !important;
+            }
+            #recipe_details {
+                background-color: #2a2a2a !important;
+            }
+            .ingredient-table th {
+                background: #2d2d2d !important;
+            }
+            /* Optional: slightly lighter table rows in dark mode */
+            .ingredient-table tr:nth-child(even) {
+                background-color: #252525 !important;
+            }
+        }
+
+        /* DARK MODE - Filter section (STEP dropdowns + Possible Cocktails / Sources row) */
+        @media (prefers-color-scheme: dark) {
+            .main-container > .card:first-of-type,
+            .main-container > .card:first-of-type .card-body,
+            .search-boxes,
+            .search-boxes .excel-row,
+            .search-boxes .excel-cell,
+            #name-source-row,
+            #name-source-row .card,
+            #name-source-row .card-body {
+                background-color: #2a2a2a !important;
+                color: #e0e0e0 !important;
+                border-color: #555 !important;
+            }
+            
+            .main-container > .card:first-of-type {
+                border: 1px solid #555 !important;
+            }
+            
+            /* Make the actual dropdowns and inputs inside the filter rows dark too */
+            .term-select,
+            .operator-select,
+            .logic-select,
+            .value-input,
+            .excel-cell select,
+            .excel-cell input {
+                background-color: #3a3a3a !important;
+                border-color: #666 !important;
+                color: #e0e0e0 !important;
+            }
+        }
+
+        /* DARK MODE - Second filter row (Possible Cocktails + Sources) - ULTRA STRONG OVERRIDE */
+        @media (prefers-color-scheme: dark) {
+            #name-source-row,
+            #name-source-row.card,
+            #name-source-row .card,
+            #name-source-row > .card,
+            #name-source-row .card-body,
+            #name-source-row .excel-row,
+            #name-source-row .excel-cell,
+            #name-source-row * {
+                background-color: #2a2a2a !important;
+                color: #e0e0e0 !important;
+                border-color: #555 !important;
+            }
+            
+            /* Dropdowns and inputs inside the second row */
+            #name-select,
+            #source-select,
+            #name-source-row select,
+            #name-source-row .form-select,
+            #name-source-row input {
+                background-color: #3a3a3a !important;
+                border-color: #666 !important;
+                color: #e0e0e0 !important;
+            }
+            
+            /* Count badges */
+            #name-source-row .badge {
+                color: #e0e0e0 !important;
+                background-color: #555 !important;
+            }
+        }
+
         /* INGREDIENTS TABLE */
         .ingredient-table {
             width: 520px;
@@ -163,35 +288,75 @@ $usernames = getUsernames($conn);
             font-size: 0.82rem;
         }
         #recipe_details .card-body { padding: 4px 6px !important; }
+
+        /* DARK MODE - Second filter row (Possible Cocktails + Sources) - FINAL STRONG OVERRIDE */
+        @media (prefers-color-scheme: dark) {
+            #name-source-row,
+            #name-source-row.card,
+            #name-source-row > .card,
+            #name-source-row .card,
+            #name-source-row .card-body,
+            #name-source-row .excel-row,
+            #name-source-row .excel-cell,
+            #name-source-row * {
+                background-color: #2a2a2a !important;
+                color: #e0e0e0 !important;
+                border-color: #555 !important;
+            }
+
+            /* Dropdowns inside the second row */
+            #name-select,
+            #source-select,
+            #name-source-row select,
+            #name-source-row .form-select,
+            #name-source-row input {
+                background-color: #3a3a3a !important;
+                border-color: #666 !important;
+                color: #e0e0e0 !important;
+            }
+
+            /* Count badges */
+            #name-source-row .badge {
+                background-color: #555 !important;
+                color: #e0e0e0 !important;
+            }
+        }
+
     </style>
 </head>
 <body>
+
     <!-- Header -->
     <nav class="navbar navbar-dark">
         <div class="container-fluid d-flex align-items-center">
+            <!-- Left: Logo + Title -->
             <div class="d-flex align-items-center">
                 <img src="images/Coldberry_01_TM.jpg" alt="Logo" style="height: 36px;" class="me-2">
                 <h1 class="h5 mb-0 text-white">No-Nonsense Cocktails</h1>
             </div>
-            <div class="ms-auto d-flex align-items-center gap-2">
+            
+            <!-- Center: 4 Buttons (moved a little more right + tighter spacing) -->
+            <div class="d-flex align-items-center gap-1 mx-auto ms-12">
                 <button id="reset-button" class="btn btn-outline-light">Reset</button>
                 <button id="copy-permalink" class="btn btn-outline-light">Share Link</button>
                 <button id="lucky-button" class="btn btn-outline-light">I'm Feeling Lucky</button>
                 <button id="create-qr-code" class="btn btn-outline-light">QR Code</button>
-                
-                <div class="d-flex align-items-center ms-3">
-                    <strong class="me-1 text-white" style="font-size:0.82rem;">User:</strong>
-                    <select id="user-select" class="form-select">
-                        <option value="">Select...</option>
-                        <option value="All">All Users</option>
-                        <?php foreach ($usernames as $user): ?>
-                            <option value="<?php echo htmlspecialchars($user); ?>"><?php echo htmlspecialchars($user); ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
+            </div>
+            
+            <!-- Right: User Dropdown -->
+            <div class="d-flex align-items-center ms-3">
+                <strong class="me-1 text-white" style="font-size:0.82rem;">User:</strong>
+                <select id="user-select" class="form-select">
+                    <option value="">Select...</option>
+                    <option value="All">All Users</option>
+                    <?php foreach ($usernames as $user): ?>
+                        <option value="<?php echo htmlspecialchars($user); ?>"><?php echo htmlspecialchars($user); ?></option>
+                    <?php endforeach; ?>
+                </select>
             </div>
         </div>
     </nav>
+
 
     <div class="main-container">
         <!-- Filters -->
