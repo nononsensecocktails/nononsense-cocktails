@@ -79,22 +79,26 @@ function loadDistinctValues(term, filtersBefore) {
         });
     });
 }
-    function updateOperatorSelect($row, term) {
-        var $operatorCell = $row.find('.excel-cell:nth-child(2)');
-        var currentOperator = $operatorCell.find('.operator-select').val() || '=';
-        var $select = $('<select class="operator-select" name="operator[]"></select>');
-        if (numericOrDateFields.includes(term) || term === 'stars_out_of_3') {
-            $select.append('<option value="=">=</option>');
-            $select.append('<option value="<>">≠</option>');
-            $select.append('<option value=">=">>=</option>');
-            $select.append('<option value="<"><</option>');
-        } else {
-            $select.append('<option value="=">=</option>');
-            $select.append('<option value="<>">≠</option>');
-        }
-        $operatorCell.empty().append($select);
-        $select.val(currentOperator in $select.find('option').map(function() { return this.value; }).get() ? currentOperator : '=');
+
+function updateOperatorSelect($row, term) {
+    var $operatorCell = $row.find('.excel-cell:nth-child(2)');
+    var currentOperator = $operatorCell.find('.operator-select').val() || '=';
+    var $select = $('<select class="operator-select form-select" name="operator[]"></select>');
+
+    if (numericOrDateFields.includes(term) || term === 'stars_out_of_3') {
+        $select.append('<option value="=">=</option>');
+        $select.append('<option value="<>">≠</option>');
+        $select.append('<option value=">=">>=</option>');
+        $select.append('<option value="<"><</option>');
+    } else {
+        $select.append('<option value="=">=</option>');
+        $select.append('<option value="<>">≠</option>');
     }
+
+    $operatorCell.empty().append($select);
+    $select.val(currentOperator in $select.find('option').map(function() { return this.value; }).get() ? currentOperator : '=');
+}
+
     // NEW: Smart filter collection — skips same-term filters for parallel fields
     function getFiltersBeforeForDropdown($currentRow, currentTerm) {
         var filters = [];
@@ -769,8 +773,8 @@ function getColor(value, min, max) {
         };
         return colors[rating] || '#e0e0e0';
     }
-	
-		function updateRateDrinkSection() {
+
+    function updateRateDrinkSection() {
         var user = $('#user-select').val();
         if (user && user !== 'All') {
             $('#rate-drink-row select, #rate-drink-row input, #rate-drink-row button').prop('disabled', false);
@@ -1043,7 +1047,7 @@ function generateCurrentUrl() {
         updateLogicVisibility();
     });
 
-	
+
 function updateRecipeDetails() {
     var name = $('#name-select').val();
     var source = $('#source-select').val();
@@ -1155,5 +1159,6 @@ function renderIngredientsTable(data) {
 }
 
 
-	
+
+
 });
