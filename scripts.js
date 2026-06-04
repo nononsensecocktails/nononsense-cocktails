@@ -774,14 +774,14 @@ function getColor(value, min, max) {
         return colors[rating] || '#e0e0e0';
     }
 
-    function updateRateDrinkSection() {
-        var user = $('#user-select').val();
-        if (user && user !== 'All') {
-            $('#rate-drink-row select, #rate-drink-row input, #rate-drink-row button').prop('disabled', false);
-        } else {
-            $('#rate-drink-row select, #rate-drink-row input, #rate-drink-row button').prop('disabled', true);
-        }
+function updateRateDrinkSection() {
+    var user = $('#user-select').val();
+    if (user && user !== 'All') {
+        $('#stars-select, #last-date-input, #save-rating').prop('disabled', false);
+    } else {
+        $('#stars-select, #last-date-input, #save-rating').prop('disabled', true);
     }
+}
     function updateRatingDisplay(stars, last_date) {
         var ratingBgColor = getRatingColor(stars);
 	var formattedStars = stars ? parseFloat(stars).toFixed(4).replace(/\.?0+$/, '') : 'Not rated';
@@ -1048,7 +1048,7 @@ function generateCurrentUrl() {
     });
 
 
-function updateRecipeDetails() {
+function 	() {
     var name = $('#name-select').val();
     var source = $('#source-select').val();
     var user = $('#user-select').val();
@@ -1064,14 +1064,20 @@ function updateRecipeDetails() {
                     var detailsHtml = `
                         <div class="card-body">
                             <div class="excel-row"><div class="excel-cell label-cell">Name</div><div class="excel-cell content-cell"><strong>${data.Name || ''}</strong></div></div>
-                            <div class="excel-row"><div class="excel-cell label-cell">Stars Out of 3</div><div class="excel-cell content-cell" id="stars-display">${data.stars_out_of_3 ? (() => { const num = parseFloat(data.stars_out_of_3); let str = num.toFixed(4); const [intPart, decPart] = str.split('.'); let trimmed = decPart.replace(/0+$/, ''); if (trimmed.length === 0) trimmed = '00'; else if (trimmed.length === 1) trimmed += '0'; return intPart + '.' + trimmed; })() : 'Not rated'}</div></div>
-			    <div class="excel-row"><div class="excel-cell label-cell">Last Date</div><div class="excel-cell content-cell" id="last-date-display">${data.last_date || 'Not set'}</div></div>
-                            <div class="excel-row" id="rate-drink-row">
-                                <div class="excel-cell">Rate this Drink:</div>
-                                <div class="excel-cell"><select id="stars-select"><option value="">Select Stars</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="TBD">TBD</option><option value="Next">Next</option><option value="Revisit">Revisit</option></select></div>
-                                <div class="excel-cell"><input type="date" id="last-date-input" value="${today}"></div>
-                                <div class="excel-cell"><button id="save-rating" class="btn btn-success btn-sm">Save Rating</button></div>
-                            </div>
+
+				<div class="excel-row">
+				    <div class="excel-cell label-cell">Stars Out of 3</div>
+				    <div class="excel-cell content-cell" id="stars-display">${data.stars_out_of_3 ? (() => { const num = parseFloat(data.stars_out_of_3); let str = num.toFixed(4); const [intPart, decPart] = str.split('.'); let trimmed = decPart.replace(/0+$/, ''); if (trimmed.length === 0) trimmed = '00'; else if (trimmed.length === 1) trimmed += '0'; return intPart + '.' + trimmed; })() : 'Not rated'}</div>
+				    <div class="excel-cell label-cell">Rate this Drink:</div>
+				    <div class="excel-cell"><select id="stars-select"><option value="">Select Stars</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="TBD">TBD</option><option value="Next">Next</option><option value="Revisit">Revisit</option></select></div>
+				</div>
+				<div class="excel-row">
+				    <div class="excel-cell label-cell">Last Date</div>
+				    <div class="excel-cell content-cell" id="last-date-display">${data.last_date || 'Not set'}</div>
+				    <div class="excel-cell"><input type="date" id="last-date-input" value="${today}"></div>
+				    <div class="excel-cell"><button id="save-rating" class="btn btn-success btn-sm">Save Rating</button></div>
+				</div>
+
                             <div class="excel-row"><div class="excel-cell label-cell">Source</div><div class="excel-cell content-cell">${data.Source || ''}</div></div>
                             <div class="excel-row"><div class="excel-cell label-cell">Page</div><div class="excel-cell content-cell">${data.Page || ''}</div></div>
                             <div class="excel-row"><div class="excel-cell label-cell">Shaken/Stirred</div><div class="excel-cell content-cell">${data['Shaken/Stirred'] || ''}</div></div>
