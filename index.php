@@ -44,7 +44,7 @@ $usernames = getUsernames($conn);
             width: 800px !important;
             max-width: 800px !important;
             min-width: 800px !important;
-            margin: 2px 0 2px 0px !important;
+            margin: 2px auto 2px auto !important;
             padding: 0;
             overflow-x: hidden;
         }
@@ -56,7 +56,7 @@ $usernames = getUsernames($conn);
             font-size: 0.9rem;
             width: 800px !important;
             max-width: 800px !important;
-            margin: 0 0 0 0px !important;
+            margin: 0 auto !important;
         }
         .card {
             border: 1px solid #ccc;
@@ -129,7 +129,7 @@ $usernames = getUsernames($conn);
         #recipe_details {
             width: 800px !important;
             max-width: 800px !important;
-            margin: 0 0 0 0px !important;   /* left-aligned with tiny page padding */
+            margin: 0 auto !important;   /* left-aligned with tiny page padding */
             border: 1px solid #ccc;
             background-color: #ffffff;
         }
@@ -143,13 +143,13 @@ $usernames = getUsernames($conn);
         .navbar .container-fluid {
             width: 800px !important;
             max-width: 800px !important;
-            margin: 0 0 0 0px !important;
+            margin: 0 auto !important;
         }
 /* FILTERS CARD (the two rows with Step dropdowns) - match 800px left-aligned */
         .main-container > .card:first-of-type {
             width: 800px !important;
             max-width: 800px !important;
-            margin: 0 0 0 0px !important;
+            margin: 0 auto !important;
         }
 
         /* DARK MODE - Full text visibility for metadata + ingredients (fixes black text) */
@@ -435,5 +435,6 @@ $usernames = getUsernames($conn);
     </div>
 
     <script src="scripts.js"></script>
+<?php require_once 'footer.php'; ?>
 </body>
 </html>
