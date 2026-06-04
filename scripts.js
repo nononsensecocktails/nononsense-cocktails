@@ -784,8 +784,8 @@ function getColor(value, min, max) {
     }
     function updateRatingDisplay(stars, last_date) {
         var ratingBgColor = getRatingColor(stars);
-        $('#stars-display').html('<span style="background-color:' + ratingBgColor + '; color: #000000;">' + (stars || 'Not rated') + '</span>');
-        $('#last-date-display').text(last_date || 'Not set');
+	var formattedStars = stars ? parseFloat(stars).toFixed(4).replace(/\.?0+$/, '') : 'Not rated';
+	$('#stars-display').html('<span style="background-color:' + ratingBgColor + '; color: #000000;">' + (stars ? (() => { const num = parseFloat(stars); let str = num.toFixed(4); const [intPart, decPart] = str.split('.'); let trimmed = decPart.replace(/0+$/, ''); if (trimmed.length === 0) trimmed = '00'; else if (trimmed.length === 1) trimmed += '0'; return intPart + '.' + trimmed; })() : 'Not rated') + '</span>');        $('#last-date-display').text(last_date || 'Not set');
         $('#stars-select').val(stars || '');
         $('#last-date-input').val(new Date().toISOString().split('T')[0]);
     }
@@ -1064,8 +1064,8 @@ function updateRecipeDetails() {
                     var detailsHtml = `
                         <div class="card-body">
                             <div class="excel-row"><div class="excel-cell label-cell">Name</div><div class="excel-cell content-cell"><strong>${data.Name || ''}</strong></div></div>
-                            <div class="excel-row"><div class="excel-cell label-cell">Stars Out of 3</div><div class="excel-cell content-cell" id="stars-display">${data.stars_out_of_3 || 'Not rated'}</div></div>
-                            <div class="excel-row"><div class="excel-cell label-cell">Last Date</div><div class="excel-cell content-cell" id="last-date-display">${data.last_date || 'Not set'}</div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Stars Out of 3</div><div class="excel-cell content-cell" id="stars-display">${data.stars_out_of_3 ? (() => { const num = parseFloat(data.stars_out_of_3); let str = num.toFixed(4); const [intPart, decPart] = str.split('.'); let trimmed = decPart.replace(/0+$/, ''); if (trimmed.length === 0) trimmed = '00'; else if (trimmed.length === 1) trimmed += '0'; return intPart + '.' + trimmed; })() : 'Not rated'}</div></div>
+			    <div class="excel-row"><div class="excel-cell label-cell">Last Date</div><div class="excel-cell content-cell" id="last-date-display">${data.last_date || 'Not set'}</div></div>
                             <div class="excel-row" id="rate-drink-row">
                                 <div class="excel-cell">Rate this Drink:</div>
                                 <div class="excel-cell"><select id="stars-select"><option value="">Select Stars</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="TBD">TBD</option><option value="Next">Next</option><option value="Revisit">Revisit</option></select></div>
