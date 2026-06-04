@@ -1048,7 +1048,7 @@ function generateCurrentUrl() {
     });
 
 
-function 	() {
+function updateRecipeDetails() {
     var name = $('#name-select').val();
     var source = $('#source-select').val();
     var user = $('#user-select').val();
