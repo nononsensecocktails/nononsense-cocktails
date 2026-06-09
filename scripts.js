@@ -10,6 +10,11 @@ $(document).ready(function() {
     const allowAndFields = ['ingredients', 'characteristics', 'garnish', 'instructions'];
     let unitConversions = {};
     let pendingFilterChange = false;
+
+// NEW: State for the Ingredients Order dropdown
+    let currentRecipeData = null;
+    let ingredientsOrder = 'Recipe';
+
     function loadUnitConversions(callback) {
         $.ajax({
             url: 'filter.php',
@@ -982,6 +987,14 @@ $('#user-select').on('change', function() {
 
     $('#name-select').on('change', updateSources);
     $('#source-select').on('change', updateRecipeDetails);
+// NEW: Re-sort ingredients immediately when the user changes the Ingredients Order dropdown
+$(document).on('change', '#ingredients-order-select', function () {
+    ingredientsOrder = $(this).val();
+    if (currentRecipeData) {
+        renderIngredientsTable(currentRecipeData);
+    }
+});
+
     $('#lucky-button').on('click', loadRandomRecipe);
     $('#reset-button').on('click', function() {
         resetFilters();
@@ -1060,6 +1073,7 @@ function updateRecipeDetails() {
             dataType: 'json',
             success: function(data) {
                 if (data && typeof data === 'object') {
+		currentRecipeData = data;           // Store so the sort dropdown can re-use it
                     var today = new Date().toISOString().split('T')[0];
                     var detailsHtml = `
                         <div class="card-body">
@@ -1121,6 +1135,7 @@ function updateRecipeDetails() {
     }
 }
 
+
 function renderIngredientsTable(data) {
     var ingredients = (data.Ingredients || '').split(';').filter(Boolean).map(function(ingredient) {
         var parts = ingredient.split(':');
@@ -1130,9 +1145,29 @@ function renderIngredientsTable(data) {
         return { name: name, volume: parsed.display, numericVolume: parsed.numeric };
     });
 
-    ingredients.sort(function(a, b) {
-        return b.numericVolume - a.numericVolume || (a.volume < b.volume ? -1 : 1);
-    });
+    // Apply sort order chosen in the Ingredients Order dropdown
+    if (ingredientsOrder === 'Vol Desc') {
+        ingredients.sort(function(a, b) {
+            return b.numericVolume - a.numericVolume || (a.volume < b.volume ? -1 : 1);
+        });
+    } else if (ingredientsOrder === 'Vol Asc') {
+        ingredients.sort(function(a, b) {
+            return a.numericVolume - b.numericVolume || (a.volume < b.volume ? -1 : 1);
+        });
+    } else if (ingredientsOrder === 'Alpha Asc') {
+        ingredients.sort(function(a, b) {
+            return a.name.localeCompare(b.name);
+        });
+    } else if (ingredientsOrder === 'Alpha Desc') {
+        ingredients.sort(function(a, b) {
+            return b.name.localeCompare(a.name);
+        });
+    } else if (ingredientsOrder === 'Cost Asc' || ingredientsOrder === 'Cost Desc') {
+        // Cost-based sorting not yet implemented.
+        // For now we keep the original recipe order.
+        // TODO: implement when ingredient cost data is available.
+    }
+    // 'Recipe' (default) and Cost options → keep original data order (no sort)
 
     var totalVolume = ingredients.reduce(function(sum, ingredient) {
         return sum + (isNaN(ingredient.numericVolume) ? 0 : ingredient.numericVolume);
