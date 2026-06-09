@@ -362,6 +362,7 @@ $usernames = getUsernames($conn);
         <!-- Filters -->
         <div class="card">
             <div class="card-body">
+
                 <div class="search-boxes">
                     <div class="excel-row">
                         <div class="excel-cell term-select-cell">
@@ -397,6 +398,20 @@ $usernames = getUsernames($conn);
                         <div class="excel-cell">
                             <input type="text" class="value-input form-control" name="value[]" placeholder="STEP 2: Select or Type a Value">
                         </div>
+<!-- NEW: Ingredients Order dropdown (placed in the highlighted empty space) -->
+                <div class="excel-cell" style="min-width: 170px; flex: 0 0 auto; margin-left: 8px;">
+                    <div style="font-size: 0.75rem; color: #6c757d; margin-bottom: 1px;">Ingredients Order</div>
+                    <select id="ingredients-order-select" class="form-select form-select-sm">
+                        <option value="Recipe" selected>Recipe</option>
+                        <option value="Vol Asc">Vol Asc</option>
+                        <option value="Vol Desc">Vol Desc</option>
+                        <option value="Cost Asc">Cost Asc</option>
+                        <option value="Cost Desc">Cost Desc</option>
+                        <option value="Alpha Asc">Alpha Asc</option>
+                        <option value="Alpha Desc">Alpha Desc</option>
+                    </select>
+                </div>
+
                         <div class="excel-cell" style="flex: 0 0 32px;"><button class="add-box btn btn-sm btn-outline-secondary w-100">+</button></div>
                         <div class="excel-cell" style="flex: 0 0 32px;"><button class="remove-box btn btn-sm btn-outline-secondary w-100" style="display:none;">–</button></div>
                         <div class="excel-cell logic-cell" style="flex: 0 0 64px;">
