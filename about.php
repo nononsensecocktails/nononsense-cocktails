@@ -1,15 +1,26 @@
 <?php
 $page_title = "About";
 require_once 'header.php';
-?> 
+?>
+
+<style>
+    /* Better paragraph spacing on the About page */
+    .card-body p,
+    .excel-cell p {
+        margin: 14px 0;       /* Good breathing room between paragraphs */
+        line-height: 1.6;     /* Improved readability */
+    }
+</style>
+
+<div class="excel-container">
 
         <div class="card">
             <div class="card-header bg-dark text-white">
                 <strong>No-Nonsense Cocktails - About</strong>
             </div>
             <div class="card-body">
-                <p style="margin-bottom: 12px;">Hi I'm Jason. I like cocktails, but I love spreadsheets... and I have a terrible memory.</p>
-                <p style="margin-bottom: 12px;">That's how I thought this page would start, and I guess it did... but that's not how it ends.</p>
+                <p>Hi I'm Jason. I like cocktails, but I love spreadsheets... and I have a terrible memory.</p>
+                <p>That's how I thought this page would start, and I guess it did... but that's not how it ends.</p>
                 <p>Way back in 2020 during the global COVID pandemic I, like a lot of other people, had a bunch of free time on my hands. On April 12th I purchased a booked titled <a href="https://www.amazon.com/Drinking-French-Cocktails-Ap%C3%A9ritifs-Traditions/dp/1607749297">Drinking French by David Liebovitz</a> (I already owned all of David's other food cookbooks which are also great) and started making cocktails at home. At the time it was just something to pass the time at home. After that came <a href="https://www.amazon.com/Amaro-Spirited-Bittersweet-Liqueurs-Cocktails/dp/1607747480/">Amaro by Brad Parsons</a>, then <a href="https://www.amazon.com/Death-Co-Welcome-Home-Cocktail/dp/1984858416/">Death & Co by David Kaplan, Nick Fauchald, and Alex Day</a>... you get the idea. This was great for a while as I had plenty of time and a stock of post-it notes and page tabs. But as my liqueur closet began to grow, it was easier to make more and more cocktails, but a lot harder to find a recipe or figure out what I could make becuase I was missing a quarter once of that one niche bottle I hadn't yet picked up at Binny's. Around this time me and my "cocktail boyfriends" (as my wife likes to call them) who were also in the same boat had a lively text group where we traded recipes we found and it was clear we needed a way to organize all of this.</p>
                 <p>Most people hate spreadsheets, and that's fine, but I've been working in Excel my entire life and can write some formulas and VBA code that will make your head spin. I'm not good at much in this life, but I know I'm pretty good at organizing data and making it usable. It turns out cocktail recipes lend themselves really well to my skillset. Unlike food recipes, cocktails contain a limited number of standardized ingredients and preparation methods. Every avocado is slightly different, home ovens can vary by more than a handful of degrees even if they say they're at 425F, and some food recipes have dozens of ingredients and different preparation methods. But you know every bottle of even Green Chartreuse is within a hair's breath of being exactly like the last one, ice always turns to water at 32F (yes I know that's not technically correct), and even a novice can stir several different liquors in a mixing glass for 20 seconds. This is in no way downplaying the talent of professional bartenders but hopefully you see my point, concerning ingredients.</p>
                 <p>The one really fun thing about cocktails is that even though the ingredients are standardized, the naming conventions are definitely not. Besides possibly naming Manhattan riffs after NYC neighborhoods, really the sky is the limit and can be quite fun, comical, and interesting. In this way any old list of ingredients can quickly be turned into an inside joke, cultural touchstone, or random observation. Besides how a drink tastes I believe the name is really it's most defining characteristic.</p>
