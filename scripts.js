@@ -381,62 +381,88 @@ function updateValueInput($row, term, initialValue = '') {
             }
         });
     }
-    function resetFilters() {
-        $('.search-boxes').html(`
-            <div class="excel-row">
-                <div class="excel-cell term-select-cell">
-                    <select class="term-select" name="term[]">
-                        <option value="" selected>STEP 1: Select a Filter</option>
-                        <option value="All">All</option>
-                        <option value="adaption_of">Adaptation of</option>
-                        <option value="base">Base</option>
-                        <option value="characteristics">Characteristics</option>
-                        <option value="color">Color</option>
-                        <option value="family">Family</option>
-                        <option value="garnish">Garnish</option>
-                        <option value="glass">Glass</option>
-                        <option value="ice">Ice</option>
-                        <option value="ingredients">Ingredients</option>
-                        <option value="instructions">Instructions</option>
-                        <option value="last_date">Last Date</option>
-                        <option value="mixer">Mixer</option>
-                        <option value="name">Name</option>
-                        <option value="num_ingredients">Number of Ingredients</option>
-                        <option value="servings">Servings</option>
-                        <option value="shaken_stirred">Shaken/Stirred</option>
-                        <option value="source">Source</option>
-                        <option value="stars_out_of_3">Stars out of 3</option>
-                        <option value="variations">Variations</option>
-                    </select>
-                </div>
-                <div class="excel-cell">
-                    <select class="operator-select" name="operator[]">
-                        <option value="=" selected>=</option>
-                        <option value="<>">≠</option>
-                    </select>
-                </div>
-                <div class="excel-cell">
-                    <input type="text" class="value-input" name="value[]" placeholder="STEP 2: Select or Type a Value">
-                </div>
-                <div class="excel-cell button-cell">
-                    <button class="add-box">+</button>
-                </div>
-                <div class="excel-cell button-cell">
-                    <button class="remove-box" style="display:none;">-</button>
-                </div>
-                <div class="excel-cell logic-cell">
-                    <select class="logic-select" name="logic[]" style="display:none;">
-                        <option value="AND" selected>AND</option>
-                        <option value="OR">OR</option>
-                    </select>
-                </div>
+
+function resetFilters() {
+    $('.search-boxes').html(`
+        <div class="excel-row">
+            <div class="excel-cell term-select-cell">
+                <select class="term-select" name="term[]">
+                    <option value="" selected>STEP 1: Select a Filter</option>
+                    <option value="All">All</option>
+                    <option value="adaption_of">Adaptation of</option>
+                    <option value="base">Base</option>
+                    <option value="characteristics">Characteristics</option>
+                    <option value="color">Color</option>
+                    <option value="family">Family</option>
+                    <option value="garnish">Garnish</option>
+                    <option value="glass">Glass</option>
+                    <option value="ice">Ice</option>
+                    <option value="ingredients">Ingredients</option>
+                    <option value="instructions">Instructions</option>
+                    <option value="last_date">Last Date</option>
+                    <option value="mixer">Mixer</option>
+                    <option value="name">Name</option>
+                    <option value="num_ingredients">Number of Ingredients</option>
+                    <option value="servings">Servings</option>
+                    <option value="shaken_stirred">Shaken/Stirred</option>
+                    <option value="source">Source</option>
+                    <option value="stars_out_of_3">Stars out of 3</option>
+                    <option value="variations">Variations</option>
+                </select>
             </div>
-        `);
-        updateOperatorSelect($('.search-boxes .excel-row:first'), '');
-        updateValueInput($('.search-boxes .excel-row:first'), '');
-        updateLogicVisibility();
-        updateNames();
-    }
+            <div class="excel-cell">
+                <select class="operator-select" name="operator[]">
+                    <option value="=" selected>=</option>
+                    <option value="<>">≠</option>
+                </select>
+            </div>
+            <div class="excel-cell">
+                <input type="text" class="value-input" name="value[]" placeholder="STEP 2: Select or Type a Value">
+            </div>
+            <div class="excel-cell button-cell">
+                <button class="add-box">+</button>
+            </div>
+            <div class="excel-cell button-cell">
+                <button class="remove-box" style="display:none;">-</button>
+            </div>
+            <div class="excel-cell logic-cell">
+                <select class="logic-select" name="logic[]" style="display:none;">
+                    <option value="AND" selected>AND</option>
+                    <option value="OR">OR</option>
+                </select>
+            </div>
+
+            <!-- Ingredients Order dropdown - keep on far right after reset -->
+            <div class="excel-cell" style="min-width: 170px; flex: 0 0 auto; margin-left: auto;">
+                <div style="font-size: 0.75rem; color: #6c757d; margin-bottom: 1px;">Ingredients Order</div>
+                <select id="ingredients-order-select" class="form-select form-select-sm">
+                    <option value="Recipe" selected>Recipe</option>
+                    <option value="Vol Asc">Vol Asc</option>
+                    <option value="Vol Desc">Vol Desc</option>
+                    <option value="Cost Asc">Cost Asc</option>
+                    <option value="Cost Desc">Cost Desc</option>
+                    <option value="Alpha Asc">Alpha Asc</option>
+                    <option value="Alpha Desc">Alpha Desc</option>
+                </select>
+            </div>
+        </div>
+    `);
+
+    // Re-attach the change handler for the Ingredients Order dropdown after reset
+    // (this is needed because we rebuilt the HTML)
+    $('#ingredients-order-select').on('change', function () {
+        ingredientsOrder = $(this).val();
+        if (currentRecipeData) {
+            renderIngredientsTable(currentRecipeData);
+        }
+    });
+
+    updateOperatorSelect($('.search-boxes .excel-row:first'), '');
+    updateValueInput($('.search-boxes .excel-row:first'), '');
+    updateLogicVisibility();
+    updateNames();
+}
+
     $(document).on('click', '.add-box', function() {
         var newBox = $('.search-boxes .excel-row:first').clone(true);
         newBox.find('.value-input').val('');
@@ -996,14 +1022,19 @@ $(document).on('change', '#ingredients-order-select', function () {
 });
 
     $('#lucky-button').on('click', loadRandomRecipe);
-    $('#reset-button').on('click', function() {
-        resetFilters();
-        $('#name-select').html('<option value="">STEP 3: Select a Name</option>');
-        $('#source-select').html('<option value="">STEP 4: Select a Source</option>');
-        $('#name-count').text('');
-        $('#source-count').text('');
-        $('#recipe_details').empty();
-    });
+$('#reset-button').on('click', function() {
+    resetFilters();
+    $('#name-select').html('<option value="">STEP 3: Select a Name</option>');
+    $('#source-select').html('<option value="">STEP 4: Select a Source</option>');
+
+    // Refresh counts instead of clearing them (so they persist with correct totals)
+    loadTotalCocktails();
+
+    // Note: source-count will keep its previous value (or update naturally when a name is selected later)
+    // If you ever want to force-clear source-count after reset, add: $('#source-count').text('');
+
+    $('#recipe_details').empty();
+});
 
 function generateCurrentUrl() {
     const filters = getFilters();
@@ -1110,7 +1141,7 @@ function updateRecipeDetails() {
                             <div class="excel-row"><div class="excel-cell label-cell">Variations</div><div class="excel-cell content-cell">${data.Variations || ''}</div></div>
 
                             <div class="mt-3">
-                                <strong>Ingredients</strong>
+                                <!-- <strong>Ingredients</strong> -->
                                 <table class="ingredient-table">
                                     <thead>
                                         <tr>
