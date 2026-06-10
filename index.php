@@ -322,6 +322,36 @@ $usernames = getUsernames($conn);
             }
         }
 
+/* === Manual width control for the top filter row === */
+
+/* STEP 1 dropdown (the big "Select a Filter" box) */
+.term-select-cell {
+    flex: 0 0 175px;           /* Change this number to make it wider/narrower */
+}
+
+/* Operator dropdown (the small = / ≠ box) */
+.excel-cell:has(.operator-select) {
+    flex: 0 0 58px;            /* Change this to control the small operator width */
+}
+
+/* STEP 2 input box */
+.excel-cell:has(.value-input) {
+    flex: 0 0 200px;                   /* Use flex: 1 to let it grow, or use flex: 0 0 300px; for fixed width */
+}
+
+/* Optional: Make the actual form elements fill their container */
+.term-select,
+.operator-select,
+.value-input {
+    width: 100% !important;
+}
+
+/* Align Ingredients table with metadata values */
+#recipe_details .ingredient-table {
+    margin-left: 168px;     /* Adjust this number if needed */
+}
+
+
     </style>
 </head>
 <body>
@@ -365,6 +395,7 @@ $usernames = getUsernames($conn);
 
                 <div class="search-boxes">
                     <div class="excel-row">
+			<!-- STEP 1 -->
                         <div class="excel-cell term-select-cell">
                             <select class="term-select form-select" name="term[]">
                                 <option value="" selected>STEP 1: Select a Filter</option>
@@ -389,37 +420,46 @@ $usernames = getUsernames($conn);
                                 <option value="variations">Variations</option>
                             </select>
                         </div>
+			<!-- Operator -->
                         <div class="excel-cell">
                             <select class="operator-select form-select" name="operator[]">
                                 <option value="=" selected>=</option>
                                 <option value="<>">≠</option>
                             </select>
                         </div>
+			<!-- STEP 2 -->
                         <div class="excel-cell">
                             <input type="text" class="value-input form-control" name="value[]" placeholder="STEP 2: Select or Type a Value">
                         </div>
-<!-- NEW: Ingredients Order dropdown (placed in the highlighted empty space) -->
-                <div class="excel-cell" style="min-width: 170px; flex: 0 0 auto; margin-left: 8px;">
-                    <div style="font-size: 0.75rem; color: #6c757d; margin-bottom: 1px;">Ingredients Order</div>
-                    <select id="ingredients-order-select" class="form-select form-select-sm">
-                        <option value="Recipe" selected>Recipe</option>
-                        <option value="Vol Asc">Vol Asc</option>
-                        <option value="Vol Desc">Vol Desc</option>
-                        <option value="Cost Asc">Cost Asc</option>
-                        <option value="Cost Desc">Cost Desc</option>
-                        <option value="Alpha Asc">Alpha Asc</option>
-                        <option value="Alpha Desc">Alpha Desc</option>
-                    </select>
-                </div>
 
+			<!-- + button (back in original position next to filter) -->
                         <div class="excel-cell" style="flex: 0 0 32px;"><button class="add-box btn btn-sm btn-outline-secondary w-100">+</button></div>
+			
+			<!-- – button -->
                         <div class="excel-cell" style="flex: 0 0 32px;"><button class="remove-box btn btn-sm btn-outline-secondary w-100" style="display:none;">–</button></div>
-                        <div class="excel-cell logic-cell" style="flex: 0 0 64px;">
+
+                        <!-- Logic -->
+			<div class="excel-cell logic-cell" style="flex: 0 0 64px;">
                             <select class="logic-select form-select" name="logic[]" style="display:none;">
                                 <option value="AND" selected>AND</option>
                                 <option value="OR">OR</option>
                             </select>
                         </div>
+
+			<!-- NEW: Ingredients Order dropdown moved to far right -->
+	                <div class="excel-cell" style="min-width: 170px; flex: 0 0 auto; margin-left: auto;">
+        	            <div style="font-size: 0.75rem; color: #6c757d; margin-bottom: 1px;">Ingredients Order</div>
+                	    <select id="ingredients-order-select" class="form-select form-select-sm">
+                        	<option value="Recipe" selected>Recipe</option>
+	                        <option value="Vol Asc">Vol Asc</option>
+        	                <option value="Vol Desc">Vol Desc</option>
+                	        <option value="Cost Asc">Cost Asc</option>
+                        	<option value="Cost Desc">Cost Desc</option>
+	                        <option value="Alpha Asc">Alpha Asc</option>
+        	                <option value="Alpha Desc">Alpha Desc</option>
+                	    </select>
+                	</div>
+
                     </div>
                 </div>
             </div>
