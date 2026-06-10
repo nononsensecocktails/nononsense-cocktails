@@ -1,7 +1,7 @@
 <?php
 $page_title = "About";
 require_once 'header.php';
-?>
+?> 
 
         <div class="card">
             <div class="card-header bg-dark text-white">
