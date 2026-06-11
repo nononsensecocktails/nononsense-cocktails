@@ -813,13 +813,18 @@ function updateRateDrinkSection() {
         $('#stars-select, #last-date-input, #save-rating').prop('disabled', true);
     }
 }
-    function updateRatingDisplay(stars, last_date) {
-        var ratingBgColor = getRatingColor(stars);
-	var formattedStars = stars ? parseFloat(stars).toFixed(4).replace(/\.?0+$/, '') : 'Not rated';
-	$('#stars-display').html('<span style="background-color:' + ratingBgColor + '; color: #000000;">' + (stars ? (() => { const num = parseFloat(stars); let str = num.toFixed(4); const [intPart, decPart] = str.split('.'); let trimmed = decPart.replace(/0+$/, ''); if (trimmed.length === 0) trimmed = '00'; else if (trimmed.length === 1) trimmed += '0'; return intPart + '.' + trimmed; })() : 'Not rated') + '</span>');        $('#last-date-display').text(last_date || 'Not set');
-        $('#stars-select').val(stars || '');
-        $('#last-date-input').val(new Date().toISOString().split('T')[0]);
-    }
+function updateRatingDisplay(stars, last_date) {
+    var ratingBgColor = getRatingColor(stars);
+    var displayValue = formatStarsValue(stars);
+    $('#stars-display').html(
+        '<span style="background-color:' + ratingBgColor + '; color: #000000;">' + displayValue + '</span>'
+    );
+    $('#last-date-display').text(last_date || 'Not set');
+    $('#stars-select').val(stars || '');
+    $('#last-date-input').val(new Date().toISOString().split('T')[0]);
+}
+
+
     function loadRandomRecipe() {
         var user = $('#user-select').val();
         var filters = getFilters();
@@ -1091,6 +1096,20 @@ function generateCurrentUrl() {
         updateLogicVisibility();
     });
 
+function formatStarsValue(stars) {
+    if (!stars) return 'Not rated';
+    const num = parseFloat(stars);
+    if (isNaN(num) || !isFinite(num)) {
+        return stars;   // 'Revisit', 'Next', 'TBD', or any other non-numeric status
+    }
+    // Original numeric formatting (preserved exactly)
+    let str = num.toFixed(4);
+    const [intPart, decPart] = str.split('.');
+    let trimmed = decPart.replace(/0+$/, '');
+    if (trimmed.length === 0) trimmed = '00';
+    else if (trimmed.length === 1) trimmed += '0';
+    return intPart + '.' + trimmed;
+}
 
 function updateRecipeDetails() {
     var name = $('#name-select').val();
@@ -1112,7 +1131,7 @@ function updateRecipeDetails() {
 
 				<div class="excel-row">
 				    <div class="excel-cell label-cell">Stars Out of 3</div>
-				    <div class="excel-cell content-cell" id="stars-display">${data.stars_out_of_3 ? (() => { const num = parseFloat(data.stars_out_of_3); let str = num.toFixed(4); const [intPart, decPart] = str.split('.'); let trimmed = decPart.replace(/0+$/, ''); if (trimmed.length === 0) trimmed = '00'; else if (trimmed.length === 1) trimmed += '0'; return intPart + '.' + trimmed; })() : 'Not rated'}</div>
+				    <div class="excel-cell content-cell" id="stars-display">${formatStarsValue(data.stars_out_of_3)}</div>	    
 				    <div class="excel-cell label-cell">Rate this Drink:</div>
 				    <div class="excel-cell"><select id="stars-select"><option value="">Select Stars</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="TBD">TBD</option><option value="Next">Next</option><option value="Revisit">Revisit</option></select></div>
 				</div>
