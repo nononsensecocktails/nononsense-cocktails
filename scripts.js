@@ -1016,8 +1016,9 @@ $('#user-select').on('change', function() {
     }
 });
 
-    $('#name-select').on('change', updateSources);
-    $('#source-select').on('change', updateRecipeDetails);
+$('#name-select').off('change').on('change', updateSources);
+$('#source-select').off('change').on('change', updateRecipeDetails);
+
 // NEW: Re-sort ingredients immediately when the user changes the Ingredients Order dropdown
 $(document).on('change', '#ingredients-order-select', function () {
     ingredientsOrder = $(this).val();
@@ -1123,24 +1124,41 @@ function updateRecipeDetails() {
             dataType: 'json',
             success: function(data) {
                 if (data && typeof data === 'object') {
-		currentRecipeData = data;           // Store so the sort dropdown can re-use it
+                    currentRecipeData = data;
                     var today = new Date().toISOString().split('T')[0];
+
                     var detailsHtml = `
                         <div class="card-body">
-                            <div class="excel-row"><div class="excel-cell label-cell">Name</div><div class="excel-cell content-cell"><strong>${data.Name || ''}</strong></div></div>
+                            <div class="excel-row">
+                                <div class="excel-cell label-cell">Name</div>
+                                <div class="excel-cell content-cell"><strong>${data.Name || ''}</strong></div>
+                            </div>
 
-				<div class="excel-row">
-				    <div class="excel-cell label-cell">Stars Out of 3</div>
-				    <div class="excel-cell content-cell" id="stars-display">${formatStarsValue(data.stars_out_of_3)}</div>	    
-				    <div class="excel-cell label-cell">Rate this Drink:</div>
-				    <div class="excel-cell"><select id="stars-select"><option value="">Select Stars</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="TBD">TBD</option><option value="Next">Next</option><option value="Revisit">Revisit</option></select></div>
-				</div>
-				<div class="excel-row">
-				    <div class="excel-cell label-cell">Last Date</div>
-				    <div class="excel-cell content-cell" id="last-date-display">${data.last_date || 'Not set'}</div>
-				    <div class="excel-cell"><input type="date" id="last-date-input" value="${today}"></div>
-				    <div class="excel-cell"><button id="save-rating" class="btn btn-success btn-sm">Save Rating</button></div>
-				</div>
+                            <div class="excel-row">
+                                <div class="excel-cell label-cell">Stars Out of 3</div>
+                                <div class="excel-cell content-cell" id="stars-display">${formatStarsValue(data.stars_out_of_3)}</div>
+                                <div class="excel-cell label-cell">Rate this Drink:</div>
+                                <div class="excel-cell">
+                                    <select id="stars-select">
+                                        <option value="">Select Stars</option>
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                        <option value="3">3</option>
+                                        <option value="4">4</option>
+                                        <option value="5">5</option>
+                                        <option value="TBD">TBD</option>
+                                        <option value="Next">Next</option>
+                                        <option value="Revisit">Revisit</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="excel-row">
+                                <div class="excel-cell label-cell">Last Date</div>
+                                <div class="excel-cell content-cell" id="last-date-display">${data.last_date || 'Not set'}</div>
+                                <div class="excel-cell"><input type="date" id="last-date-input" value="${today}"></div>
+                                <div class="excel-cell"><button id="save-rating" class="btn btn-success btn-sm">Save Rating</button></div>
+                            </div>
 
                             <div class="excel-row"><div class="excel-cell label-cell">Source</div><div class="excel-cell content-cell">${data.Source || ''}</div></div>
                             <div class="excel-row"><div class="excel-cell label-cell">Page</div><div class="excel-cell content-cell">${data.Page || ''}</div></div>
@@ -1160,7 +1178,6 @@ function updateRecipeDetails() {
                             <div class="excel-row"><div class="excel-cell label-cell">Variations</div><div class="excel-cell content-cell">${data.Variations || ''}</div></div>
 
                             <div class="mt-3">
-                                <!-- <strong>Ingredients</strong> -->
                                 <table class="ingredient-table">
                                     <thead>
                                         <tr>
@@ -1175,6 +1192,7 @@ function updateRecipeDetails() {
                             </div>
                         </div>
                     `;
+
                     $('#recipe_details').html(detailsHtml);
                     renderIngredientsTable(data);
                     if (data.stars_out_of_3) $('#stars-select').val(data.stars_out_of_3);
@@ -1184,7 +1202,6 @@ function updateRecipeDetails() {
         });
     }
 }
-
 
 function renderIngredientsTable(data) {
     var ingredients = (data.Ingredients || '').split(';').filter(Boolean).map(function(ingredient) {
