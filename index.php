@@ -308,8 +308,8 @@ $usernames = getUsernames($conn);
             <!-- Center: 4 Buttons -->
             <div class="d-flex align-items-center gap-1 mx-auto ms-12">
                 <button id="reset-button" class="btn btn-outline-light">Reset</button>
-                <button id="copy-permalink" class="btn btn-outline-light">Share Link</button>
                 <button id="lucky-button" class="btn btn-outline-light">I'm Feeling Lucky</button>
+                <button id="copy-permalink" class="btn btn-outline-light">Share Link</button>
                 <button id="create-qr-code" class="btn btn-outline-light">QR Code</button>
             </div>
             
