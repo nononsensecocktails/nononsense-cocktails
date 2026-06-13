@@ -1053,23 +1053,29 @@ function generateCurrentUrl() {
     let name = $('#name-select').val() || '';
     let source = $('#source-select').val() || '';
 
-    // Defensive fix for double-encoding:
-    // If the value coming from the dropdown already contains URL encoding (% encodings),
-    // decode it first so we only encode once when building the URL.
-    if (name && /%[0-9A-Fa-f]{2}/.test(name)) {
-        try { name = decodeURIComponent(name); } catch (e) {}
-    }
-    if (source && /%[0-9A-Fa-f]{2}/.test(source)) {
-        try { source = decodeURIComponent(source); } catch (e) {}
-    }
+    // Aggressive decode to prevent double-encoding no matter where the value came from
+    const decodeIfNeeded = (val) => {
+        if (!val) return '';
+        try {
+            // Decode repeatedly until it's clean (handles multiple layers of encoding)
+            let decoded = val;
+            while (/%[0-9A-Fa-f]{2}/.test(decoded)) {
+                decoded = decodeURIComponent(decoded);
+            }
+            return decoded;
+        } catch (e) {
+            return val;
+        }
+    };
+
+    name = decodeIfNeeded(name);
+    source = decodeIfNeeded(source);
 
     const params = new URLSearchParams();
 
-    // Only add filters if no specific recipe is selected (avoids conflicts on load)
     if ((!name || !source) && filters.length > 0) {
         filters.forEach((f, index) => {
             params.set(`term${index}`, encodeURIComponent(f.term));
-            // Don't encode operators (prevents double-encoding)
             params.set(`operator${index}`, f.operator);
             params.set(`value${index}`, encodeURIComponent(f.value));
             if (index > 0 && f.logic) {
@@ -1084,7 +1090,7 @@ function generateCurrentUrl() {
     const base = window.location.origin + window.location.pathname;
     return params.toString() ? `${base}?${params.toString()}` : base;
 }
-
+	
 $('#copy-permalink').off('click').on('click', function () {
     const link = generateCurrentUrl();
     const nameVal = $('#name-select').val() || '';
