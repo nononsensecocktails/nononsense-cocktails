@@ -11,6 +11,22 @@ header('Content-Type: text/html; charset=UTF-8');
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>No-Nonsense Cocktails<?php echo isset($page_title) ? ' - ' . $page_title : ''; ?></title>
+
+<?php
+// Dynamic OG tags for recipe shares so pasted links show recipe name + source
+$name  = isset($_GET['name'])  ? trim($_GET['name'])  : '';
+$source = isset($_GET['source']) ? trim($_GET['source']) : '';
+
+if ($name && $source) {
+    $ogTitle = htmlspecialchars($name . ' from ' . $source . ' — No-Nonsense Cocktails', ENT_QUOTES, 'UTF-8');
+    echo '<meta property="og:title" content="' . $ogTitle . '">' . "\n";
+    echo '<meta property="og:site_name" content="No-Nonsense Cocktails">' . "\n";
+    echo '<meta property="og:url" content="' . htmlspecialchars('https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'], ENT_QUOTES, 'UTF-8') . '">' . "\n";
+    // Optional but nice: add a description if you want
+    // echo '<meta property="og:description" content="Cocktail recipe from No-Nonsense Cocktails">' . "\n";
+}
+?>
+
     
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
