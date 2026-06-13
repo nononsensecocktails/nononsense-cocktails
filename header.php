@@ -10,24 +10,40 @@ header('Content-Type: text/html; charset=UTF-8');
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>No-Nonsense Cocktails<?php echo isset($page_title) ? ' - ' . $page_title : ''; ?></title>
 
 <?php
-// Dynamic OG tags for recipe shares so pasted links show recipe name + source
-$name  = isset($_GET['name'])  ? trim($_GET['name'])  : '';
+// === Dynamic title + Open Graph tags for recipe share links ===
+$name   = isset($_GET['name'])   ? trim($_GET['name'])   : '';
 $source = isset($_GET['source']) ? trim($_GET['source']) : '';
 
 if ($name && $source) {
-    $ogTitle = htmlspecialchars($name . ' from ' . $source . ' — No-Nonsense Cocktails', ENT_QUOTES, 'UTF-8');
+    $displayTitle = $name . ' from ' . $source;
+    $page_title = $displayTitle;           // This makes the <title> tag dynamic too
+
+    $ogTitle = htmlspecialchars($displayTitle . ' — No-Nonsense Cocktails', ENT_QUOTES, 'UTF-8');
+    
+    echo '<title>No-Nonsense Cocktails - ' . htmlspecialchars($displayTitle, ENT_QUOTES, 'UTF-8') . '</title>' . "\n";
+    
     echo '<meta property="og:title" content="' . $ogTitle . '">' . "\n";
     echo '<meta property="og:site_name" content="No-Nonsense Cocktails">' . "\n";
-    echo '<meta property="og:url" content="' . htmlspecialchars('https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'], ENT_QUOTES, 'UTF-8') . '">' . "\n";
-    // Optional but nice: add a description if you want
-    // echo '<meta property="og:description" content="Cocktail recipe from No-Nonsense Cocktails">' . "\n";
+    echo '<meta property="og:type" content="website">' . "\n";
+    
+    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $fullUrl  = $protocol . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+    echo '<meta property="og:url" content="' . htmlspecialchars($fullUrl, ENT_QUOTES, 'UTF-8') . '">' . "\n";
+    
+    // Reliable fallback image (your existing logo). Apple likes having an image.
+    echo '<meta property="og:image" content="https://nononsensecocktails.com/images/Coldberry_01_TM.jpg">' . "\n";
+    echo '<meta property="og:image:width" content="1200">' . "\n";
+    echo '<meta property="og:image:height" content="630">' . "\n";
+    
+    echo '<meta property="og:description" content="Cocktail recipe from No-Nonsense Cocktails">' . "\n";
+} else {
+    // Default title when not viewing a specific recipe
+    echo '<title>No-Nonsense Cocktails</title>' . "\n";
 }
 ?>
 
-    
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
