@@ -887,18 +887,24 @@ function loadFromUrl() {
         // Populate name-select with the name option
         let $nameSelect = $('#name-select');
         $nameSelect.empty().append('<option value="">STEP 3: Select a Name</option>');
-        if (name) {
-            $nameSelect.append(`<option value="${name}">${name}</option>`);
-            $nameSelect.val(name);
-        }
+if (name) {
+    // Safe way to create option (handles apostrophes and special characters correctly)
+    const $opt = $('<option></option>').attr('value', name).text(name);
+    $nameSelect.append($opt);
+    $nameSelect.val(name);
+}
         // Load sources immediately
         updateSources();  // This will populate source-select
         // Defer source selection to after sources load (async)
-        setTimeout(() => {
-            if (source) {
-                $('#source-select').val(source).trigger('change');
-            }
-        }, 100);  // Small delay for AJAX
+// Defer source selection to after sources load (async)
+setTimeout(() => {
+    if (source && $('#source-select').find(`option[value="${source}"]`).length > 0) {
+        $('#source-select').val(source).trigger('change');
+    } else if (source) {
+        // Fallback: force the value even if option doesn't exist yet
+        $('#source-select').val(source).trigger('change');
+    }
+}, 250);
     }
 
     // Then handle filters (if no recipe)
@@ -1044,14 +1050,26 @@ $('#reset-button').on('click', function() {
 
 function generateCurrentUrl() {
     const filters = getFilters();
-    const name = $('#name-select').val() || '';
-    const source = $('#source-select').val() || '';
+    let name = $('#name-select').val() || '';
+    let source = $('#source-select').val() || '';
+
+    // Defensive fix for double-encoding:
+    // If the value coming from the dropdown already contains URL encoding (% encodings),
+    // decode it first so we only encode once when building the URL.
+    if (name && /%[0-9A-Fa-f]{2}/.test(name)) {
+        try { name = decodeURIComponent(name); } catch (e) {}
+    }
+    if (source && /%[0-9A-Fa-f]{2}/.test(source)) {
+        try { source = decodeURIComponent(source); } catch (e) {}
+    }
+
     const params = new URLSearchParams();
+
     // Only add filters if no specific recipe is selected (avoids conflicts on load)
     if ((!name || !source) && filters.length > 0) {
         filters.forEach((f, index) => {
             params.set(`term${index}`, encodeURIComponent(f.term));
-            // FIX: Don't encode operators (prevents double-encoding)
+            // Don't encode operators (prevents double-encoding)
             params.set(`operator${index}`, f.operator);
             params.set(`value${index}`, encodeURIComponent(f.value));
             if (index > 0 && f.logic) {
@@ -1059,21 +1077,38 @@ function generateCurrentUrl() {
             }
         });
     }
-    if (name) params.set('name', encodeURIComponent(name));
+
+    if (name)  params.set('name', encodeURIComponent(name));
     if (source) params.set('source', encodeURIComponent(source));
+
     const base = window.location.origin + window.location.pathname;
     return params.toString() ? `${base}?${params.toString()}` : base;
 }
 
-    $('#copy-permalink').off('click').on('click', function () {
-        const link = generateCurrentUrl();
-        navigator.clipboard.writeText(link).then(() => {
-            const recipeName = name ? ` for “${name}”` : '';
-            alert(`Permalink${recipeName} copied to clipboard!`);
-        }).catch(() => {
-            alert('Copy failed. Here is the link:\n' + link);
-        });
+$('#copy-permalink').off('click').on('click', function () {
+    const link = generateCurrentUrl();
+    const nameVal = $('#name-select').val() || '';
+    const sourceVal = $('#source-select').val() || '';
+
+    let textToCopy = link;
+
+    if (nameVal && sourceVal) {
+        // Copy a nice formatted line that includes the recipe name + source
+        textToCopy = `${nameVal} from ${sourceVal} — No-Nonsense Cocktails\n${link}`;
+    }
+
+    navigator.clipboard.writeText(textToCopy).then(() => {
+        if (nameVal && sourceVal) {
+            alert(`Link for “${nameVal}” from ${sourceVal} copied!`);
+        } else {
+            alert('Permalink copied to clipboard!');
+        }
+    }).catch(() => {
+        alert('Copy failed. Here is the link:\n' + link);
     });
+});
+    
+    
     $('#create-qr-code').off('click').on('click', function () {
         const link = generateCurrentUrl();
         $('#qr-code').empty();
