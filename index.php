@@ -430,7 +430,7 @@ $usernames = getUsernames($conn);
         <button id="close-qr-code" class="btn btn-secondary mt-2">Close</button>
     </div>
 
-    <script src="scripts.js"></script>
+    <script src="scripts.js?v=20240614d"></script>
 <?php require_once 'footer.php'; ?>
 </body>
 </html>
