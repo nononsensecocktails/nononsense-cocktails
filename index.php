@@ -31,6 +31,21 @@ $usernames = getUsernames($conn);
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
    
     <style>
+        #save-rating {
+ 	        display: none !important;
+	    }
+	    #stars-select,
+        #last-date-input {
+            display: none !important;
+        }
+        /* Hide the "Rate this Drink:" label */
+        .excel-cell:has(+ .excel-cell #stars-select) {
+            display: none !important;
+        }
+        .logic-select {
+            font-size: 0.70rem !important;
+        }
+        
         :root { --accent: #e76f51; }
         @media (prefers-color-scheme: dark) { :root { --accent: #f4a261; } }
 
