@@ -10,6 +10,10 @@ $usernames = getUsernames($conn);
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- ===== Google Adsense ===== -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3865173708892194"
+         crossorigin="anonymous"></script>
+    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=800, initial-scale=1.0, minimum-scale=0.1, maximum-scale=10.0, user-scalable=yes">
 
