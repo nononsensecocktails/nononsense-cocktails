@@ -469,6 +469,7 @@ function resetFilters() {
         newBox.find('.remove-box').show();
         newBox.find('.add-box').text('+');
         newBox.find('.term-select').val('');
+        newBox.find('.excel-cell').last().remove();
         $(this).closest('.excel-row').after(newBox);
         var term = newBox.find('.term-select').val();
         updateOperatorSelect(newBox, term);
@@ -1090,7 +1091,8 @@ function generateCurrentUrl() {
     const base = window.location.origin + window.location.pathname;
     return params.toString() ? `${base}?${params.toString()}` : base;
 }
-	
+
+
 $('#copy-permalink').off('click').on('click', function () {
     const link = generateCurrentUrl();
     const nameVal = $('#name-select').val() || '';
@@ -1199,7 +1201,7 @@ function updateRecipeDetails() {
                                 <div class="excel-cell content-cell" id="last-date-display">${data.last_date || 'Not set'}</div>
                                 <div class="excel-cell"><input type="date" id="last-date-input" value="${today}"></div>
                                 <div class="excel-cell"><button id="save-rating" class="btn btn-success btn-sm" style="display: none;">Save Rating</button></div>
-							</div>
+                            </div>
 
                             <div class="excel-row"><div class="excel-cell label-cell">Source</div><div class="excel-cell content-cell">${data.Source || ''}</div></div>
                             <div class="excel-row"><div class="excel-cell label-cell">Page</div><div class="excel-cell content-cell">${data.Page || ''}</div></div>
