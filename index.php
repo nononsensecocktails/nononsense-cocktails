@@ -43,9 +43,10 @@ $usernames = getUsernames($conn);
             display: none !important;
         }
         .logic-select {
-            font-size: 0.70rem !important;
+            min-width: 66px !important;     /* adjust this number up/down by 2-4px until it's one 'D' wider */
+            font-size: 0.82rem !important;  /* keep font size normal or only slightly smaller */
         }
-        
+		
         :root { --accent: #e76f51; }
         @media (prefers-color-scheme: dark) { :root { --accent: #f4a261; } }
 
