@@ -1198,8 +1198,8 @@ function updateRecipeDetails() {
                                 <div class="excel-cell label-cell">Last Date</div>
                                 <div class="excel-cell content-cell" id="last-date-display">${data.last_date || 'Not set'}</div>
                                 <div class="excel-cell"><input type="date" id="last-date-input" value="${today}"></div>
-                                <div class="excel-cell"><button id="save-rating" class="btn btn-success btn-sm">Save Rating</button></div>
-                            </div>
+                                <div class="excel-cell"><button id="save-rating" class="btn btn-success btn-sm" style="display: none;">Save Rating</button></div>
+							</div>
 
                             <div class="excel-row"><div class="excel-cell label-cell">Source</div><div class="excel-cell content-cell">${data.Source || ''}</div></div>
                             <div class="excel-row"><div class="excel-cell label-cell">Page</div><div class="excel-cell content-cell">${data.Page || ''}</div></div>
