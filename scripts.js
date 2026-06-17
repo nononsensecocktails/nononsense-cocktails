@@ -12,8 +12,12 @@ $(document).ready(function() {
     let pendingFilterChange = false;
 
 // NEW: State for the Ingredients Order dropdown
-    let currentRecipeData = null;
+        let currentRecipeData = null;
     let ingredientsOrder = 'Recipe';
+
+    // NEW: Undo state for filter changes
+    let lastFilterSnapshot = null;
+    let lastChangedRow = null;
 
     function loadUnitConversions(callback) {
         $.ajax({
@@ -382,6 +386,104 @@ function updateValueInput($row, term, initialValue = '') {
         });
     }
 
+    }
+}
+
+// NEW: Undo snapshot helpers
+function captureFilterSnapshot() {
+    var snapshot = [];
+    $('.search-boxes .excel-row').each(function() {
+        var $row = $(this);
+        var term = $row.find('.term-select').val();
+        var operator = $row.find('.operator-select').val();
+        var value = $row.find('.value-input').val();
+        var logic = $row.find('.logic-select').val() || 'AND';
+        if (term) {
+            snapshot.push({
+                term: term,
+                operator: operator,
+                value: value,
+                logic: logic
+            });
+        }
+    });
+    snapshot.ingredientsOrder = ingredientsOrder;
+    return snapshot;
+}
+
+function restoreFromSnapshot(snapshot) {
+    if (!snapshot || snapshot.length === 0) return;
+
+    $('.search-boxes').empty();
+
+    snapshot.forEach(function(item, index) {
+        var newBox;
+        if (index === 0) {
+            newBox = $(`
+                <div class="excel-row">
+                    <div class="excel-cell term-select-cell">
+                        <select class="term-select" name="term[]"></select>
+                    </div>
+                    <div class="excel-cell"><select class="operator-select" name="operator[]"></select></div>
+                    <div class="excel-cell"><input type="text" class="value-input" name="value[]"></div>
+                    <div class="excel-cell button-cell"><button class="add-box">+</button></div>
+                    <div class="excel-cell button-cell"><button class="remove-box" style="display:none;">-</button></div>
+                    <div class="excel-cell logic-cell"><select class="logic-select" name="logic[]" style="display:none;"></select></div>
+                </div>
+            `);
+        } else {
+            newBox = $('.search-boxes .excel-row:first').clone(true);
+            newBox.find('.remove-box').show();
+            newBox.find('.add-box').text('+');
+        }
+
+        newBox.find('.term-select').val(item.term);
+        updateOperatorSelect(newBox, item.term);
+        newBox.find('.operator-select').val(item.operator);
+        updateValueInput(newBox, item.term, item.value || '').then(function() {
+            newBox.find('.logic-select').val(item.logic || 'AND');
+            if (index === snapshot.length - 1) {
+                updateLogicVisibility();
+                updateNames();
+            }
+        });
+        $('.search-boxes').append(newBox);
+    });
+
+    if (snapshot.ingredientsOrder) {
+        ingredientsOrder = snapshot.ingredientsOrder;
+        $('#ingredients-order-select').val(ingredientsOrder);
+    }
+}
+
+function removeAllUndoButtons() {
+    $('.undo-filter-btn').remove();
+    lastFilterSnapshot = null;
+    lastChangedRow = null;
+}
+
+function showUndoButtonForRow($row) {
+    removeAllUndoButtons();
+
+    var $undoBtn = $('<button class="undo-filter-btn btn btn-sm btn-outline-secondary ms-1" style="font-size:0.75rem; padding:1px 6px;">Undo</button>');
+    $undoBtn.on('click', function() {
+        if (lastFilterSnapshot) {
+            restoreFromSnapshot(lastFilterSnapshot);
+        }
+        removeAllUndoButtons();
+    });
+
+    var $buttonCell = $row.find('.button-cell').last();
+    if ($buttonCell.length) {
+        $buttonCell.append($undoBtn);
+    } else {
+        $row.append($undoBtn);
+    }
+
+    lastChangedRow = $row;
+}
+
+
 function resetFilters() {
     $('.search-boxes').html(`
         <div class="excel-row">
@@ -464,31 +566,41 @@ function resetFilters() {
 }
 
     $(document).on('click', '.add-box', function() {
+        var $currentRow = $(this).closest('.excel-row');
+        lastFilterSnapshot = captureFilterSnapshot();
+
         var newBox = $('.search-boxes .excel-row:first').clone(true);
         newBox.find('.value-input').val('');
         newBox.find('.remove-box').show();
         newBox.find('.add-box').text('+');
         newBox.find('.term-select').val('');
         newBox.find('.excel-cell').last().remove();
-        $(this).closest('.excel-row').after(newBox);
+        $currentRow.after(newBox);
         var term = newBox.find('.term-select').val();
         updateOperatorSelect(newBox, term);
-        updateValueInput(newBox, term);
-        updateLogicVisibility();
-        updateAllBelow(newBox);
+        updateValueInput(newBox, term).then(function() {
+            updateLogicVisibility();
+            updateAllBelow(newBox).then(function() {
+                showUndoButtonForRow(newBox);
+            });
+        });
     });
+
     $(document).on('click', '.remove-box', function() {
         if ($('.search-boxes .excel-row').length > 1) {
-            pendingFilterChange = true; // Reset name/source because filters changed
+            pendingFilterChange = true;
             var $row = $(this).closest('.excel-row');
+            lastFilterSnapshot = captureFilterSnapshot();
             $row.remove();
             updateLogicVisibility();
-           
-            // DO NOT rebuild all dropdowns — this was wiping values!
-            // Just update the results
             updateNames();
+            var $prevRow = $('.search-boxes .excel-row').last();
+            if ($prevRow.length) {
+                showUndoButtonForRow($prevRow);
+            }
         }
     });
+
     $(document).on('change', '.term-select', function() {
         var $row = $(this).closest('.excel-row');
         var term = $(this).val();
@@ -499,20 +611,31 @@ function resetFilters() {
         // Changing the term is NOT a filter change yet
         // Only selecting a VALUE should trigger name update
     });
+
     $(document).on('change', '.operator-select', function() {
         var $row = $(this).closest('.excel-row');
-        updateAllBelow($row);
+        lastFilterSnapshot = captureFilterSnapshot();
+        updateAllBelow($row).then(function() {
+            showUndoButtonForRow($row);
+        });
     });
     $(document).on('change', '.value-input', function() {
-    pendingFilterChange = true; // <-- Mark that a real change happened
-    var $row = $(this).closest('.excel-row');
-    updateAllBelow($row);
+        pendingFilterChange = true;
+        var $row = $(this).closest('.excel-row');
+        lastFilterSnapshot = captureFilterSnapshot();
+        updateAllBelow($row).then(function() {
+            showUndoButtonForRow($row);
+        });
     });
     $(document).on('change', '.logic-select', function() {
-    pendingFilterChange = true; // <-- AND/OR is a real change
-    var $row = $(this).closest('.excel-row');
-    updateAllBelow($row);
+        pendingFilterChange = true;
+        var $row = $(this).closest('.excel-row');
+        lastFilterSnapshot = captureFilterSnapshot();
+        updateAllBelow($row).then(function() {
+            showUndoButtonForRow($row);
+        });
     });
+
     // When user changes AND/OR dropdown, refresh the value dropdown immediately
     $(document).on('change', '.logic-select', function() {
         var $row = $(this).closest('.excel-row');
@@ -521,7 +644,9 @@ function resetFilters() {
             updateValueInput($row, term);
         }
     });
+
     function updateAllBelow($startRow) {
+        var promises = [];
         var foundStart = $startRow.length === 0;
         $('.search-boxes .excel-row').each(function() {
             if ($(this).is($startRow)) {
@@ -530,10 +655,15 @@ function resetFilters() {
             }
             if (foundStart) {
                 var term = $(this).find('.term-select').val();
-                updateValueInput($(this), term);
+                if (term) {
+                    promises.push(updateValueInput($(this), term));
+                }
             }
         });
-        updateNames();
+        // Return the promise so callers can chain .then()
+        return Promise.all(promises).then(function() {
+            updateNames();
+        });
     }
 
 function updateNames() {
@@ -1035,17 +1165,14 @@ $(document).on('change', '#ingredients-order-select', function () {
 });
 
     $('#lucky-button').on('click', loadRandomRecipe);
+
 $('#reset-button').on('click', function() {
+    removeAllUndoButtons();
     resetFilters();
     $('#name-select').html('<option value="">STEP 3: Select a Name</option>');
     $('#source-select').html('<option value="">STEP 4: Select a Source</option>');
 
-    // Refresh counts instead of clearing them (so they persist with correct totals)
     loadTotalCocktails();
-
-    // Note: source-count will keep its previous value (or update naturally when a name is selected later)
-    // If you ever want to force-clear source-count after reset, add: $('#source-count').text('');
-
     $('#recipe_details').empty();
 });
 
@@ -1133,11 +1260,13 @@ $('#copy-permalink').off('click').on('click', function () {
     $('#close-qr-code').on('click', function() {
         $('#qr-code-popup').hide();
     });
+
     loadUnitConversions(function() {
         loadFromUrl();
         updateOperatorSelect($('.search-boxes .excel-row:first'), $('.term-select').val());
-        updateValueInput($('.search-boxes .excel-row:first'), $('.term-select').val());
-        updateLogicVisibility();
+        updateValueInput($('.search-boxes .excel-row:first'), $('.term-select').val()).then(function() {
+            updateLogicVisibility();
+        });
     });
 
 function formatStarsValue(stars) {
