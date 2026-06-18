@@ -133,194 +133,174 @@ function updateOperatorSelect($row, term) {
     }
 
 function updateValueInput($row, term, initialValue = '') {
-    var $valueCell = $row.find('.excel-cell:nth-child(3)');
-    var currentValue = $row.find('.value-input').val() || initialValue.trim(); // Trim to remove potential spaces
-    $valueCell.empty();
-    if (dropdownFields.includes(term)) {
-        // Skip Name filter — keep it as plain text input
-        if (term === 'name') {
-            var $input = $('<input type="text" class="value-input" name="value[]" placeholder="Type name or partial name">');
-            if (initialValue) $input.val(initialValue);
-            $valueCell.append($input);
-            return;
-        }
-        // For all other terms: use <select> with Choices.js
-        var $select = $('<select class="value-input choices-filter" name="value[]"></select>');
-        $select.append('<option value="">Any ' + term.replace(/_/g, ' ') + '</option>');
-        $valueCell.append($select);
-        // Load options via AJAX
-        var filtersBefore = getFiltersBeforeForDropdown($row, term);
-        console.log('Filters before for ' + term + ':', filtersBefore); // Debug
-        loadDistinctValues(term, filtersBefore).then(function(values) {
-            // Remember current value before rebuilding
-            var preservedValue = (currentValue || initialValue).trim().toLowerCase(); // Normalize for comparison
-            // Clear existing options except placeholder
-            $select.find('option:not(:first)').remove();
-            if (values.length === 0) {
-                $select.append('<option value="" disabled>No options available</option>');
-            } else {
-                // Collect already used values for this term
-                var usedValues = [];
-                $('.search-boxes .excel-row').each(function() {
-                    if ($(this).is($row)) return false;
-                    if ($(this).find('.term-select').val() === term) {
-                        var val = $(this).find('.value-input').val();
-                        if (val) usedValues.push(val);
-                    }
-                });
-                // Add unused values first
-                values.filter(v => !usedValues.includes(v)).forEach(function(v) {
-                    $select.append('<option value="' + v + '">' + v + '</option>');
-                });
-                // Add separator and used values
-                if (usedValues.length > 0) {
-                    var uniqueUsed = [...new Set(usedValues.filter(v => values.includes(v)))];
-                    if (uniqueUsed.length > 0) {
-                        $select.append('<option disabled>──────────────────</option>');
-                        uniqueUsed.forEach(function(v) {
-                            $select.append('<option value="' + v + '" style="color:#999;">' + v + ' (already used)</option>');
-                        });
-                    }
-                }
+    return new Promise(function(resolve) {
+        var $valueCell = $row.find('.excel-cell:nth-child(3)');
+        var currentValue = $row.find('.value-input').val() || initialValue.trim();
+        $valueCell.empty();
+
+        if (dropdownFields.includes(term)) {
+            if (term === 'name') {
+                var $input = $('<input type="text" class="value-input" name="value[]" placeholder="Type name or partial name">');
+                if (initialValue) $input.val(initialValue);
+                $valueCell.append($input);
+                resolve();
+                return;
             }
-            console.log('Fetched values for ' + term + ':', values); // Debug
-            console.log('Preserved value (normalized):', preservedValue); // Debug
-            // Find matching value case-insensitively
-            var matchingValue = values.find(v => v.trim().toLowerCase() === preservedValue) || initialValue; // Fallback to initial if not found
-            console.log('Matching value found:', matchingValue); // Debug
-            // Custom sorter functions
-            var customSorter = function(a, b) {
-                return a.label.localeCompare(b.label); // Default alphabetical
-            };
-            if (term === 'last_date') {
-                // Sort dates chronologically (assuming YYYY-MM-DD format)
-                customSorter = function(a, b) {
-                    var dateA = new Date(a.label);
-                    var dateB = new Date(b.label);
-                    return dateA - dateB;
-                };
-            } else if (term === 'stars_out_of_3') {
-                // Sort numerically first, then strings (e.g., 1,2,3,4,5 then TBD, Next, Revisit)
-                customSorter = function(a, b) {
-                    var numA = parseFloat(a.label);
-                    var numB = parseFloat(b.label);
-                    if (!isNaN(numA) && !isNaN(numB)) {
-                        return numA - numB;
-                    } else if (!isNaN(numA)) {
-                        return -1;
-                    } else if (!isNaN(numB)) {
-                        return 1;
-                    } else {
-                        return a.label.localeCompare(b.label);
-                    }
-                };
-            }
-            // Custom validator (on callback)
-            var customCallback = function(value) {
-                if (term === 'last_date') {
-                    // Validate date format (YYYY-MM-DD)
-                    var dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-                    if (!dateRegex.test(value)) {
-                        alert('Invalid date format. Use YYYY-MM-DD.');
-                        return false;
-                    }
-                    // Optional: Check if valid date
-                    if (isNaN(Date.parse(value))) {
-                        alert('Invalid date.');
-                        return false;
-                    }
-                } else if (term === 'stars_out_of_3') {
-                    // Validate against allowed values (assuming from options, but enforce numeric 1-5 or specific strings)
-                    var allowedStars = ['1', '2', '3', '4', '5', 'TBD', 'Next', 'Revisit'];
-                    if (!allowedStars.includes(value)) {
-                        alert('Invalid stars value.');
-                        return false;
-                    }
-                }
-                return true; // Valid
-            };
-            // Check if Choices.js is already initialized on this select (e.g., for first row)
-            if ($select[0].choices) {
-                console.log('Choices found—destroying instance for ' + term); // Debug
-                $select[0].choices.destroy();
-            } else {
-                console.log('No existing Choices for ' + term + '—initializing new'); // Debug
-            }
-            // Initialize Choices.js with custom sorter
-            var choicesInstance = new Choices($select[0], {
-                searchEnabled: true,
-                searchPlaceholderValue: 'Type to search...',
-                removeItemButton: true,
-                shouldSort: true,
-                sorter: customSorter,
-                itemSelectText: '',
-                noResultsText: 'No matches found',
-                noChoicesText: 'No options available',
-                classNames: {
-                    containerOuter: 'choices',
-                    containerInner: 'choices__inner',
-                    input: 'choices__input',
-                    inputCloned: 'choices__input--cloned',
-                    list: 'choices__list',
-                    listItems: 'choices__list--multiple',
-                    listSingle: 'choices__list--single',
-                    listDropdown: 'choices__list--dropdown',
-                    item: 'choices__item',
-                    itemSelectable: 'choices__item--selectable',
-                    itemDisabled: 'choices__item--disabled',
-                    itemChoice: 'choices__item--choice',
-                    placeholder: 'choices__placeholder',
-                    group: 'choices__group',
-                    groupHeading: 'choices__heading',
-                    button: 'choices__button',
-                    activeState: 'is-active',
-                    focusState: 'is-focused',
-                    openState: 'is-open',
-                    disabledState: 'is-disabled',
-                    highlightedState: 'is-highlighted',
-                    selectedState: 'is-selected',
-                    flippedState: 'is-flipped',
-                    loadingState: 'is-loading',
-                    noResults: 'has-no-results',
-                    noChoices: 'has-no-choices'
-                },
-                callbackOnCreateTemplates: function(template) {
-                    return {
-                        choice: (classNames, data) => {
-                            return template(`
-                                <div class="${classNames.item} ${classNames.itemChoice} ${data.disabled ? classNames.itemDisabled : classNames.itemSelectable}" data-select-text="${this.config.itemSelectText}" data-choice ${data.disabled ? 'data-choice-disabled aria-disabled=true' : 'data-choice-selectable'} data-id="${data.id}" data-value="${data.value}" ${data.groupId > 0 ? 'role="treeitem"' : 'role="option"'}>
-                                    ${data.label}
-                                </div>
-                            `);
+
+            var $select = $('<select class="value-input choices-filter" name="value[]"></select>');
+            $select.append('<option value="">Any ' + term.replace(/_/g, ' ') + '</option>');
+            $valueCell.append($select);
+
+            var filtersBefore = getFiltersBeforeForDropdown($row, term);
+            console.log('Filters before for ' + term + ':', filtersBefore);
+
+            loadDistinctValues(term, filtersBefore).then(function(values) {
+                var preservedValue = (currentValue || initialValue).trim().toLowerCase();
+                $select.find('option:not(:first)').remove();
+
+                if (values.length === 0) {
+                    $select.append('<option value="" disabled>No options available</option>');
+                } else {
+                    var usedValues = [];
+                    $('.search-boxes .excel-row').each(function() {
+                        if ($(this).is($row)) return false;
+                        if ($(this).find('.term-select').val() === term) {
+                            var val = $(this).find('.value-input').val();
+                            if (val) usedValues.push(val);
                         }
-                    };
+                    });
+
+                    values.filter(v => !usedValues.includes(v)).forEach(function(v) {
+                        $select.append('<option value="' + v + '">' + v + '</option>');
+                    });
+
+                    if (usedValues.length > 0) {
+                        var uniqueUsed = [...new Set(usedValues.filter(v => values.includes(v)))];
+                        if (uniqueUsed.length > 0) {
+                            $select.append('<option disabled>──────────────────</option>');
+                            uniqueUsed.forEach(function(v) {
+                                $select.append('<option value="' + v + '" style="color:#999;">' + v + ' (already used)</option>');
+                            });
+                        }
+                    }
                 }
-            });
-            console.log('Re-initialized Choices for ' + term); // Debug
-            // Add validator on choice select
-            $select.on('change', function() {
-                var selectedValue = choicesInstance.getValue(true);
-                if (selectedValue && !customCallback(selectedValue)) {
-                    choicesInstance.removeActiveItems(); // Clear invalid
+
+                console.log('Fetched values for ' + term + ':', values);
+                console.log('Preserved value (normalized):', preservedValue);
+
+                var matchingValue = values.find(v => v.trim().toLowerCase() === preservedValue) || initialValue;
+
+                // ========== SAFE Choices.js INITIALIZATION (permanent fix) ==========
+                var choicesInstance = null;
+
+                if (typeof Choices !== 'undefined') {
+                    if ($select[0].choices) {
+                        console.log('Choices found—destroying instance for ' + term);
+                        $select[0].choices.destroy();
+                    } else {
+                        console.log('No existing Choices for ' + term + '—initializing new');
+                    }
+
+                    choicesInstance = new Choices($select[0], {
+                        searchEnabled: true,
+                        searchPlaceholderValue: 'Type to search...',
+                        removeItemButton: true,
+                        shouldSort: true,
+                        sorter: function(a, b) {
+                            if (term === 'last_date') {
+                                var dateA = new Date(a.label);
+                                var dateB = new Date(b.label);
+                                return dateA - dateB;
+                            } else if (term === 'stars_out_of_3') {
+                                var numA = parseFloat(a.label);
+                                var numB = parseFloat(b.label);
+                                if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+                                if (!isNaN(numA)) return -1;
+                                if (!isNaN(numB)) return 1;
+                                return a.label.localeCompare(b.label);
+                            }
+                            return a.label.localeCompare(b.label);
+                        },
+                        itemSelectText: '',
+                        noResultsText: 'No matches found',
+                        noChoicesText: 'No options available',
+                        classNames: {
+                            containerOuter: 'choices',
+                            containerInner: 'choices__inner',
+                            input: 'choices__input',
+                            inputCloned: 'choices__input--cloned',
+                            list: 'choices__list',
+                            listItems: 'choices__list--multiple',
+                            listSingle: 'choices__list--single',
+                            listDropdown: 'choices__list--dropdown',
+                            item: 'choices__item',
+                            itemSelectable: 'choices__item--selectable',
+                            itemDisabled: 'choices__item--disabled',
+                            itemChoice: 'choices__item--choice',
+                            placeholder: 'choices__placeholder',
+                            group: 'choices__group',
+                            groupHeading: 'choices__heading',
+                            button: 'choices__button',
+                            activeState: 'is-active',
+                            focusState: 'is-focused',
+                            openState: 'is-open',
+                            disabledState: 'is-disabled',
+                            highlightedState: 'is-highlighted',
+                            selectedState: 'is-selected',
+                            flippedState: 'is-flipped',
+                            loadingState: 'is-loading',
+                            noResults: 'has-no-results',
+                            noChoices: 'has-no-choices'
+                        },
+                        callbackOnCreateTemplates: function(template) {
+                            return {
+                                choice: (classNames, data) => {
+                                    return template(`
+                                        <div class="${classNames.item} ${classNames.itemChoice} ${data.disabled ? classNames.itemDisabled : classNames.itemSelectable}" data-select-text="${this.config.itemSelectText}" data-choice ${data.disabled ? 'data-choice-disabled aria-disabled=true' : 'data-choice-selectable'} data-id="${data.id}" data-value="${data.value}" ${data.groupId > 0 ? 'role="treeitem"' : 'role="option"'}>
+                                            ${data.label}
+                                        </div>
+                                    `);
+                                }
+                            };
+                        }
+                    });
+
+                    $select.on('change', function() {
+                        var selectedValue = choicesInstance.getValue(true);
+                        // Add custom validation here if needed later
+                    });
+
+                    if (matchingValue) {
+                        $select.val(matchingValue);
+                        choicesInstance.setChoiceByValue(matchingValue);
+                    }
+
+                } else {
+                    // Fallback when Choices.js is not loaded
+                    console.warn('Choices.js not loaded — using plain select for ' + term);
+                    values.forEach(function(v) {
+                        $select.append('<option value="' + v + '">' + v + '</option>');
+                    });
+                    if (matchingValue) {
+                        $select.val(matchingValue);
+                    }
                 }
+                // ========== END SAFE INITIALIZATION ==========
+
+                resolve();
+            }).catch(function(error) {
+                console.error('AJAX error in loadDistinctValues for ' + term + ':', error);
+                resolve();
             });
-            // Restore preserved value if still valid
-            if (matchingValue) {
-                $select.val(matchingValue); // First set native value
-                choicesInstance.setChoiceByValue(matchingValue); // Then sync to Choices UI
-                choicesInstance.showDropdown(); // Optional: Open to verify
-                choicesInstance.hideDropdown(); // Close after
-                console.log('Synced value to Choices UI:', choicesInstance.getValue(true)); // Debug
+
+        } else {
+            $valueCell.append('<input type="text" class="value-input" name="value[]" placeholder="STEP 2: Select or Type a Value">');
+            if (currentValue) {
+                $valueCell.find('.value-input').val(currentValue);
             }
-        }).catch(function(error) {
-    		console.error('AJAX error in loadDistinctValues for ' + term + ':', error);
-	});
-    } else {
-        $valueCell.append('<input type="text" class="value-input" name="value[]" placeholder="STEP 2: Select or Type a Value">');
-        if (currentValue) {
-            $valueCell.find('.value-input').val(currentValue);
+            resolve();
         }
-    }
+    });
 }
 
     function getFiltersBefore($row) {
@@ -627,13 +607,24 @@ function resetFilters() {
             showUndoButtonForRow($row);
         });
     });
+
     $(document).on('change', '.logic-select', function() {
         pendingFilterChange = true;
         var $row = $(this).closest('.excel-row');
         lastFilterSnapshot = captureFilterSnapshot();
-        updateAllBelow($row).then(function() {
-            showUndoButtonForRow($row);
-        });
+        var term = $row.find('.term-select').val();
+        if (term) {
+            // Refresh this row first (its own options depend on the new logic), then lower rows
+            updateValueInput($row, term).then(function() {
+                updateAllBelow($row).then(function() {
+                    showUndoButtonForRow($row);
+                });
+            });
+        } else {
+            updateAllBelow($row).then(function() {
+                showUndoButtonForRow($row);
+            });
+        }
     });
 
     // When user changes AND/OR dropdown, refresh the value dropdown immediately
