@@ -190,94 +190,74 @@ function updateValueInput($row, term, initialValue = '') {
 
                 var matchingValue = values.find(v => v.trim().toLowerCase() === preservedValue) || initialValue;
 
-                // ========== SAFE Choices.js INITIALIZATION (permanent fix) ==========
+                // Safe Choices.js initialization with try/catch
                 var choicesInstance = null;
 
                 if (typeof Choices !== 'undefined') {
-                    if ($select[0].choices) {
-                        console.log('Choices found—destroying instance for ' + term);
-                        $select[0].choices.destroy();
-                    } else {
-                        console.log('No existing Choices for ' + term + '—initializing new');
-                    }
-
-                    choicesInstance = new Choices($select[0], {
-                        searchEnabled: true,
-                        searchPlaceholderValue: 'Type to search...',
-                        removeItemButton: true,
-                        shouldSort: true,
-                        sorter: function(a, b) {
-                            if (term === 'last_date') {
-                                var dateA = new Date(a.label);
-                                var dateB = new Date(b.label);
-                                return dateA - dateB;
-                            } else if (term === 'stars_out_of_3') {
-                                var numA = parseFloat(a.label);
-                                var numB = parseFloat(b.label);
-                                if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
-                                if (!isNaN(numA)) return -1;
-                                if (!isNaN(numB)) return 1;
-                                return a.label.localeCompare(b.label);
-                            }
-                            return a.label.localeCompare(b.label);
-                        },
-                        itemSelectText: '',
-                        noResultsText: 'No matches found',
-                        noChoicesText: 'No options available',
-                        classNames: {
-                            containerOuter: 'choices',
-                            containerInner: 'choices__inner',
-                            input: 'choices__input',
-                            inputCloned: 'choices__input--cloned',
-                            list: 'choices__list',
-                            listItems: 'choices__list--multiple',
-                            listSingle: 'choices__list--single',
-                            listDropdown: 'choices__list--dropdown',
-                            item: 'choices__item',
-                            itemSelectable: 'choices__item--selectable',
-                            itemDisabled: 'choices__item--disabled',
-                            itemChoice: 'choices__item--choice',
-                            placeholder: 'choices__placeholder',
-                            group: 'choices__group',
-                            groupHeading: 'choices__heading',
-                            button: 'choices__button',
-                            activeState: 'is-active',
-                            focusState: 'is-focused',
-                            openState: 'is-open',
-                            disabledState: 'is-disabled',
-                            highlightedState: 'is-highlighted',
-                            selectedState: 'is-selected',
-                            flippedState: 'is-flipped',
-                            loadingState: 'is-loading',
-                            noResults: 'has-no-results',
-                            noChoices: 'has-no-choices'
-                        },
-                        callbackOnCreateTemplates: function(template) {
-                            return {
-                                choice: (classNames, data) => {
-                                    return template(`
-                                        <div class="${classNames.item} ${classNames.itemChoice} ${data.disabled ? classNames.itemDisabled : classNames.itemSelectable}" data-select-text="${this.config.itemSelectText}" data-choice ${data.disabled ? 'data-choice-disabled aria-disabled=true' : 'data-choice-selectable'} data-id="${data.id}" data-value="${data.value}" ${data.groupId > 0 ? 'role="treeitem"' : 'role="option"'}>
-                                            ${data.label}
-                                        </div>
-                                    `);
-                                }
-                            };
+                    try {
+                        if ($select[0].choices) {
+                            $select[0].choices.destroy();
                         }
-                    });
+                        choicesInstance = new Choices($select[0], {
+                            searchEnabled: true,
+                            searchPlaceholderValue: 'Type to search...',
+                            removeItemButton: true,
+                            shouldSort: true,
+                            sorter: function(a, b) {
+                                if (term === 'last_date') {
+                                    return new Date(a.label) - new Date(b.label);
+                                } else if (term === 'stars_out_of_3') {
+                                    var numA = parseFloat(a.label);
+                                    var numB = parseFloat(b.label);
+                                    if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+                                    if (!isNaN(numA)) return -1;
+                                    if (!isNaN(numB)) return 1;
+                                    return a.label.localeCompare(b.label);
+                                }
+                                return a.label.localeCompare(b.label);
+                            },
+                            itemSelectText: '',
+                            noResultsText: 'No matches found',
+                            noChoicesText: 'No options available',
+                            classNames: {
+                                containerOuter: 'choices',
+                                containerInner: 'choices__inner',
+                                input: 'choices__input',
+                                inputCloned: 'choices__input--cloned',
+                                list: 'choices__list',
+                                listItems: 'choices__list--multiple',
+                                listSingle: 'choices__list--single',
+                                listDropdown: 'choices__list--dropdown',
+                                item: 'choices__item',
+                                itemSelectable: 'choices__item--selectable',
+                                itemDisabled: 'choices__item--disabled',
+                                itemChoice: 'choices__item--choice',
+                                placeholder: 'choices__placeholder',
+                                group: 'choices__group',
+                                groupHeading: 'choices__heading',
+                                button: 'choices__button',
+                                activeState: 'is-active',
+                                focusState: 'is-focused',
+                                openState: 'is-open',
+                                disabledState: 'is-disabled',
+                                highlightedState: 'is-highlighted',
+                                selectedState: 'is-selected',
+                                flippedState: 'is-flipped',
+                                loadingState: 'is-loading',
+                                noResults: 'has-no-results',
+                                noChoices: 'has-no-choices'
+                            }
+                        });
 
-                    $select.on('change', function() {
-                        var selectedValue = choicesInstance.getValue(true);
-                        // Add custom validation here if needed later
-                    });
-
-                    if (matchingValue) {
-                        $select.val(matchingValue);
-                        choicesInstance.setChoiceByValue(matchingValue);
+                        if (matchingValue) {
+                            $select.val(matchingValue);
+                            choicesInstance.setChoiceByValue(matchingValue);
+                        }
+                    } catch (e) {
+                        console.error('Error initializing Choices.js for ' + term + ':', e);
                     }
-
                 } else {
-                    // Fallback when Choices.js is not loaded
-                    console.warn('Choices.js not loaded — using plain select for ' + term);
+                    console.warn('Choices.js not loaded — falling back to plain select for ' + term);
                     values.forEach(function(v) {
                         $select.append('<option value="' + v + '">' + v + '</option>');
                     });
@@ -285,7 +265,6 @@ function updateValueInput($row, term, initialValue = '') {
                         $select.val(matchingValue);
                     }
                 }
-                // ========== END SAFE INITIALIZATION ==========
 
                 resolve();
             }).catch(function(error) {
