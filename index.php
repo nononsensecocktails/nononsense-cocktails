@@ -1,4 +1,4 @@
-<?php
+	<?php
 header("Cache-Control: max-age=0, must-revalidate");
 require_once 'db.php';
 require_once 'functions.php';
@@ -11,10 +11,6 @@ $usernames = getUsernames($conn);
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- ===== Google Adsense ===== -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3865173708892194"
-         crossorigin="anonymous"></script>
-    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=800, initial-scale=1.0, minimum-scale=0.1, maximum-scale=10.0, user-scalable=yes">
 
@@ -22,6 +18,10 @@ $usernames = getUsernames($conn);
    
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Choices.js (add this) -->
+    <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             tailwind.config = { content: [], theme: { extend: {} } };
@@ -46,10 +46,9 @@ $usernames = getUsernames($conn);
             min-width: 66px !important;     /* adjust this number up/down by 2-4px until it's one 'D' wider */
             font-size: 0.82rem !important;  /* keep font size normal or only slightly smaller */
         }
-		
+        
         :root { --accent: #e76f51; }
         @media (prefers-color-scheme: dark) { :root { --accent: #f4a261; } }
-
         body {
             background: #f8f1e3;
             font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -57,28 +56,30 @@ $usernames = getUsernames($conn);
             line-height: 1.2;
             margin: 0;
             padding: 0;
+	    /*overflow-x: hidden;*/
         }
         @media (prefers-color-scheme: dark) {
             body { background: #1e1e1e; color: #e0e0e0; }
         }
-
-        /* ============================================
-           CONSOLIDATED WIDTH RULES (replaces all the scattered 800px !important rules)
-        ============================================ */
-        .main-container,
-        .navbar,
-        #recipe_details,
-        .navbar .container-fluid,
-        .main-container > .card:first-of-type {
-            width: 100%;
-            max-width: 800px;
-            margin-left: auto;
-            margin-right: auto;
+        /* MAIN CONTAINER - 800px left-aligned + no horizontal scrollbar */
+        .main-container {
+            width: 800px !important;
+            max-width: 800px !important;
+            min-width: 800px !important;
+            margin: 2px auto 2px auto !important;
+            padding: 0;
+            /*overflow-x: hidden;*/
         }
-
-        /* ============================================
-           BASE STYLES
-        ============================================ */
+        /* NAVBAR - 800px left-aligned (removes black spillover on the right) */
+        .navbar {
+            background: #2a2a2a;
+            color: white;
+            padding: 2px 6px;
+            font-size: 0.9rem;
+            width: 800px !important;
+            max-width: 800px !important;
+            margin: 0 auto !important;
+        }
         .card {
             border: 1px solid #ccc;
             border-radius: 0;
@@ -94,8 +95,11 @@ $usernames = getUsernames($conn);
             background: #f0f0f0;
             font-size: 0.9rem;
         }
-
-        /* FILTER ROWS - keep on one line, shrink on mobile */
+        @media (prefers-color-scheme: dark) {
+            .card { border-color: #555; }
+            .card-header { background: #2d2d2d; }
+        }
+        /* FILTERS - all dropdowns identical */
         .search-boxes .excel-row {
             display: flex !important;
             gap: 2px;
@@ -106,26 +110,28 @@ $usernames = getUsernames($conn);
         .excel-cell {
             padding: 2px 4px !important;
         }
-
+        /* Force Step 1 and Step 2 to look exactly like Step 3 and Step 4 */
         .term-select, .operator-select, .logic-select {
             border: 1px solid #ccc !important;
             background-color: #ffffff !important;
             font-size: 0.85rem !important;
             padding: 4px 8px !important;
             height: auto !important;
-            border-radius: 4px !important;
+            border-radius: 4px !important;   /* rounded corners */
         }
         .value-input {
             border: 1px solid #ccc;
         }
-
-        /* METADATA */
+        /* METADATA - ABSOLUTE MINIMUM PADDING */
         #recipe_details .excel-row {
             display: flex !important;
             margin-bottom: 1px;
             border-bottom: 1px solid #e5e5e5;
             padding: 0;
             line-height: 1;
+        }
+        @media (prefers-color-scheme: dark) {
+            #recipe_details .excel-row { border-color: #444; }
         }
         #recipe_details .label-cell {
             font-weight: 600;
@@ -140,9 +146,121 @@ $usernames = getUsernames($conn);
             padding-left: 4px;
             min-width: 0;
         }
+
+/* STATIC FIXED WIDTH FOR ENTIRE METADATA SECTION - LEFT ALIGNED */
         #recipe_details {
+            width: 800px !important;
+            max-width: 800px !important;
+            margin: 0 auto !important;   /* left-aligned with tiny page padding */
             border: 1px solid #ccc;
             background-color: #ffffff;
+        }
+        @media (prefers-color-scheme: dark) {
+            #recipe_details {
+                border-color: #555;
+                background-color: #2a2a2a;
+            }
+        }
+/* NAVBAR / HEADER WITH 4 BUTTONS - match metadata 800px left-aligned */
+        .navbar .container-fluid {
+            width: 800px !important;
+            max-width: 800px !important;
+            margin: 0 auto !important;
+        }
+/* FILTERS CARD (the two rows with Step dropdowns) - match 800px left-aligned */
+        .main-container > .card:first-of-type {
+            width: 800px !important;
+            max-width: 800px !important;
+            margin: 0 auto !important;
+        }
+
+        /* DARK MODE - Full text visibility for metadata + ingredients (fixes black text) */
+        @media (prefers-color-scheme: dark) {
+            #recipe_details,
+            #recipe_details .label-cell,
+            #recipe_details .content-cell,
+            #recipe_details .card-body,
+            #recipe_details *,
+            .ingredient-table,
+            .ingredient-table th,
+            .ingredient-table td {
+                color: #e0e0e0 !important;
+            }
+            #recipe_details {
+                background-color: #2a2a2a !important;
+            }
+            .ingredient-table th {
+                background: #2d2d2d !important;
+            }
+            /* Optional: slightly lighter table rows in dark mode */
+            .ingredient-table tr:nth-child(even) {
+                background-color: #252525 !important;
+            }
+        }
+
+        /* DARK MODE - Filter section (STEP dropdowns + Possible Cocktails / Sources row) */
+        @media (prefers-color-scheme: dark) {
+            .main-container > .card:first-of-type,
+            .main-container > .card:first-of-type .card-body,
+            .search-boxes,
+            .search-boxes .excel-row,
+            .search-boxes .excel-cell,
+            #name-source-row,
+            #name-source-row .card,
+            #name-source-row .card-body {
+                background-color: #2a2a2a !important;
+                color: #e0e0e0 !important;
+                border-color: #555 !important;
+            }
+            
+            .main-container > .card:first-of-type {
+                border: 1px solid #555 !important;
+            }
+            
+            /* Make the actual dropdowns and inputs inside the filter rows dark too */
+            .term-select,
+            .operator-select,
+            .logic-select,
+            .value-input,
+            .excel-cell select,
+            .excel-cell input {
+                background-color: #3a3a3a !important;
+                border-color: #666 !important;
+                color: #e0e0e0 !important;
+            }
+        }
+
+        /* DARK MODE - Second filter row (Possible Cocktails + Sources) - ULTRA STRONG OVERRIDE */
+        @media (prefers-color-scheme: dark) {
+            #name-source-row,
+            #name-source-row.card,
+            #name-source-row .card,
+            #name-source-row > .card,
+            #name-source-row .card-body,
+            #name-source-row .excel-row,
+            #name-source-row .excel-cell,
+            #name-source-row * {
+                background-color: #2a2a2a !important;
+                color: #e0e0e0 !important;
+                border-color: #555 !important;
+            }
+            
+            /* Dropdowns and inputs inside the second row */
+            #name-select,
+            #source-select,
+            #name-source-row select,
+            #name-source-row .form-select,
+            #name-source-row input {
+                background-color: #3a3a3a !important;
+                border-color: #666 !important;
+                color: #e0e0e0 !important;
+            }
+            
+            /* Count badges */
+            #name-source-row .badge {
+                color: #e0e0e0 !important;
+                background-color: #555 !important;
+            }
         }
 
         /* INGREDIENTS TABLE */
@@ -164,138 +282,37 @@ $usernames = getUsernames($conn);
             background: #f0f0f0;
             font-weight: 600;
         }
+        @media (prefers-color-scheme: dark) {
+            .ingredient-table { border-color: #555; }
+            .ingredient-table th,
+            .ingredient-table td { border-color: #555; }
+            .ingredient-table th { background: #2d2d2d; }
+        }
         .ingredient-table th:nth-child(1), .ingredient-table td:nth-child(1) { width: 28px; text-align: left; }
         .ingredient-table th:nth-child(2), .ingredient-table td:nth-child(2) { 
-            width: 170px; text-align: left; padding-right: 4px; word-break: break-word; white-space: normal;
+            width: 170px;
+            text-align: left; 
+            padding-right: 4px;
+            word-break: break-word;
+            white-space: normal;
         }
-        .ingredient-table th:nth-child(3), .ingredient-table td:nth-child(3) { width: 82px; text-align: right; padding-left: 4px; }
-        .ingredient-table th:nth-child(4), .ingredient-table td:nth-child(4) { width: 65px; text-align: right; }
-
+        .ingredient-table th:nth-child(3), .ingredient-table td:nth-child(3) { 
+            width: 82px; 
+            text-align: right; 
+            padding-left: 4px;
+        }
+        .ingredient-table th:nth-child(4), .ingredient-table td:nth-child(4) { 
+            width: 65px; 
+            text-align: right;
+        }
         .btn { padding: 2px 8px; font-size: 0.82rem; }
-        #user-select { font-size: 0.82rem; }
+        #user-select {
+            font-size: 0.82rem;
+        }
         #recipe_details .card-body { padding: 4px 6px !important; }
 
-        /* Manual flex control for filter row cells */
-        .term-select-cell { flex: 0 0 175px; }
-        .excel-cell:has(.operator-select) { flex: 0 0 58px; }
-        .excel-cell:has(.value-input) { flex: 0 0 200px; }
-        .term-select, .operator-select, .value-input { width: 100% !important; }
-        #recipe_details .ingredient-table { margin-left: 168px; }
-
-        /* ============================================
-           RESPONSIVE SHRINKING (guarantees no horizontal overflow on mobile)
-        ============================================ */
-
-        /* Large phones / small tablets */
-        @media (max-width: 768px) {
-            .search-boxes .excel-row { gap: 1px; margin-bottom: 1px; }
-            .excel-cell { padding: 1px 2px !important; }
-            .term-select, .operator-select, .logic-select,
-            .value-input, .excel-cell select, .excel-cell input {
-                font-size: 0.8rem !important;
-                padding: 2px 4px !important;
-            }
-            button, .btn { font-size: 0.8rem !important; padding: 2px 6px !important; }
-        }
-
-        /* Most phones */
-        @media (max-width: 480px) {
-            .search-boxes .excel-row { gap: 1px; }
-            .excel-cell { padding: 0 1px !important; }
-            .term-select, .operator-select, .logic-select,
-            .value-input {
-                font-size: 0.75rem !important;
-                padding: 1px 3px !important;
-            }
-            button, .btn { font-size: 0.75rem !important; padding: 2px 6px !important; }
-
-            /* Metadata */
-            #recipe_details .label-cell { width: 120px; padding-right: 4px; font-size: 0.75rem; }
-            #recipe_details .content-cell { font-size: 0.75rem; padding-left: 2px; }
-            #recipe_details .excel-row { margin-bottom: 0; padding: 0; }
-
-            /* Ingredients table */
-            .ingredient-table th, .ingredient-table td {
-                font-size: 0.75rem !important;
-                padding: 2px 4px !important;
-            }
-        }
-
-        /* Very narrow phones - aggressive shrinking */
-        @media (max-width: 400px) {
-            .search-boxes .excel-row { gap: 0; }
-            .excel-cell { padding: 0 1px !important; }
-            .term-select, .operator-select, .logic-select,
-            .value-input {
-                font-size: 0.7rem !important;
-                padding: 1px 2px !important;
-            }
-            button, .btn { font-size: 0.7rem !important; padding: 1px 4px !important; }
-
-            /* Metadata */
-            #recipe_details .label-cell { width: 100px; font-size: 0.7rem; }
-            #recipe_details .content-cell { font-size: 0.7rem; }
-
-            /* Ingredients table */
-            .ingredient-table th, .ingredient-table td {
-                font-size: 0.7rem !important;
-                padding: 1px 2px !important;
-            }
-        }
-
-        /* ============================================
-           DARK MODE (consolidated where practical)
-        ============================================ */
+        /* DARK MODE - Second filter row (Possible Cocktails + Sources) - FINAL STRONG OVERRIDE */
         @media (prefers-color-scheme: dark) {
-            .card { border-color: #555; }
-            .card-header { background: #2d2d2d; }
-
-            /* Metadata + Ingredients */
-            #recipe_details,
-            #recipe_details .label-cell,
-            #recipe_details .content-cell,
-            #recipe_details .card-body,
-            #recipe_details *,
-            .ingredient-table,
-            .ingredient-table th,
-            .ingredient-table td {
-                color: #e0e0e0 !important;
-            }
-            #recipe_details { background-color: #2a2a2a !important; border-color: #555; }
-            .ingredient-table { border-color: #555; }
-            .ingredient-table th { background: #2d2d2d !important; }
-            .ingredient-table tr:nth-child(even) { background-color: #252525 !important; }
-
-            /* Filter section (all rows) */
-            .main-container > .card:first-of-type,
-            .main-container > .card:first-of-type .card-body,
-            .search-boxes,
-            .search-boxes .excel-row,
-            .search-boxes .excel-cell,
-            #name-source-row,
-            #name-source-row .card,
-            #name-source-row .card-body {
-                background-color: #2a2a2a !important;
-                color: #e0e0e0 !important;
-                border-color: #555 !important;
-            }
-            .main-container > .card:first-of-type { border: 1px solid #555 !important; }
-
-            /* Dropdowns and inputs in filters */
-            .term-select,
-            .operator-select,
-            .logic-select,
-            .value-input,
-            .excel-cell select,
-            .excel-cell input,
-            #name-select,
-            #source-select {
-                background-color: #3a3a3a !important;
-                border-color: #666 !important;
-                color: #e0e0e0 !important;
-            }
-
-            /* Second filter row (Possible Cocktails + Sources) */
             #name-source-row,
             #name-source-row.card,
             #name-source-row > .card,
@@ -308,11 +325,55 @@ $usernames = getUsernames($conn);
                 color: #e0e0e0 !important;
                 border-color: #555 !important;
             }
+
+            /* Dropdowns inside the second row */
+            #name-select,
+            #source-select,
+            #name-source-row select,
+            #name-source-row .form-select,
+            #name-source-row input {
+                background-color: #3a3a3a !important;
+                border-color: #666 !important;
+                color: #e0e0e0 !important;
+            }
+
+            /* Count badges */
             #name-source-row .badge {
                 background-color: #555 !important;
                 color: #e0e0e0 !important;
             }
         }
+
+/* === Manual width control for the top filter row === */
+
+/* STEP 1 dropdown (the big "Select a Filter" box) */
+.term-select-cell {
+    flex: 0 0 175px;           /* Change this number to make it wider/narrower */
+}
+
+/* Operator dropdown (the small = / ≠ box) */
+.excel-cell:has(.operator-select) {
+    flex: 0 0 58px;            /* Change this to control the small operator width */
+}
+
+/* STEP 2 input box */
+.excel-cell:has(.value-input) {
+    flex: 0 0 200px;                   /* Use flex: 1 to let it grow, or use flex: 0 0 300px; for fixed width */
+}
+
+/* Optional: Make the actual form elements fill their container */
+.term-select,
+.operator-select,
+.value-input {
+    width: 100% !important;
+}
+
+/* Align Ingredients table with metadata values */
+#recipe_details .ingredient-table {
+    margin-left: 168px;     /* Adjust this number if needed */
+}
+
+
     </style>
 </head>
 <body>
@@ -322,11 +383,13 @@ $usernames = getUsernames($conn);
         <div class="container-fluid d-flex align-items-center">
             <!-- Left: Logo + Title -->
             <div class="d-flex align-items-center">
-                <img src="images/Coldberry_01_TM.jpg" alt="Logo" style="height: 36px;" class="me-2">
+                <a href="https://www.nononsensecocktails.com/">
+                    <img src="images/Coldberry_01_TM.jpg" alt="Logo" style="height: 36px;" class="me-2">
+                </a>
                 <h1 class="h5 mb-0 text-white">No-Nonsense Cocktails</h1>
             </div>
             
-            <!-- Center: 4 Buttons -->
+            <!-- Center: 4 Buttons (moved a little more right + tighter spacing) -->
             <div class="d-flex align-items-center gap-1 mx-auto ms-12">
                 <button id="reset-button" class="btn btn-outline-light">Reset</button>
                 <button id="lucky-button" class="btn btn-outline-light">I'm Feeling Lucky</button>
@@ -348,13 +411,15 @@ $usernames = getUsernames($conn);
         </div>
     </nav>
 
+
     <div class="main-container">
         <!-- Filters -->
         <div class="card">
             <div class="card-body">
+
                 <div class="search-boxes">
                     <div class="excel-row">
-                        <!-- STEP 1 -->
+			<!-- STEP 1 -->
                         <div class="excel-cell term-select-cell">
                             <select class="term-select form-select" name="term[]">
                                 <option value="" selected>STEP 1: Select a Filter</option>
@@ -379,45 +444,46 @@ $usernames = getUsernames($conn);
                                 <option value="variations">Variations</option>
                             </select>
                         </div>
-                        <!-- Operator -->
+			<!-- Operator -->
                         <div class="excel-cell">
                             <select class="operator-select form-select" name="operator[]">
                                 <option value="=" selected>=</option>
                                 <option value="<>">≠</option>
                             </select>
                         </div>
-                        <!-- STEP 2 -->
+			<!-- STEP 2 -->
                         <div class="excel-cell">
                             <input type="text" class="value-input form-control" name="value[]" placeholder="STEP 2: Select or Type a Value">
                         </div>
 
-                        <!-- + button -->
+			<!-- + button (back in original position next to filter) -->
                         <div class="excel-cell" style="flex: 0 0 32px;"><button class="add-box btn btn-sm btn-outline-secondary w-100">+</button></div>
-                        
-                        <!-- – button -->
+			
+			<!-- – button -->
                         <div class="excel-cell" style="flex: 0 0 32px;"><button class="remove-box btn btn-sm btn-outline-secondary w-100" style="display:none;">–</button></div>
 
                         <!-- Logic -->
-                        <div class="excel-cell logic-cell" style="flex: 0 0 64px;">
+			<div class="excel-cell logic-cell" style="flex: 0 0 64px;">
                             <select class="logic-select form-select" name="logic[]" style="display:none;">
                                 <option value="AND" selected>AND</option>
                                 <option value="OR">OR</option>
                             </select>
                         </div>
 
-                        <!-- Ingredients Order dropdown -->
-                        <div class="excel-cell" style="min-width: 170px; flex: 0 0 auto; margin-left: auto;">
-                            <div style="font-size: 0.75rem; color: #6c757d; margin-bottom: 1px;">Ingredients Order</div>
-                            <select id="ingredients-order-select" class="form-select form-select-sm">
-                                <option value="Recipe" selected>Recipe</option>
-                                <option value="Vol Asc">Vol Asc</option>
-                                <option value="Vol Desc">Vol Desc</option>
-                                <option value="Cost Asc">Cost Asc</option>
-                                <option value="Cost Desc">Cost Desc</option>
-                                <option value="Alpha Asc">Alpha Asc</option>
-                                <option value="Alpha Desc">Alpha Desc</option>
-                            </select>
-                        </div>
+			<!-- NEW: Ingredients Order dropdown moved to far right -->
+	                <div class="excel-cell" style="min-width: 170px; flex: 0 0 auto; margin-left: auto;">
+        	            <div style="font-size: 0.75rem; color: #6c757d; margin-bottom: 1px;">Ingredients Order</div>
+                	    <select id="ingredients-order-select" class="form-select form-select-sm">
+                        	<option value="Recipe" selected>Recipe</option>
+	                        <option value="Vol Asc">Vol Asc</option>
+        	                <option value="Vol Desc">Vol Desc</option>
+                	        <option value="Cost Asc">Cost Asc</option>
+                        	<option value="Cost Desc">Cost Desc</option>
+	                        <option value="Alpha Asc">Alpha Asc</option>
+        	                <option value="Alpha Desc">Alpha Desc</option>
+                	    </select>
+                	</div>
+
                     </div>
                 </div>
             </div>
