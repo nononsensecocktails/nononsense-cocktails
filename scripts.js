@@ -152,8 +152,6 @@ function updateValueInput($row, term, initialValue = '') {
             $valueCell.append($select);
 
             var filtersBefore = getFiltersBeforeForDropdown($row, term);
-            console.log('Filters before for ' + term + ':', filtersBefore);
-
             loadDistinctValues(term, filtersBefore).then(function(values) {
                 var preservedValue = (currentValue || initialValue).trim().toLowerCase();
                 $select.find('option:not(:first)').remove();
@@ -185,79 +183,31 @@ function updateValueInput($row, term, initialValue = '') {
                     }
                 }
 
-                console.log('Fetched values for ' + term + ':', values);
-                console.log('Preserved value (normalized):', preservedValue);
-
                 var matchingValue = values.find(v => v.trim().toLowerCase() === preservedValue) || initialValue;
 
-                // Safe Choices.js initialization with try/catch
                 var choicesInstance = null;
 
                 if (typeof Choices !== 'undefined') {
-                    try {
-                        if ($select[0].choices) {
-                            $select[0].choices.destroy();
-                        }
-                        choicesInstance = new Choices($select[0], {
-                            searchEnabled: true,
-                            searchPlaceholderValue: 'Type to search...',
-                            removeItemButton: true,
-                            shouldSort: true,
-                            sorter: function(a, b) {
-                                if (term === 'last_date') {
-                                    return new Date(a.label) - new Date(b.label);
-                                } else if (term === 'stars_out_of_3') {
-                                    var numA = parseFloat(a.label);
-                                    var numB = parseFloat(b.label);
-                                    if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
-                                    if (!isNaN(numA)) return -1;
-                                    if (!isNaN(numB)) return 1;
-                                    return a.label.localeCompare(b.label);
-                                }
-                                return a.label.localeCompare(b.label);
-                            },
-                            itemSelectText: '',
-                            noResultsText: 'No matches found',
-                            noChoicesText: 'No options available',
-                            classNames: {
-                                containerOuter: 'choices',
-                                containerInner: 'choices__inner',
-                                input: 'choices__input',
-                                inputCloned: 'choices__input--cloned',
-                                list: 'choices__list',
-                                listItems: 'choices__list--multiple',
-                                listSingle: 'choices__list--single',
-                                listDropdown: 'choices__list--dropdown',
-                                item: 'choices__item',
-                                itemSelectable: 'choices__item--selectable',
-                                itemDisabled: 'choices__item--disabled',
-                                itemChoice: 'choices__item--choice',
-                                placeholder: 'choices__placeholder',
-                                group: 'choices__group',
-                                groupHeading: 'choices__heading',
-                                button: 'choices__button',
-                                activeState: 'is-active',
-                                focusState: 'is-focused',
-                                openState: 'is-open',
-                                disabledState: 'is-disabled',
-                                highlightedState: 'is-highlighted',
-                                selectedState: 'is-selected',
-                                flippedState: 'is-flipped',
-                                loadingState: 'is-loading',
-                                noResults: 'has-no-results',
-                                noChoices: 'has-no-choices'
-                            }
-                        });
+                    if ($select[0].choices) {
+                        $select[0].choices.destroy();
+                    }
 
-                        if (matchingValue) {
-                            $select.val(matchingValue);
-                            choicesInstance.setChoiceByValue(matchingValue);
-                        }
-                    } catch (e) {
-                        console.error('Error initializing Choices.js for ' + term + ':', e);
+                    choicesInstance = new Choices($select[0], {
+                        searchEnabled: true,
+                        searchPlaceholderValue: 'Type to search...',
+                        removeItemButton: true,
+                        shouldSort: true,
+                        itemSelectText: '',
+                        noResultsText: 'No matches found',
+                        noChoicesText: 'No options available'
+                    });
+
+                    if (matchingValue) {
+                        $select.val(matchingValue);
+                        choicesInstance.setChoiceByValue(matchingValue);
                     }
                 } else {
-                    console.warn('Choices.js not loaded — falling back to plain select for ' + term);
+                    console.warn('Choices.js not loaded for ' + term);
                     values.forEach(function(v) {
                         $select.append('<option value="' + v + '">' + v + '</option>');
                     });
@@ -268,7 +218,7 @@ function updateValueInput($row, term, initialValue = '') {
 
                 resolve();
             }).catch(function(error) {
-                console.error('AJAX error in loadDistinctValues for ' + term + ':', error);
+                console.error('loadDistinctValues error for ' + term, error);
                 resolve();
             });
 
@@ -281,7 +231,6 @@ function updateValueInput($row, term, initialValue = '') {
         }
     });
 }
-
     function getFiltersBefore($row) {
         var filters = [];
         $('.search-boxes .excel-row').each(function() {
