@@ -43,6 +43,31 @@ $usernames = getUsernames($conn);
             font-size: 0.82rem !important;  /* keep font size normal or only slightly smaller */
         }
         
+        /* === Clear button styles for filter inputs === */
+        .input-with-clear {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-with-clear .value-input {
+            padding-right: 28px;
+        }
+
+        .clear-btn {
+            position: absolute;
+            right: 8px;
+            font-size: 18px;
+            color: #999;
+            cursor: pointer;
+            user-select: none;
+            display: none;
+        }
+
+        .clear-btn:hover {
+            color: #333;
+        }
+
         :root { --accent: #e76f51; }
         @media (prefers-color-scheme: dark) { :root { --accent: #f4a261; } }
         body {
