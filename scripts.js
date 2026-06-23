@@ -128,16 +128,6 @@ function updateOperatorSelect($row, term) {
         return filters;
     }
 
-/**
- * Modified updateValueInput function
- * 
- * Changes:
- * - Uses native <input> + <datalist> for searchable behavior on eligible fields
- * - Excludes: garnish, instructions, name (keeps original behavior)
- * - Still loads options via loadDistinctValues() for context-aware lists
- * - Preserves existing value handling, cascading updates, and filter logic
- * - For datalist: full list is available via down-arrow or typing (browser-dependent)
- */
 function updateValueInput($row, term, initialValue = '') {
     var $valueCell = $row.find('.excel-cell:nth-child(3)');
     var currentValue = $row.find('.value-input').val() || initialValue.trim();
@@ -148,13 +138,15 @@ function updateValueInput($row, term, initialValue = '') {
 
     if (dropdownFields.includes(term)) {
 
-        // === Plain text input (Name, Garnish, Instructions) ===
+        // === Plain text input with Clear X (Name, Garnish, Instructions) ===
         if (textInputOnlyFields.includes(term)) {
             var placeholder = 'Type ' + term.replace(/_/g, ' ') + ' or partial match';
             if (term === 'name') {
                 placeholder = 'Type name or partial name';
             }
 
+            // Create wrapper for input + clear button
+            var $wrapper = $('<div class="input-with-clear"></div>');
             var $input = $('<input type="text" class="value-input form-control" name="value[]">');
             $input.attr('placeholder', placeholder);
 
@@ -162,7 +154,33 @@ function updateValueInput($row, term, initialValue = '') {
                 $input.val(currentValue);
             }
 
-            $valueCell.append($input);
+            // Clear button
+            var $clearBtn = $('<span class="clear-btn" aria-label="Clear">×</span>');
+
+            $wrapper.append($input).append($clearBtn);
+            $valueCell.append($wrapper);
+
+            // Clear button click handler
+            $clearBtn.on('click', function() {
+                $input.val('').trigger('change');
+                $(this).hide();
+            });
+
+            // Show/hide clear button based on input value
+            $input.on('input change', function() {
+                if ($(this).val()) {
+                    $clearBtn.show();
+                } else {
+                    $clearBtn.hide();
+                }
+            });
+
+            // Initial state of clear button
+            if (currentValue) {
+                $clearBtn.show();
+            } else {
+                $clearBtn.hide();
+            }
 
             $input.on('change input', function () {
                 if (typeof updateAllBelow === 'function') {
@@ -174,45 +192,31 @@ function updateValueInput($row, term, initialValue = '') {
             return;
         }
 
-        // === Searchable datalist for all other dropdown fields (Ingredients, Glass, Base, etc.) ===
-        var datalistId = 'step2-datalist-' + term + '-' + Date.now();
+        // === Choices.js for all other dropdown fields (desktop + mobile) ===
+        var $select = $('<select class="value-input choices-filter" name="value[]"></select>');
+        $select.append('<option value="">Any ' + term.replace(/_/g, ' ') + '</option>');
 
-        var $input = $('<input>', {
-            type: 'text',
-            class: 'value-input form-control',
-            name: 'value[]',
-            placeholder: 'STEP 2: Select or Type a Value',
-            list: datalistId
-        });
-
-        if (currentValue) {
-            $input.val(currentValue);
-        }
-
-        var $datalist = $('<datalist>', { id: datalistId });
+        $valueCell.append($select);
 
         var filtersBefore = getFiltersBeforeForDropdown($row, term);
 
         loadDistinctValues(term, filtersBefore).then(function(values) {
             $.each(values, function(index, value) {
-                $datalist.append($('<option>', { value: value }));
+                $select.append($('<option>', { value: value, text: value }));
+            });
+
+            // Initialize Choices.js (includes built-in clear/remove button)
+            new Choices($select[0], {
+                searchPlaceholderValue: 'Type to search...',
+                shouldSort: false,
+                removeItemButton: true,   // ← This adds the clear "X" on selected value
+                itemSelectText: '',
+                searchResultLimit: -1
             });
         });
 
-        $valueCell.append($input).append($datalist);
-
-        // === Small enhancement for better single-letter keyboard navigation in Chrome ===
-        $input.on('keydown', function(e) {
-            if (e.key.length === 1 && /[a-zA-Z0-9]/.test(e.key)) {
-                setTimeout(() => {
-                    const currentVal = $(this).val();
-                    $(this).val(currentVal + ' ').val(currentVal);
-                }, 10);
-            }
-        });
-
-        // Trigger cascading updates when value changes
-        $input.on('change input', function () {
+        // Trigger cascading updates
+        $select.on('change', function () {
             if (typeof updateAllBelow === 'function') {
                 updateAllBelow($row);
             }
@@ -239,7 +243,6 @@ function updateValueInput($row, term, initialValue = '') {
         $(document).trigger('filtersChanged');
     });
 }
-
 
     function getFiltersBefore($row) {
         var filters = [];
