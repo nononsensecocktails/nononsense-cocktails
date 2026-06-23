@@ -244,10 +244,10 @@ function getTotalCocktails($conn, $user, $filters_data) {
     }
     $base_where = "WHERE (COALESCE(r.Hide, 0) = 0 OR EXISTS (SELECT 1 FROM user_ratings ur3 WHERE ur3.recipe_id = r.ID AND ur3.username = r.Source))";
     if ($user === 'All' && has_ur_filters($filters_data)) {
-        $inner_sql = "SELECT r.Name FROM recipes r $join $base_where GROUP BY r.ID HAVING ($where_clause)";
-        $sql = "SELECT COUNT(DISTINCT Name) as total FROM ($inner_sql) sub";
+        $inner_sql = "SELECT r.ID FROM recipes r $join $base_where GROUP BY r.ID HAVING ($where_clause)";
+        $sql = "SELECT COUNT(*) as total FROM ($inner_sql) sub";
     } else {
-        $sql = "SELECT COUNT(DISTINCT r.Name) as total FROM recipes r $join $base_where";
+        $sql = "SELECT COUNT(DISTINCT r.ID) as total FROM recipes r $join $base_where";
         if ($where_clause !== '1=1') {
             $sql .= " AND ($where_clause)";
         }
