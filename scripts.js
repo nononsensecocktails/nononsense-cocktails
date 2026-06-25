@@ -133,11 +133,10 @@ function updateValueInput($row, term, initialValue = '') {
     var currentValue = $row.find('.value-input').val() || initialValue.trim();
     $valueCell.empty();
 
-    // Fields that should always be plain text inputs with clear button
     var textInputOnlyFields = ['name', 'garnish', 'instructions', 'All'];
 
     // === Plain text input with Clear X (Name, Garnish, Instructions, All) ===
-if (textInputOnlyFields.includes(term)) {
+    if (textInputOnlyFields.includes(term)) {
         var placeholder = 'Type to search...';
         if (term === 'name') {
             placeholder = 'Type name or partial name';
@@ -160,13 +159,11 @@ if (textInputOnlyFields.includes(term)) {
         $wrapper.append($input).append($clearBtn);
         $valueCell.append($wrapper);
 
-        // Clear button click handler
         $clearBtn.on('click', function() {
             $input.val('').trigger('change');
             $(this).hide();
         });
 
-        // Show/hide clear button based on input value
         $input.on('input change', function() {
             if ($(this).val()) {
                 $clearBtn.show();
@@ -175,7 +172,6 @@ if (textInputOnlyFields.includes(term)) {
             }
         });
 
-        // Initial state of clear button
         if (currentValue) {
             $clearBtn.show();
         } else {
@@ -193,7 +189,66 @@ if (textInputOnlyFields.includes(term)) {
     }
 
     if (dropdownFields.includes(term)) {
-        // === Choices.js for all other dropdown fields ===
+
+        // === Mobile: Custom searchable input + scrollable list ===
+        if (/Mobi|Android/i.test(navigator.userAgent) || window.innerWidth < 768) {
+            var $input = $('<input type="text" class="value-input form-control" name="value[]" placeholder="Type to search...">');
+            if (currentValue) $input.val(currentValue);
+
+            var $list = $('<div class="mobile-search-list"></div>');
+
+            $valueCell.css('position', 'relative').append($input).append($list);
+
+            var allOptions = [];
+
+            loadDistinctValues(term, getFiltersBeforeForDropdown($row, term)).then(function(values) {
+                allOptions = values || [];
+
+                function renderList(filtered) {
+                    $list.empty();
+                    filtered.forEach(function(val) {
+                        var $item = $('<div class="mobile-search-item">' + val + '</div>');
+                        $item.on('click', function() {
+                            $input.val(val).trigger('change');
+                            $list.hide();
+                        });
+                        $list.append($item);
+                    });
+                }
+
+                renderList(allOptions);
+
+                $input.on('input', function() {
+                    var val = $(this).val().toLowerCase();
+                    var filtered = allOptions.filter(function(opt) {
+                        return opt.toLowerCase().includes(val);
+                    });
+                    renderList(filtered);
+                    $list.show();
+                });
+
+                $input.on('focus', function() {
+                    $list.show();
+                });
+
+                $(document).on('click', function(e) {
+                    if (!$(e.target).closest($valueCell).length) {
+                        $list.hide();
+                    }
+                });
+            });
+
+            $input.on('change input', function () {
+                if (typeof updateAllBelow === 'function') {
+                    updateAllBelow($row);
+                }
+                $(document).trigger('filtersChanged');
+            });
+
+            return;
+        }
+
+        // === Desktop: Choices.js ===
         var $select = $('<select class="value-input choices-filter" name="value[]"></select>');
         $select.append('<option value="">Any ' + term.replace(/_/g, ' ') + '</option>');
 
@@ -206,13 +261,24 @@ if (textInputOnlyFields.includes(term)) {
                 $select.append($('<option>', { value: value, text: value }));
             });
 
-            new Choices($select[0], {
+            if ($select.data('choices')) {
+                $select.data('choices').destroy();
+            }
+
+            var choices = new Choices($select[0], {
+                searchEnabled: true,
                 searchPlaceholderValue: 'Type to search...',
                 shouldSort: false,
                 removeItemButton: true,
                 itemSelectText: '',
-                searchResultLimit: -1
+                searchResultLimit: -1,
+                searchChoices: true,
+                searchFields: ['label'],
+                duplicateItemsAllowed: false,
+                position: 'auto'
             });
+
+            $select.data('choices', choices);
         });
 
         $select.on('change', function () {
@@ -225,7 +291,7 @@ if (textInputOnlyFields.includes(term)) {
         return;
     }
 
-    // === Fallback for non-dropdown fields ===
+    // === Fallback ===
     var $fallbackInput = $('<input type="text" class="value-input form-control" name="value[]">');
     $fallbackInput.attr('placeholder', 'STEP 2: Select or Type a Value');
 
