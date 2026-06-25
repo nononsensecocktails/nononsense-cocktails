@@ -133,66 +133,67 @@ function updateValueInput($row, term, initialValue = '') {
     var currentValue = $row.find('.value-input').val() || initialValue.trim();
     $valueCell.empty();
 
-    // Fields that should behave exactly like "Name" (plain text input)
-    var textInputOnlyFields = ['name', 'garnish', 'instructions'];
+    // Fields that should always be plain text inputs with clear button
+    var textInputOnlyFields = ['name', 'garnish', 'instructions', 'All'];
 
-    if (dropdownFields.includes(term)) {
+    // === Plain text input with Clear X (Name, Garnish, Instructions, All) ===
+if (textInputOnlyFields.includes(term)) {
+        var placeholder = 'Type to search...';
+        if (term === 'name') {
+            placeholder = 'Type name or partial name';
+        } else if (term === 'All') {
+            placeholder = 'Search all fields...';
+        } else {
+            placeholder = 'Type ' + term.replace(/_/g, ' ') + ' or partial match';
+        }
 
-        // === Plain text input with Clear X (Name, Garnish, Instructions) ===
-        if (textInputOnlyFields.includes(term)) {
-            var placeholder = 'Type ' + term.replace(/_/g, ' ') + ' or partial match';
-            if (term === 'name') {
-                placeholder = 'Type name or partial name';
-            }
+        var $wrapper = $('<div class="input-with-clear"></div>');
+        var $input = $('<input type="text" class="value-input form-control" name="value[]">');
+        $input.attr('placeholder', placeholder);
 
-            // Create wrapper for input + clear button
-            var $wrapper = $('<div class="input-with-clear"></div>');
-            var $input = $('<input type="text" class="value-input form-control" name="value[]">');
-            $input.attr('placeholder', placeholder);
+        if (currentValue) {
+            $input.val(currentValue);
+        }
 
-            if (currentValue) {
-                $input.val(currentValue);
-            }
+        var $clearBtn = $('<span class="clear-btn" aria-label="Clear">×</span>');
 
-            // Clear button
-            var $clearBtn = $('<span class="clear-btn" aria-label="Clear">×</span>');
+        $wrapper.append($input).append($clearBtn);
+        $valueCell.append($wrapper);
 
-            $wrapper.append($input).append($clearBtn);
-            $valueCell.append($wrapper);
+        // Clear button click handler
+        $clearBtn.on('click', function() {
+            $input.val('').trigger('change');
+            $(this).hide();
+        });
 
-            // Clear button click handler
-            $clearBtn.on('click', function() {
-                $input.val('').trigger('change');
-                $(this).hide();
-            });
-
-            // Show/hide clear button based on input value
-            $input.on('input change', function() {
-                if ($(this).val()) {
-                    $clearBtn.show();
-                } else {
-                    $clearBtn.hide();
-                }
-            });
-
-            // Initial state of clear button
-            if (currentValue) {
+        // Show/hide clear button based on input value
+        $input.on('input change', function() {
+            if ($(this).val()) {
                 $clearBtn.show();
             } else {
                 $clearBtn.hide();
             }
+        });
 
-            $input.on('change input', function () {
-                if (typeof updateAllBelow === 'function') {
-                    updateAllBelow($row);
-                }
-                $(document).trigger('filtersChanged');
-            });
-
-            return;
+        // Initial state of clear button
+        if (currentValue) {
+            $clearBtn.show();
+        } else {
+            $clearBtn.hide();
         }
 
-        // === Choices.js for all other dropdown fields (desktop + mobile) ===
+        $input.on('change input', function () {
+            if (typeof updateAllBelow === 'function') {
+                updateAllBelow($row);
+            }
+            $(document).trigger('filtersChanged');
+        });
+
+        return;
+    }
+
+    if (dropdownFields.includes(term)) {
+        // === Choices.js for all other dropdown fields ===
         var $select = $('<select class="value-input choices-filter" name="value[]"></select>');
         $select.append('<option value="">Any ' + term.replace(/_/g, ' ') + '</option>');
 
@@ -205,17 +206,15 @@ function updateValueInput($row, term, initialValue = '') {
                 $select.append($('<option>', { value: value, text: value }));
             });
 
-            // Initialize Choices.js (includes built-in clear/remove button)
             new Choices($select[0], {
                 searchPlaceholderValue: 'Type to search...',
                 shouldSort: false,
-                removeItemButton: true,   // ← This adds the clear "X" on selected value
+                removeItemButton: true,
                 itemSelectText: '',
                 searchResultLimit: -1
             });
         });
 
-        // Trigger cascading updates
         $select.on('change', function () {
             if (typeof updateAllBelow === 'function') {
                 updateAllBelow($row);
