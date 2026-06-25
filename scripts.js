@@ -190,14 +190,19 @@ function updateValueInput($row, term, initialValue = '') {
 
     if (dropdownFields.includes(term)) {
 
-        // === Mobile: Custom searchable input + scrollable list ===
+        // === Mobile: Custom searchable input + scrollable list (with clear X) ===
         if (/Mobi|Android/i.test(navigator.userAgent) || window.innerWidth < 768) {
             var $input = $('<input type="text" class="value-input form-control" name="value[]" placeholder="Type to search...">');
             if (currentValue) $input.val(currentValue);
 
-            var $list = $('<div class="mobile-search-list"></div>');
+            var $wrapper = $('<div class="input-with-clear"></div>');
+            var $clearBtn = $('<span class="clear-btn" aria-label="Clear">×</span>');
 
-            $valueCell.css('position', 'relative').append($input).append($list);
+            $wrapper.append($input).append($clearBtn);
+            $valueCell.css('position', 'relative').append($wrapper);
+
+            var $list = $('<div class="mobile-search-list"></div>');
+            $valueCell.append($list);
 
             var allOptions = [];
 
@@ -211,6 +216,7 @@ function updateValueInput($row, term, initialValue = '') {
                         $item.on('click', function() {
                             $input.val(val).trigger('change');
                             $list.hide();
+                            $clearBtn.show();
                         });
                         $list.append($item);
                     });
@@ -238,6 +244,26 @@ function updateValueInput($row, term, initialValue = '') {
                 });
             });
 
+            $clearBtn.on('click', function() {
+                $input.val('').trigger('change');
+                $list.hide();
+                $clearBtn.hide();
+            });
+
+            $input.on('input change', function() {
+                if ($(this).val()) {
+                    $clearBtn.show();
+                } else {
+                    $clearBtn.hide();
+                }
+            });
+
+            if (currentValue) {
+                $clearBtn.show();
+            } else {
+                $clearBtn.hide();
+            }
+
             $input.on('change input', function () {
                 if (typeof updateAllBelow === 'function') {
                     updateAllBelow($row);
@@ -248,11 +274,15 @@ function updateValueInput($row, term, initialValue = '') {
             return;
         }
 
-        // === Desktop: Choices.js ===
+        // === Desktop + Mobile: Choices.js with clear X button ===
         var $select = $('<select class="value-input choices-filter" name="value[]"></select>');
         $select.append('<option value="">Any ' + term.replace(/_/g, ' ') + '</option>');
 
-        $valueCell.append($select);
+        var $wrapper = $('<div class="input-with-clear choices-wrapper"></div>');
+        var $clearBtn = $('<span class="clear-btn" aria-label="Clear">×</span>');
+
+        $wrapper.append($select).append($clearBtn);
+        $valueCell.append($wrapper);
 
         var filtersBefore = getFiltersBeforeForDropdown($row, term);
 
@@ -279,6 +309,23 @@ function updateValueInput($row, term, initialValue = '') {
             });
 
             $select.data('choices', choices);
+
+            function updateClearButton() {
+                if ($select.val() && $select.val() !== '') {
+                    $clearBtn.show();
+                } else {
+                    $clearBtn.hide();
+                }
+            }
+
+            $select.on('change', updateClearButton);
+            updateClearButton();
+
+            $clearBtn.on('click', function() {
+                choices.clearStore();
+                $select.val('').trigger('change');
+                $clearBtn.hide();
+            });
         });
 
         $select.on('change', function () {
@@ -291,7 +338,7 @@ function updateValueInput($row, term, initialValue = '') {
         return;
     }
 
-    // === Fallback ===
+    // === Fallback for non-dropdown fields ===
     var $fallbackInput = $('<input type="text" class="value-input form-control" name="value[]">');
     $fallbackInput.attr('placeholder', 'STEP 2: Select or Type a Value');
 
@@ -308,7 +355,6 @@ function updateValueInput($row, term, initialValue = '') {
         $(document).trigger('filtersChanged');
     });
 }
-
     function getFiltersBefore($row) {
         var filters = [];
         $('.search-boxes .excel-row').each(function() {
