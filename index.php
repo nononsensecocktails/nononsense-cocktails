@@ -14,6 +14,13 @@ $usernames = getUsernames($conn);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=800, initial-scale=1.0, minimum-scale=0.1, maximum-scale=10.0, user-scalable=yes">
 
+	<!-- Favicon / Icon links for modern browsers -->
+    <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/images/android-chrome-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/images/android-chrome-512x512.png">
+	
     <title>No-Nonsense Cocktails</title>
    
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
