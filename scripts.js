@@ -274,15 +274,11 @@ function updateValueInput($row, term, initialValue = '') {
             return;
         }
 
-        // === Desktop + Mobile: Choices.js with clear X button ===
+        // === Desktop: Choices.js (uses built-in remove button) ===
         var $select = $('<select class="value-input choices-filter" name="value[]"></select>');
         $select.append('<option value="">Any ' + term.replace(/_/g, ' ') + '</option>');
 
-        var $wrapper = $('<div class="input-with-clear choices-wrapper"></div>');
-        var $clearBtn = $('<span class="clear-btn" aria-label="Clear">×</span>');
-
-        $wrapper.append($select).append($clearBtn);
-        $valueCell.append($wrapper);
+        $valueCell.append($select);
 
         var filtersBefore = getFiltersBeforeForDropdown($row, term);
 
@@ -295,7 +291,7 @@ function updateValueInput($row, term, initialValue = '') {
                 $select.data('choices').destroy();
             }
 
-            var choices = new Choices($select[0], {
+            new Choices($select[0], {
                 searchEnabled: true,
                 searchPlaceholderValue: 'Type to search...',
                 shouldSort: false,
@@ -306,25 +302,6 @@ function updateValueInput($row, term, initialValue = '') {
                 searchFields: ['label'],
                 duplicateItemsAllowed: false,
                 position: 'auto'
-            });
-
-            $select.data('choices', choices);
-
-            function updateClearButton() {
-                if ($select.val() && $select.val() !== '') {
-                    $clearBtn.show();
-                } else {
-                    $clearBtn.hide();
-                }
-            }
-
-            $select.on('change', updateClearButton);
-            updateClearButton();
-
-            $clearBtn.on('click', function() {
-                choices.clearStore();
-                $select.val('').trigger('change');
-                $clearBtn.hide();
             });
         });
 
