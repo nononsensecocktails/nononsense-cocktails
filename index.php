@@ -91,7 +91,17 @@ $usernames = getUsernames($conn);
         background-color: #2a2a2a;
     }
 }
-        
+        .choices-wrapper .clear-btn {
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.choices-wrapper .choices {
+    width: 100%;
+    padding-right: 30px;
+}
+
         /* === Clear button styles for filter inputs === */
         .input-with-clear {
             position: relative;
