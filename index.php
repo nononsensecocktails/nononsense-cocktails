@@ -42,6 +42,55 @@ $usernames = getUsernames($conn);
             min-width: 66px !important;     /* adjust this number up/down by 2-4px until it's one 'D' wider */
             font-size: 0.82rem !important;  /* keep font size normal or only slightly smaller */
         }
+
+/* Mobile search list (used for Ice, Glass, Ingredients, etc. on mobile) */
+.mobile-search-list {
+    display: none;
+    position: absolute;
+    z-index: 1000;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    max-height: 220px;
+    overflow-y: auto;
+    width: 100%;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+    margin-top: 4px;
+}
+
+.mobile-search-item {
+    padding: 12px 16px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    font-size: 16px;
+    color: #222;
+}
+
+.mobile-search-item:last-child {
+    border-bottom: none;
+}
+
+.mobile-search-item:hover {
+    background-color: #f5f5f5;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .mobile-search-list {
+        background-color: #1e1e1e;
+        border: 1px solid #444;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+    }
+
+    .mobile-search-item {
+        color: #eee;
+        border-bottom: 1px solid #333;
+    }
+
+    .mobile-search-item:hover {
+        background-color: #2a2a2a;
+    }
+}
         
         /* === Clear button styles for filter inputs === */
         .input-with-clear {
