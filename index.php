@@ -14,13 +14,13 @@ $usernames = getUsernames($conn);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=800, initial-scale=1.0, minimum-scale=0.1, maximum-scale=10.0, user-scalable=yes">
 
-	<!-- Favicon / Icon links for modern browsers -->
+    <!-- Favicon / Icon links for modern browsers -->
     <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
     <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="192x192" href="/images/android-chrome-192x192.png">
     <link rel="icon" type="image/png" sizes="512x512" href="/images/android-chrome-512x512.png">
-	
+
     <title>No-Nonsense Cocktails</title>
    
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
@@ -107,6 +107,28 @@ $usernames = getUsernames($conn);
 .choices-wrapper .choices {
     width: 100%;
     padding-right: 30px;
+}
+
+/* Make the built-in Choices.js remove button more visible and consistent */
+.choices__button {
+    position: relative;
+    padding: 0 6px;
+    margin-left: 6px;
+    font-size: 18px;
+    line-height: 1;
+    color: #999;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+}
+
+.choices__button:hover {
+    color: #333;
+}
+
+/* Optional: give a bit more space around the selected item */
+.choices__inner .choices__item {
+    padding-right: 6px;
 }
 
         /* === Clear button styles for filter inputs === */
