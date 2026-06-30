@@ -746,47 +746,20 @@ function updateNames() {
         });
     }
 
-/* 
-Old code before 20251214
-    function parseVolume(volumeStr) {
-        if (!volumeStr) return { numeric: 0, unit: '', display: '' };
-        const specialUnits = ['top', 'splash', 'rinse'];
-        const lowered = volumeStr.toLowerCase();
-        if (specialUnits.includes(lowered)) {
-            return { numeric: unitConversions[lowered] || 0, unit: lowered, display: volumeStr };
-        }
-        const match = lowered.match(/^([\d.\/]+)\s*(\w+)?$/);
-        if (!match) return { numeric: 0, unit: '', display: volumeStr };
-        let quantityStr = match[1];
-        let unit = match[2] || '';
-console.log('Extracted unit:', unit);
-        let quantity;
-        const isFraction = quantityStr.includes('/');
-        if (isFraction) {
-            const [numerator, denominator] = quantityStr.split('/').map(Number);
-            quantity = numerator / denominator;
-        } else {
-            quantity = parseFloat(quantityStr);
-        }
-        if (isNaN(quantity)) return { numeric: 0, unit, display: volumeStr };
-        const conversionFactor = unitConversions[unit] || 1.0;
-        let display;
-        if (unit === 'oz' || unit === '') {
-            if (isFraction) {
-                display = quantity.toFixed(3).replace(/\.?0+$/, '');
-            } else {
-                display = quantityStr;
-            }
-        } else {
-            display = quantityStr + (unit ? ' ' + unit : '');
-        }
-console.log('Final display in parseVolume:', display);
-        return { numeric: quantity * conversionFactor, unit, display };
-    }
-*/
 
 function parseVolume(volumeStr) {
     if (!volumeStr) return { numeric: 0, unit: '', display: '' };
+
+    // Handle bare special units like "Top", "Splash", "Rinse" that have no number
+    const lowered = volumeStr.toLowerCase().trim();
+    if (unitConversions.hasOwnProperty(lowered)) {
+        return {
+            numeric: unitConversions[lowered],
+            unit: lowered,
+            display: volumeStr
+        };
+    }
+
     const match = volumeStr.match(/^([\d.]+)\s*(\w+)?$/);
     if (!match) return { numeric: 0, unit: '', display: volumeStr };
     const numeric = parseFloat(match[1]) || 0;
@@ -800,18 +773,21 @@ function parseVolume(volumeStr) {
     } else {
         display = numeric.toFixed(2);
     }
-    const conversionFactor = unitConversions[unit] || 1.0;
+    const conversionFactor = unitConversions[unit] ?? 1.0;
     return { numeric: numeric * conversionFactor, unit: unit, display: display };
 }
 
 function getColor(value, min, max) {
     if (min === max) return '';
-    var ratio = (value - min) / (max - min);
-    var r = Math.round(255 * (1 - ratio));
-    var g = Math.round(255 * ratio);
-    var b = 0;
-    return 'rgb(' + r + ',' + g + ',' + b + ')';
+    // Cap at the provided max so anything >= max gets the same full color
+    var capped = Math.min(value, max);
+    var ratio = (capped - min) / (max - min);
+    // Hue: 0° = red → 120° = green (smooth red-orange-yellow-green)
+    var hue = ratio * 120;
+    // Tweak saturation/lightness as needed for readability on your table background
+    return `hsl(${hue}, 70%, 55%)`;
 }
+
     function getRatingColor(rating) {
         const colors = {
             '1': '#ff0000',
@@ -1305,7 +1281,7 @@ function renderIngredientsTable(data) {
         var percentVol = (ingredient.numericVolume && totalVolume > 0) 
             ? (ingredient.numericVolume / totalVolume * 100).toFixed(2) 
             : '';
-        var colorStyle = percentVol ? `background-color: ${getColor(parseFloat(percentVol), 0, 100)};` : '';
+	var colorStyle = percentVol ? `background-color: ${getColor(parseFloat(percentVol), 0, 60)};` : '';
         tbodyHtml += `
             <tr>
                 <td>${index + 1}</td>
