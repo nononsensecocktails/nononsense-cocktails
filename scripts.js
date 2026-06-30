@@ -234,6 +234,9 @@ function updateValueInput($row, term, initialValue = '') {
                 });
 
                 $input.on('focus', function() {
+                    if (!$input.val()) {
+                        renderList(allOptions);   // ← Reset to full list when empty
+                    }
                     $list.show();
                 });
 
@@ -246,7 +249,8 @@ function updateValueInput($row, term, initialValue = '') {
 
             $clearBtn.on('click', function() {
                 $input.val('').trigger('change');
-                $list.hide();
+                renderList(allOptions);           // ← Restore full list after clearing
+                $list.show();
                 $clearBtn.hide();
             });
 
@@ -273,7 +277,7 @@ function updateValueInput($row, term, initialValue = '') {
 
             return;
         }
-
+        
         // === Desktop: Choices.js (uses built-in remove button) ===
         var $select = $('<select class="value-input choices-filter" name="value[]"></select>');
         $select.append('<option value="">Any ' + term.replace(/_/g, ' ') + '</option>');
