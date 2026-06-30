@@ -143,7 +143,7 @@ function updateValueInput($row, term, initialValue = '') {
         } else if (term === 'All') {
             placeholder = 'Search all fields...';
         } else {
-            placeholder = 'Type ' + term.replace(/_/g, ' ') + ' or partial match';
+            placeholder = 'Type ' + term.replace(/_/g, ' ') ;
         }
 
         var $wrapper = $('<div class="input-with-clear"></div>');
@@ -277,7 +277,7 @@ function updateValueInput($row, term, initialValue = '') {
 
             return;
         }
-        
+
         // === Desktop: Choices.js (uses built-in remove button) ===
         var $select = $('<select class="value-input choices-filter" name="value[]"></select>');
         $select.append('<option value="">Any ' + term.replace(/_/g, ' ') + '</option>');
