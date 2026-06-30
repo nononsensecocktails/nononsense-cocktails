@@ -374,7 +374,7 @@ $usernames = getUsernames($conn);
 
         /* INGREDIENTS TABLE */
         .ingredient-table {
-            width: 520px;
+            width: 380px;
             border-collapse: collapse;
             font-size: 0.82rem;
             margin-top: 2px;
@@ -397,21 +397,29 @@ $usernames = getUsernames($conn);
             .ingredient-table td { border-color: #555; }
             .ingredient-table th { background: #2d2d2d; }
         }
-        .ingredient-table th:nth-child(1), .ingredient-table td:nth-child(1) { width: 28px; text-align: left; }
+
+	/*Ingredient Number*/
+        .ingredient-table th:nth-child(1), .ingredient-table td:nth-child(1) { width: 15px; text-align: left; }
+
+	/*Ingredient Name*/
         .ingredient-table th:nth-child(2), .ingredient-table td:nth-child(2) { 
-            width: 170px;
+            width: 125px;
             text-align: left; 
             padding-right: 4px;
             word-break: break-word;
             white-space: normal;
         }
+
+	/*Volume Oz*/
         .ingredient-table th:nth-child(3), .ingredient-table td:nth-child(3) { 
-            width: 82px; 
+            width: 45px; 
             text-align: right; 
             padding-left: 4px;
         }
+
+	/*% Vol*/
         .ingredient-table th:nth-child(4), .ingredient-table td:nth-child(4) { 
-            width: 65px; 
+            width: 35px; 
             text-align: right;
         }
         .btn { padding: 2px 8px; font-size: 0.82rem; }
@@ -479,7 +487,7 @@ $usernames = getUsernames($conn);
 
 /* Align Ingredients table with metadata values */
 #recipe_details .ingredient-table {
-    margin-left: 168px;     /* Adjust this number if needed */
+    margin-left: 135px;     /* Adjust this number if needed */
 }
 
 
@@ -533,6 +541,7 @@ $usernames = getUsernames($conn);
                             <select class="term-select form-select" name="term[]">
                                 <option value="" selected>STEP 1: Select a Filter</option>
                                 <option value="All">All</option>
+                                <option value="stars_out_of_3">Stars out of 3</option>
                                 <option value="adaption_of">Adaptation of</option>
                                 <option value="base">Base</option>
                                 <option value="characteristics">Characteristics</option>
@@ -544,13 +553,12 @@ $usernames = getUsernames($conn);
                                 <option value="ingredients">Ingredients</option>
                                 <option value="instructions">Instructions</option>
                                 <option value="last_date">Last Date</option>
-								<option value="num_ingredients">Number of Ingredients</option>
                                 <option value="mixer">Mixer</option>
                                 <option value="name">Name</option>
+				<option value="num_ingredients">Number of Ingredients</option>
                                 <option value="servings">Servings</option>
                                 <option value="shaken_stirred">Shaken/Stirred</option>
                                 <option value="source">Source</option>
-                                <option value="stars_out_of_3">Stars out of 3</option>
                                 <option value="variations">Variations</option>
                             </select>
                         </div>
