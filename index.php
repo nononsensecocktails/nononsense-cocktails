@@ -544,6 +544,7 @@ $usernames = getUsernames($conn);
                                 <option value="ingredients">Ingredients</option>
                                 <option value="instructions">Instructions</option>
                                 <option value="last_date">Last Date</option>
+								<option value="num_ingredients">Number of Ingredients</option>
                                 <option value="mixer">Mixer</option>
                                 <option value="name">Name</option>
                                 <option value="servings">Servings</option>
