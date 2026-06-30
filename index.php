@@ -419,7 +419,7 @@ $usernames = getUsernames($conn);
 
 	/*% Vol*/
         .ingredient-table th:nth-child(4), .ingredient-table td:nth-child(4) { 
-            width: 35px; 
+            width: 40px; 
             text-align: right;
         }
         .btn { padding: 2px 8px; font-size: 0.82rem; }
