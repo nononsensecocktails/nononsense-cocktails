@@ -1085,30 +1085,43 @@ function generateCurrentUrl() {
     return params.toString() ? `${base}?${params.toString()}` : base;
 }
 
-
-$('#copy-permalink').off('click').on('click', function () {
+$('#copy-permalink').off('click').on('click', async function () {
     const link = generateCurrentUrl();
     const nameVal = $('#name-select').val() || '';
     const sourceVal = $('#source-select').val() || '';
 
-    let textToCopy = link;
+    // Build a nice title for the share sheet / preview
+    const shareTitle = (nameVal && sourceVal)
+        ? `${nameVal} from ${sourceVal} — No-Nonsense Cocktails`
+        : 'No-Nonsense Cocktails';
 
-    if (nameVal && sourceVal) {
-        // Copy a nice formatted line that includes the recipe name + source
-        textToCopy = `${nameVal} from ${sourceVal} — No-Nonsense Cocktails\n${link}`;
+    // Try Web Share API first (best experience on iOS/Android)
+    if (navigator.share) {
+        try {
+            await navigator.share({
+                title: shareTitle,
+                text: shareTitle,
+                url: link
+            });
+            return; // User successfully shared via native share sheet
+        } catch (err) {
+            // User cancelled the share sheet or an error occurred.
+            // Fall through to clipboard fallback.
+        }
     }
 
-    navigator.clipboard.writeText(textToCopy).then(() => {
-        if (nameVal && sourceVal) {
-            alert(`Link for “${nameVal}” from ${sourceVal} copied!`);
-        } else {
-            alert('Permalink copied to clipboard!');
-        }
-    }).catch(() => {
+    // Fallback: Copy only the clean URL to clipboard
+    // (This avoids the "paste into browser → Google search" problem)
+    try {
+        await navigator.clipboard.writeText(link);
+        const message = (nameVal && sourceVal)
+            ? `Link for “${nameVal}” copied!`
+            : 'Link copied to clipboard!';
+        alert(message);
+    } catch (err) {
         alert('Copy failed. Here is the link:\n' + link);
-    });
-});
-    
+    }
+});    
     
     $('#create-qr-code').off('click').on('click', function () {
         const link = generateCurrentUrl();
