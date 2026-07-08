@@ -1,5 +1,7 @@
 <?php
 header("Cache-Control: max-age=0, must-revalidate");
+session_start();
+
 require_once 'db.php';
 require_once 'functions.php';
 $conn = getDBConnection();
@@ -7,12 +9,19 @@ if (!$conn) {
     die('Database connection failed');
 }
 $usernames = getUsernames($conn);
+
+$is_logged_in = isset($_SESSION['is_logged_in']) && $_SESSION['is_logged_in'];
+$user_name = $_SESSION['user_name'] ?? '';
+$user_picture = $_SESSION['user_picture'] ?? '';
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=800, initial-scale=1.0, minimum-scale=0.1, maximum-scale=10.0, user-scalable=yes">
+
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
     <!-- Favicon / Icon links for modern browsers -->
     <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
@@ -496,28 +505,35 @@ $usernames = getUsernames($conn);
 <body>
 
     <!-- Header -->
-    <nav class="navbar navbar-dark">
-        <div class="container-fluid d-flex align-items-center">
-            <!-- Left: Logo + Title -->
-            <div class="d-flex align-items-center">
-                <a href="https://www.nononsensecocktails.com/">
-                    <img src="images/Coldberry_01_TM.jpg" alt="Logo" style="height: 36px;" class="me-2">
-                </a>
-                <h1 class="h5 mb-0 text-white">No-Nonsense Cocktails</h1>
-            </div>
+<nav class="navbar navbar-dark py-1">
+    <div class="container-fluid d-flex align-items-center">
+        
+        <!-- Left: Logo + Title (kept at original size) -->
+        <div class="d-flex align-items-center flex-shrink-0">
+            <a href="https://www.nononsensecocktails.com/">
+                <img src="images/Coldberry_01_TM.jpg" alt="Logo" style="height: 36px;" class="me-2">
+            </a>
+            <h1 class="h5 mb-0 text-white fw-bold">No-Nonsense Cocktails</h1>
+        </div>
+        
+        <!-- Right side: All buttons + User dropdown + Sign In (smaller + single line) -->
+        <div class="d-flex align-items-center ms-auto gap-1 flex-wrap flex-md-nowrap">
             
-            <!-- Center: 4 Buttons (moved a little more right + tighter spacing) -->
-            <div class="d-flex align-items-center gap-1 mx-auto ms-12">
-                <button id="reset-button" class="btn btn-outline-light">Reset</button>
-                <button id="lucky-button" class="btn btn-outline-light">I'm Feeling Lucky</button>
-                <button id="copy-permalink" class="btn btn-outline-light">Share Link</button>
-                <button id="create-qr-code" class="btn btn-outline-light">QR Code</button>
-            </div>
+            <!-- 4 Buttons (smaller than btn-sm) -->
+            <button id="reset-button" class="btn btn-outline-light btn-sm" 
+                    style="padding: 0.08rem 0.35rem; font-size: 0.72rem; line-height: 1.1;">Reset</button>
+            <button id="lucky-button" class="btn btn-outline-light btn-sm" 
+                    style="padding: 0.08rem 0.35rem; font-size: 0.72rem; line-height: 1.1;">I'm Feeling Lucky</button>
+            <button id="copy-permalink" class="btn btn-outline-light btn-sm" 
+                    style="padding: 0.08rem 0.35rem; font-size: 0.72rem; line-height: 1.1;">Share Link</button>
+            <button id="create-qr-code" class="btn btn-outline-light btn-sm" 
+                    style="padding: 0.08rem 0.35rem; font-size: 0.72rem; line-height: 1.1;">QR Code</button>
             
-            <!-- Right: User Dropdown -->
-            <div class="d-flex align-items-center ms-3">
-                <strong class="me-1 text-white" style="font-size:0.82rem;">User:</strong>
-                <select id="user-select" class="form-select">
+            <!-- User Dropdown (smaller) -->
+            <div class="d-flex align-items-center ms-1">
+                <strong class="me-1 text-white" style="font-size: 0.68rem; white-space: nowrap;">User:</strong>
+                <select id="user-select" class="form-select form-select-sm" 
+                        style="width: auto; min-width: 100px; font-size: 0.75rem; padding: 0.1rem 0.3rem; height: auto;">
                     <option value="">Select...</option>
                     <option value="All">All Users</option>
                     <?php foreach ($usernames as $user): ?>
@@ -525,6 +541,46 @@ $usernames = getUsernames($conn);
                     <?php endforeach; ?>
                 </select>
             </div>
+
+            <!-- Auth State (smaller Sign In / Logout) -->
+            <?php if ($is_logged_in): ?>
+                <div class="d-flex align-items-center ms-1">
+                    <?php if ($user_picture): ?>
+                        <img src="<?php echo htmlspecialchars($user_picture); ?>" alt="Avatar" class="rounded-circle me-1" style="height: 20px; width: 20px; object-fit: cover;">
+                    <?php endif; ?>
+                    <span class="text-white small me-1 d-none d-md-inline" style="font-size: 0.72rem;"><?php echo htmlspecialchars($user_name); ?></span>
+                    <a href="/auth/logout.php" class="btn btn-sm btn-outline-light" 
+                       style="padding: 0.08rem 0.35rem; font-size: 0.72rem; line-height: 1.1;">Log out</a>
+                </div>
+            <?php else: ?>
+                <button type="button" class="btn btn-outline-light btn-sm ms-1" 
+                        style="padding: 0.08rem 0.35rem; font-size: 0.72rem; line-height: 1.1;"
+                        data-bs-toggle="modal" data-bs-target="#loginModal">
+                    Sign In
+                </button>
+            <?php endif; ?>
+            
+        </div>
+        
+    </div>
+</nav>
+
+    <!-- Auth state -->
+    <?php if ($is_logged_in): ?>
+        <div class="d-flex align-items-center ms-2">
+            <?php if ($user_picture): ?>
+                <img src="<?php echo htmlspecialchars($user_picture); ?>" alt="Avatar" class="rounded-circle me-1" style="height: 28px; width: 28px; object-fit: cover;">
+            <?php endif; ?>
+            <span class="text-white small me-2"><?php echo htmlspecialchars($user_name); ?></span>
+            <a href="/auth/logout.php" class="btn btn-sm btn-outline-light">Log out</a>
+        </div>
+    <?php else: ?>
+        <button type="button" class="btn btn-outline-light ms-2" data-bs-toggle="modal" data-bs-target="#loginModal">
+            Sign In
+        </button>
+    <?php endif; ?>
+</div>
+
         </div>
     </nav>
 
@@ -633,5 +689,62 @@ $usernames = getUsernames($conn);
 
     <script src="scripts.js?v=<?= filemtime('scripts.js') ?>"></script>
 <?php require_once 'footer.php'; ?>
+
+<!-- Login Modal -->
+<!-- Login Modal -->
+<div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="loginModalLabel">Sign in to No-Nonsense Cocktails</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <p class="text-muted mb-3">Sign in with your preferred account</p>
+
+                <div class="d-grid gap-2">
+                    <!-- Google -->
+                    <a href="/auth/login.php" class="btn btn-outline-dark btn-lg d-flex align-items-center justify-content-center gap-2">
+                        <i class="fab fa-google fa-lg text-danger"></i>
+                        <span>Sign in with Google</span>
+                    </a>
+
+                    <!-- Facebook -->
+                    <a href="/auth/login.php" class="btn btn-outline-dark btn-lg d-flex align-items-center justify-content-center gap-2">
+                        <i class="fab fa-facebook-f fa-lg text-primary"></i>
+                        <span>Sign in with Facebook</span>
+                    </a>
+
+                    <!-- Amazon -->
+                    <a href="/auth/login.php" class="btn btn-outline-dark btn-lg d-flex align-items-center justify-content-center gap-2">
+                        <i class="fab fa-amazon fa-lg text-warning"></i>
+                        <span>Sign in with Amazon</span>
+                    </a>
+
+                    <!-- X / Twitter -->
+                    <a href="/auth/login.php" class="btn btn-outline-dark btn-lg d-flex align-items-center justify-content-center gap-2">
+                        <i class="fab fa-x-twitter fa-lg"></i>
+                        <span>Sign in with X</span>
+                    </a>
+
+                    <!-- Email / Password -->
+                    <a href="/auth/login.php" class="btn btn-outline-primary btn-lg d-flex align-items-center justify-content-center gap-2 mt-2">
+                        <i class="fas fa-envelope fa-lg"></i>
+                        <span>Sign in with Email or Password</span>
+                    </a>
+                </div>
+
+                <div class="mt-3">
+                    <small class="text-muted">You’ll be taken to a secure login page</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
