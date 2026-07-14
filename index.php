@@ -508,7 +508,7 @@ $user_picture = $_SESSION['user_picture'] ?? '';
 <nav class="navbar navbar-dark py-1">
     <div class="container-fluid d-flex align-items-center">
         
-        <!-- Left: Logo + Title (kept at original size) -->
+        <!-- Left: Logo + Title -->
         <div class="d-flex align-items-center flex-shrink-0">
             <a href="https://www.nononsensecocktails.com/">
                 <img src="images/Coldberry_01_TM.jpg" alt="Logo" style="height: 36px;" class="me-2">
@@ -516,24 +516,19 @@ $user_picture = $_SESSION['user_picture'] ?? '';
             <h1 class="h5 mb-0 text-white fw-bold">No-Nonsense Cocktails</h1>
         </div>
         
-        <!-- Right side: All buttons + User dropdown + Sign In (smaller + single line) -->
+        <!-- Right side only: Buttons + User dropdown + Auth -->
         <div class="d-flex align-items-center ms-auto gap-1 flex-wrap flex-md-nowrap">
             
-            <!-- 4 Buttons (smaller than btn-sm) -->
-            <button id="reset-button" class="btn btn-outline-light btn-sm" 
-                    style="padding: 0.08rem 0.35rem; font-size: 0.72rem; line-height: 1.1;">Reset</button>
-            <button id="lucky-button" class="btn btn-outline-light btn-sm" 
-                    style="padding: 0.08rem 0.35rem; font-size: 0.72rem; line-height: 1.1;">I'm Feeling Lucky</button>
-            <button id="copy-permalink" class="btn btn-outline-light btn-sm" 
-                    style="padding: 0.08rem 0.35rem; font-size: 0.72rem; line-height: 1.1;">Share Link</button>
-            <button id="create-qr-code" class="btn btn-outline-light btn-sm" 
-                    style="padding: 0.08rem 0.35rem; font-size: 0.72rem; line-height: 1.1;">QR Code</button>
+            <!-- 4 Buttons -->
+            <button id="reset-button" class="btn btn-outline-light btn-sm">Reset</button>
+            <button id="lucky-button" class="btn btn-outline-light btn-sm">I'm Feeling Lucky</button>
+            <button id="copy-permalink" class="btn btn-outline-light btn-sm">Share Link</button>
+            <button id="create-qr-code" class="btn btn-outline-light btn-sm">QR Code</button>
             
-            <!-- User Dropdown (smaller) -->
+            <!-- User Dropdown -->
             <div class="d-flex align-items-center ms-1">
-                <strong class="me-1 text-white" style="font-size: 0.68rem; white-space: nowrap;">User:</strong>
-                <select id="user-select" class="form-select form-select-sm" 
-                        style="width: auto; min-width: 100px; font-size: 0.75rem; padding: 0.1rem 0.3rem; height: auto;">
+                <strong class="me-1 text-white" style="font-size: 0.72rem; white-space: nowrap;">User:</strong>
+                <select id="user-select" class="form-select form-select-sm" style="width: auto; min-width: 105px; font-size: 0.82rem;">
                     <option value="">Select...</option>
                     <option value="All">All Users</option>
                     <?php foreach ($usernames as $user): ?>
@@ -542,20 +537,17 @@ $user_picture = $_SESSION['user_picture'] ?? '';
                 </select>
             </div>
 
-            <!-- Auth State (smaller Sign In / Logout) -->
+            <!-- Logged-in state (only on the right) -->
             <?php if ($is_logged_in): ?>
                 <div class="d-flex align-items-center ms-1">
                     <?php if ($user_picture): ?>
-                        <img src="<?php echo htmlspecialchars($user_picture); ?>" alt="Avatar" class="rounded-circle me-1" style="height: 20px; width: 20px; object-fit: cover;">
+                        <img src="<?php echo htmlspecialchars($user_picture); ?>" alt="Avatar" class="rounded-circle me-1" style="height: 22px; width: 22px; object-fit: cover;">
                     <?php endif; ?>
-                    <span class="text-white small me-1 d-none d-md-inline" style="font-size: 0.72rem;"><?php echo htmlspecialchars($user_name); ?></span>
-                    <a href="/auth/logout.php" class="btn btn-sm btn-outline-light" 
-                       style="padding: 0.08rem 0.35rem; font-size: 0.72rem; line-height: 1.1;">Log out</a>
+                    <span class="text-white small me-1 d-none d-md-inline" style="font-size: 0.75rem;"><?php echo htmlspecialchars($user_name); ?></span>
+                    <a href="/auth/logout.php" class="btn btn-sm btn-outline-light">Log out</a>
                 </div>
             <?php else: ?>
-                <button type="button" class="btn btn-outline-light btn-sm ms-1" 
-                        style="padding: 0.08rem 0.35rem; font-size: 0.72rem; line-height: 1.1;"
-                        data-bs-toggle="modal" data-bs-target="#loginModal">
+                <button type="button" class="btn btn-outline-light btn-sm ms-1" data-bs-toggle="modal" data-bs-target="#loginModal">
                     Sign In
                 </button>
             <?php endif; ?>
@@ -690,7 +682,6 @@ $user_picture = $_SESSION['user_picture'] ?? '';
     <script src="scripts.js?v=<?= filemtime('scripts.js') ?>"></script>
 <?php require_once 'footer.php'; ?>
 
-<!-- Login Modal -->
 <!-- Login Modal -->
 <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
