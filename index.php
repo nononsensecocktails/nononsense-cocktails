@@ -15,6 +15,26 @@ $user_name = $_SESSION['user_name'] ?? '';
 $user_picture = $_SESSION['user_picture'] ?? '';
 ?>
 
+<?php if ($is_logged_in): ?>
+<style>
+    /* Show rating section only for logged-in users */
+    .rate-this-drink,
+    .rating-container,
+    #rating-section {
+        display: block !important;
+    }
+</style>
+<?php else: ?>
+<style>
+    /* Hide rating section for non-logged-in users */
+    .rate-this-drink,
+    .rating-container,
+    #rating-section {
+        display: none !important;
+    }
+</style>
+<?php endif; ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -43,21 +63,7 @@ $user_picture = $_SESSION['user_picture'] ?? '';
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
    
     <style>
-        #save-rating {
- 	        display: none !important;
-	    }
-	    #stars-select,
-        #last-date-input {
-            display: none !important;
-        }
-        /* Hide the "Rate this Drink:" label */
-        .excel-cell:has(+ .excel-cell #stars-select) {
-            display: none !important;
-        }
-        .logic-select {
-            min-width: 66px !important;     /* adjust this number up/down by 2-4px until it's one 'D' wider */
-            font-size: 0.82rem !important;  /* keep font size normal or only slightly smaller */
-        }
+
 
 /* Mobile search list (used for Ice, Glass, Ingredients, etc. on mobile) */
 .mobile-search-list {
@@ -537,26 +543,33 @@ $user_picture = $_SESSION['user_picture'] ?? '';
                 </select>
             </div>
 
-            <!-- Logged-in state (only on the right) -->
-            <?php if ($is_logged_in): ?>
-                <div class="d-flex align-items-center ms-1">
-                    <?php if ($user_picture): ?>
-                        <img src="<?php echo htmlspecialchars($user_picture); ?>" alt="Avatar" class="rounded-circle me-1" style="height: 22px; width: 22px; object-fit: cover;">
-                    <?php endif; ?>
-                    <span class="text-white small me-1 d-none d-md-inline" style="font-size: 0.75rem;"><?php echo htmlspecialchars($user_name); ?></span>
-                    <a href="/auth/logout.php" class="btn btn-sm btn-outline-light">Log out</a>
-                </div>
-            <?php else: ?>
-                <button type="button" class="btn btn-outline-light btn-sm ms-1" data-bs-toggle="modal" data-bs-target="#loginModal">
-                    Sign In
-                </button>
-            <?php endif; ?>
+<!-- Auth State (Logged In) -->
+<?php if ($is_logged_in): ?>
+    <div class="d-flex align-items-center ms-1" style="max-width: 180px;">
+        <?php if ($user_picture): ?>
+            <img src="<?php echo htmlspecialchars($user_picture); ?>" 
+                 alt="Avatar" 
+                 class="rounded-circle me-1 flex-shrink-0" 
+                 style="height: 22px; width: 22px; object-fit: cover;">
+        <?php endif; ?>
+        
+        <span class="text-white small me-1 text-truncate d-none d-md-inline" 
+              style="font-size: 0.72rem; max-width: 110px;">
+            <?php echo htmlspecialchars($user_name ?: $user_email); ?>
+        </span>
+        
+        <a href="/auth/logout.php" class="btn btn-sm btn-outline-light flex-shrink-0">Log out</a>
+    </div>
+<?php else: ?>
+    <button type="button" class="btn btn-outline-light btn-sm ms-1" data-bs-toggle="modal" data-bs-target="#loginModal">
+        Sign In
+    </button>
+<?php endif; ?>
             
         </div>
         
     </div>
 </nav>
-
 
 </div>
 
