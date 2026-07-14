@@ -1,8 +1,8 @@
 <?php
-// auth/callback.php - Full Production Version
+// auth/callback.php - Full Production Version (with user_id)
 
 error_reporting(E_ALL);
-ini_set('display_errors', 0);   // Hide technical errors from normal users
+ini_set('display_errors', 0);
 ini_set('log_errors', 1);
 
 session_start();
@@ -26,7 +26,7 @@ try {
         'urlResourceOwnerDetails' => 'https://' . $_ENV['AUTH0_DOMAIN'] . '/userinfo'
     ]);
 
-    // === Validate state from cookie (CSRF protection) ===
+    // Validate state from cookie
     if (empty($_GET['state']) || empty($_COOKIE['oauth2state'])) {
         throw new Exception('Login session expired or invalid. Please try again.');
     }
@@ -36,12 +36,12 @@ try {
         throw new Exception('Login session expired or invalid. Please try again.');
     }
 
-    // Exchange authorization code for access token
+    // Exchange code for token
     $accessToken = $provider->getAccessToken('authorization_code', [
         'code' => $_GET['code']
     ]);
 
-    // Get user profile from Auth0
+    // Get user profile
     $resourceOwner = $provider->getResourceOwner($accessToken);
     $user = $resourceOwner->toArray();
 
@@ -75,13 +75,10 @@ try {
         $providerName
     ]);
 
-    // Get internal user ID
-    $user_id = $conn->lastInsertId();
-    if (empty($user_id)) {
-        $stmt = $conn->prepare("SELECT id FROM users WHERE auth0_sub = ?");
-        $stmt->execute([$user['sub']]);
-        $user_id = $stmt->fetchColumn();
-    }
+    // Get the internal user_id from the users table
+    $stmt = $conn->prepare("SELECT id FROM users WHERE auth0_sub = ?");
+    $stmt->execute([$user['sub']]);
+    $user_id = $stmt->fetchColumn();
 
     // === Set session variables ===
     $_SESSION['user_id']        = $user_id;
@@ -91,10 +88,9 @@ try {
     $_SESSION['user_picture']   = $user['picture'] ?? '';
     $_SESSION['is_logged_in']   = true;
 
-    // Clean up temporary state cookie
+    // Clean up
     setcookie('oauth2state', '', time() - 3600, '/');
 
-    // Success — redirect to homepage
     header('Location: https://nononsensecocktails.com/');
     exit;
 
