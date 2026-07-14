@@ -557,20 +557,7 @@ $user_picture = $_SESSION['user_picture'] ?? '';
     </div>
 </nav>
 
-    <!-- Auth state -->
-    <?php if ($is_logged_in): ?>
-        <div class="d-flex align-items-center ms-2">
-            <?php if ($user_picture): ?>
-                <img src="<?php echo htmlspecialchars($user_picture); ?>" alt="Avatar" class="rounded-circle me-1" style="height: 28px; width: 28px; object-fit: cover;">
-            <?php endif; ?>
-            <span class="text-white small me-2"><?php echo htmlspecialchars($user_name); ?></span>
-            <a href="/auth/logout.php" class="btn btn-sm btn-outline-light">Log out</a>
-        </div>
-    <?php else: ?>
-        <button type="button" class="btn btn-outline-light ms-2" data-bs-toggle="modal" data-bs-target="#loginModal">
-            Sign In
-        </button>
-    <?php endif; ?>
+
 </div>
 
         </div>
