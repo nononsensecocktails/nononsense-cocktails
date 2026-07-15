@@ -576,7 +576,9 @@ $user_picture = $_SESSION['user_picture'] ?? '';
         </div>
     </nav>
 
-
+<!-- Hidden field to store the current recipe's ID -->
+<input type="hidden" id="current-recipe-id" value="">
+	
     <div class="main-container">
         <!-- Filters -->
         <div class="card">
