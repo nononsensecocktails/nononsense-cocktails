@@ -17,7 +17,10 @@ $user_picture = $_SESSION['user_picture'] ?? '';
 
 <?php if ($is_logged_in): ?>
 <style>
-    /* Show rating section only for logged-in users */
+    /* Show all rating elements when user is logged in */
+    #save-rating,
+    #stars-select,
+    #last-date-input,
     .rate-this-drink,
     .rating-container,
     #rating-section {
@@ -26,7 +29,10 @@ $user_picture = $_SESSION['user_picture'] ?? '';
 </style>
 <?php else: ?>
 <style>
-    /* Hide rating section for non-logged-in users */
+    /* Hide all rating elements when user is NOT logged in */
+    #save-rating,
+    #stars-select,
+    #last-date-input,
     .rate-this-drink,
     .rating-container,
     #rating-section {
