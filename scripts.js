@@ -1121,8 +1121,8 @@ $('#copy-permalink').off('click').on('click', async function () {
     } catch (err) {
         alert('Copy failed. Here is the link:\n' + link);
     }
-});    
-    
+});
+
     $('#create-qr-code').off('click').on('click', function () {
         const link = generateCurrentUrl();
         $('#qr-code').empty();
@@ -1174,6 +1174,8 @@ function updateRecipeDetails() {
             success: function(data) {
                 if (data && typeof data === 'object') {
                     currentRecipeData = data;
+                    // Store the current recipe's ID in the hidden field
+                    document.getElementById('current-recipe-id').value = data.ID;
                     var today = new Date().toISOString().split('T')[0];
 
                     var detailsHtml = `
