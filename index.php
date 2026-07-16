@@ -578,7 +578,7 @@ $user_picture = $_SESSION['user_picture'] ?? '';
 
 <!-- Hidden field to store the current recipe's ID -->
 <input type="hidden" id="current-recipe-id" value="">
-	
+
     <div class="main-container">
         <!-- Filters -->
         <div class="card">
@@ -733,6 +733,30 @@ $user_picture = $_SESSION['user_picture'] ?? '';
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Rating Confirmation Modal -->
+<div class="modal fade" id="ratingConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Rating</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>You are about to save this rating:</p>
+                <ul class="mb-0">
+                    <li><strong>Recipe:</strong> <span id="confirm-recipe-name"></span></li>
+                    <li><strong>Source:</strong> <span id="confirm-recipe-source"></span></li>
+                    <li><strong>Rating:</strong> <span id="confirm-rating-value"></span></li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirm-save-rating-btn">Confirm &amp; Save</button>
             </div>
         </div>
     </div>
