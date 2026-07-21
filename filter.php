@@ -58,8 +58,9 @@ try {
             $source = $_POST['source'] ?? '';
             $stars = $_POST['stars'] ?? '';
             $last_date = $_POST['last_date'] ?? '';
+            $user_id = $_POST['user_id'] ?? null;
             $username = $_POST['username'] ?? '';
-            $result = saveRating($conn, $name, $source, $stars, $last_date, $username);
+            $result = saveRating($conn, $name, $source, $stars, $last_date, $user_id, $username);
             break;
         case 'getUnitConversions':
             $result = getUnitConversions($conn);
