@@ -1228,8 +1228,8 @@ function updateRecipeDetails() {
                             <div class="excel-row">
                                 <div class="excel-cell label-cell">Stars Out of 3</div>
                                 <div class="excel-cell content-cell" id="stars-display">${formatStarsValue(data.stars_out_of_3)}</div>
-                                <div class="excel-cell label-cell">Rate this Drink:</div>
-                                <div class="excel-cell">
+                                <div class="excel-cell label-cell rate-control">Rate this Drink:</div>
+                                <div class="excel-cell rate-control">
                                     <select id="stars-select">
                                         <option value="">Select Stars</option>
                                         <option value="1">1</option>
@@ -1249,7 +1249,7 @@ function updateRecipeDetails() {
                                 <div class="excel-cell rate-control"><input type="date" id="last-date-input" value="${today}"></div>
                                 <div class="excel-cell rate-control"><button id="save-rating" class="btn btn-success btn-sm">Save Rating</button></div>
                             </div>
-
+							
                             <div class="excel-row"><div class="excel-cell label-cell">Source</div><div class="excel-cell content-cell">${data.Source || ''}</div></div>
                             <div class="excel-row"><div class="excel-cell label-cell">Page</div><div class="excel-cell content-cell">${data.Page || ''}</div></div>
                             <div class="excel-row"><div class="excel-cell label-cell">Shaken/Stirred</div><div class="excel-cell content-cell">${data['Shaken/Stirred'] || ''}</div></div>
