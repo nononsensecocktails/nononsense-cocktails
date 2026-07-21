@@ -800,13 +800,11 @@ function getColor(value, min, max) {
     }
 
 function updateRateDrinkSection() {
-    var user = $('#user-select').val();
-    if (user && user !== 'All') {
-        $('#stars-select, #last-date-input, #save-rating').prop('disabled', false);
-    } else {
-        $('#stars-select, #last-date-input, #save-rating').prop('disabled', true);
-    }
+    // No longer needed – visibility and enabled state are now controlled
+    // exclusively by isUserLoggedIn inside updateRecipeDetails().
+    // Left as a no-op so existing calls do not break.
 }
+
 function updateRatingDisplay(stars, last_date) {
     var ratingBgColor = getRatingColor(stars);
     var displayValue = formatStarsValue(stars);
@@ -939,11 +937,8 @@ setTimeout(() => {
         var source = $('#source-select').val();
         var stars = $('#stars-select').val();
         var last_date = $('#last-date-input').val();
-        var username = $('#user-select').val();
-        if (!username || username === 'All' || username === '') {
-            alert('Please select a specific user to rate the drink.');
-            return;
-        }
+
+        // Validation before opening the modal
         if (!stars) {
             alert('Please select stars.');
             return;
@@ -952,6 +947,38 @@ setTimeout(() => {
             alert('Please select a last date.');
             return;
         }
+
+        // Populate the confirmation modal
+        $('#confirm-recipe-name').text(name || '');
+        $('#confirm-recipe-source').text(source || '');
+        $('#confirm-rating-value').text(stars);
+        $('#confirm-rating-date').text(last_date);
+        $('#rating-confirm-error').hide().text('');
+
+        // Prevent changes while the modal is open
+        $('#stars-select, #last-date-input').prop('disabled', true);
+
+        // Show the modal
+        var modal = new bootstrap.Modal(document.getElementById('ratingConfirmModal'));
+        modal.show();
+    });
+
+    // Confirm button inside the modal
+    $(document).on('click', '#confirm-save-rating-btn', function() {
+        var name = $('#name-select').val();
+        var source = $('#source-select').val();
+        var stars = $('#stars-select').val();
+        var last_date = $('#last-date-input').val();
+
+        // Always use the logged-in user (never the User: dropdown)
+        if (!isUserLoggedIn || !loggedInUserId || !loggedInUserName) {
+            $('#rating-confirm-error').text('You must be logged in to save a rating.').show();
+            return;
+        }
+
+        var $error = $('#rating-confirm-error');
+        $error.hide().text('');
+
         $.ajax({
             url: 'filter.php',
             method: 'POST',
@@ -961,23 +988,36 @@ setTimeout(() => {
                 source: source,
                 stars: stars,
                 last_date: last_date,
-                username: username
+                user_id: loggedInUserId,
+                username: loggedInUserName
             },
             dataType: 'json',
             success: function(response) {
                 console.log('Save rating response:', response);
                 if (response.success) {
-                    alert('Rating saved successfully.');
+                    // Close modal and update display (no success alert)
+                    var modalEl = document.getElementById('ratingConfirmModal');
+                    var modal = bootstrap.Modal.getInstance(modalEl);
+                    if (modal) modal.hide();
+
                     updateRatingDisplay(stars, last_date);
+                    // Re-enable the controls
+                    $('#stars-select, #last-date-input').prop('disabled', false);
                 } else {
-                    alert('Failed to save rating: ' + response.error);
+                    // Keep modal open and show error
+                    $error.text('Failed to save rating: ' + (response.error || 'Unknown error')).show();
                 }
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 console.error('Save rating AJAX failed:', textStatus, errorThrown);
-                alert('Error saving rating.');
+                $error.text('Error saving rating. Please try again.').show();
             }
         });
+    });
+
+    // When the modal is closed (Cancel or X), re-enable the controls
+    $('#ratingConfirmModal').on('hidden.bs.modal', function () {
+        $('#stars-select, #last-date-input').prop('disabled', false);
     });
 
 $('#user-select').on('change', function() {
@@ -1177,16 +1217,6 @@ function updateRecipeDetails() {
                     // Store the current recipe's ID in the hidden field
                     document.getElementById('current-recipe-id').value = data.ID;
                     var today = new Date().toISOString().split('T')[0];
-                    
-// Show or hide the rating section based on login status
-const ratingSection = document.querySelector('.rate-this-drink');
-if (ratingSection) {
-    if (isUserLoggedIn) {
-        ratingSection.style.display = 'block';
-    } else {
-        ratingSection.style.display = 'none';
-    }
-}                    
 
                     var detailsHtml = `
                         <div class="card-body">
@@ -1216,8 +1246,8 @@ if (ratingSection) {
                             <div class="excel-row">
                                 <div class="excel-cell label-cell">Last Date</div>
                                 <div class="excel-cell content-cell" id="last-date-display">${data.last_date || 'Not set'}</div>
-                                <div class="excel-cell"><input type="date" id="last-date-input" value="${today}"></div>
-                                <div class="excel-cell"><button id="save-rating" class="btn btn-success btn-sm" style="display: none;">Save Rating</button></div>
+                                <div class="excel-cell rate-control"><input type="date" id="last-date-input" value="${today}"></div>
+                                <div class="excel-cell rate-control"><button id="save-rating" class="btn btn-success btn-sm">Save Rating</button></div>
                             </div>
 
                             <div class="excel-row"><div class="excel-cell label-cell">Source</div><div class="excel-cell content-cell">${data.Source || ''}</div></div>
@@ -1256,7 +1286,14 @@ if (ratingSection) {
                     $('#recipe_details').html(detailsHtml);
                     renderIngredientsTable(data);
                     if (data.stars_out_of_3) $('#stars-select').val(data.stars_out_of_3);
-                    updateRateDrinkSection();
+
+                    // Visibility & enabled state controlled solely by login status
+                    if (isUserLoggedIn) {
+                        $('.rate-control').show();
+                        $('#stars-select, #last-date-input, #save-rating').prop('disabled', false);
+                    } else {
+                        $('.rate-control').hide();
+                    }
                 }
             }
         });
