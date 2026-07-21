@@ -1,4 +1,4 @@
-<?php
+<div class="modal-body"><?php
 header("Cache-Control: max-age=0, must-revalidate");
 session_start();
 
@@ -17,6 +17,8 @@ $user_picture = $_SESSION['user_picture'] ?? '';
 
 <script>
     const isUserLoggedIn = <?php echo $is_logged_in ? 'true' : 'false'; ?>;
+    const loggedInUserId = <?php echo $is_logged_in && !empty($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 'null'; ?>;
+    const loggedInUserName = <?php echo $is_logged_in && !empty($_SESSION['user_name']) ? json_encode($_SESSION['user_name']) : 'null'; ?>;
 </script>
 
 <!DOCTYPE html>
@@ -519,10 +521,12 @@ $user_picture = $_SESSION['user_picture'] ?? '';
             <div class="d-flex align-items-center ms-1">
                 <strong class="me-1 text-white" style="font-size: 0.72rem; white-space: nowrap;">User:</strong>
                 <select id="user-select" class="form-select form-select-sm" style="width: auto; min-width: 105px; font-size: 0.82rem;">
-                    <option value="">Select...</option>
-                    <option value="All">All Users</option>
+                    <option value="All" <?php echo (!$is_logged_in) ? 'selected' : ''; ?>>All Users</option>
                     <?php foreach ($usernames as $user): ?>
-                        <option value="<?php echo htmlspecialchars($user); ?>"><?php echo htmlspecialchars($user); ?></option>
+                        <option value="<?php echo htmlspecialchars($user); ?>"
+                            <?php echo ($is_logged_in && $user_name === $user) ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($user); ?>
+                        </option>
                     <?php endforeach; ?>
                 </select>
             </div>
@@ -736,7 +740,9 @@ $user_picture = $_SESSION['user_picture'] ?? '';
                     <li><strong>Recipe:</strong> <span id="confirm-recipe-name"></span></li>
                     <li><strong>Source:</strong> <span id="confirm-recipe-source"></span></li>
                     <li><strong>Rating:</strong> <span id="confirm-rating-value"></span></li>
+                    <li><strong>Date:</strong> <span id="confirm-rating-date"></span></li>
                 </ul>
+                <div id="rating-confirm-error" class="text-danger mt-3" style="display: none;"></div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
