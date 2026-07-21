@@ -1177,6 +1177,16 @@ function updateRecipeDetails() {
                     // Store the current recipe's ID in the hidden field
                     document.getElementById('current-recipe-id').value = data.ID;
                     var today = new Date().toISOString().split('T')[0];
+                    
+// Show or hide the rating section based on login status
+const ratingSection = document.querySelector('.rate-this-drink');
+if (ratingSection) {
+    if (isUserLoggedIn) {
+        ratingSection.style.display = 'block';
+    } else {
+        ratingSection.style.display = 'none';
+    }
+}                    
 
                     var detailsHtml = `
                         <div class="card-body">
