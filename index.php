@@ -15,31 +15,9 @@ $user_name = $_SESSION['user_name'] ?? '';
 $user_picture = $_SESSION['user_picture'] ?? '';
 ?>
 
-<?php if ($is_logged_in): ?>
-<style>
-    /* Show all rating elements when user is logged in */
-    #save-rating,
-    #stars-select,
-    #last-date-input,
-    .rate-this-drink,
-    .rating-container,
-    #rating-section {
-        display: block !important;
-    }
-</style>
-<?php else: ?>
-<style>
-    /* Hide all rating elements when user is NOT logged in */
-    #save-rating,
-    #stars-select,
-    #last-date-input,
-    .rate-this-drink,
-    .rating-container,
-    #rating-section {
-        display: none !important;
-    }
-</style>
-<?php endif; ?>
+<script>
+    const isUserLoggedIn = <?php echo $is_logged_in ? 'true' : 'false'; ?>;
+</script>
 
 <!DOCTYPE html>
 <html lang="en">
