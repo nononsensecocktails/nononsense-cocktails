@@ -592,8 +592,8 @@ function getRecipeDetails($conn, $name, $source, $user) {
     return $recipe;
 }
 
-function saveRating($conn, $name, $source, $stars, $last_date, $username) {
-    if (!$name || !$source || !$stars || !$last_date || !$username) {
+function saveRating($conn, $name, $source, $stars, $last_date, $user_id, $username) {
+    if (!$name || !$source || !$stars || !$last_date || !$user_id || !$username) {
         return ['success' => false, 'error' => 'Missing parameters'];
     }
     $sql = "SELECT ID, Name, Source FROM recipes WHERE Name = :name AND Source = :source";
@@ -604,14 +604,18 @@ function saveRating($conn, $name, $source, $stars, $last_date, $username) {
     $recipe = $stmt->fetch(PDO::FETCH_ASSOC);
     if (!$recipe) return ['success' => false, 'error' => 'Recipe not found'];
     $recipe_id = $recipe['ID'];
-    $sql = "INSERT INTO user_ratings (recipe_id, name, source, username, stars_out_of_3, last_date)
-            VALUES (:recipe_id, :name, :source, :username, :stars, :last_date)
-            ON DUPLICATE KEY UPDATE stars_out_of_3 = :stars";
+
+    $sql = "INSERT INTO user_ratings (recipe_id, name, source, username, user_id, stars_out_of_3, last_date)
+            VALUES (:recipe_id, :name, :source, :username, :user_id, :stars, :last_date)
+            ON DUPLICATE KEY UPDATE 
+                stars_out_of_3 = VALUES(stars_out_of_3),
+                user_id = VALUES(user_id)";
     $stmt = $conn->prepare($sql);
     $stmt->bindValue(':recipe_id', $recipe_id);
     $stmt->bindValue(':name', $recipe['Name']);
     $stmt->bindValue(':source', $recipe['Source']);
     $stmt->bindValue(':username', $username);
+    $stmt->bindValue(':user_id', $user_id, PDO::PARAM_INT);
     $stmt->bindValue(':stars', $stars);
     $stmt->bindValue(':last_date', date('Y-m-d', strtotime($last_date)));
     $stmt->execute();
