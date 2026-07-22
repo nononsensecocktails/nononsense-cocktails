@@ -1020,6 +1020,92 @@ setTimeout(() => {
         $('#stars-select, #last-date-input').prop('disabled', false);
     });
 
+// ===== Profile Modal =====
+$(document).on('click', '#open-profile-modal', function(e) {
+    e.preventDefault();
+    if (!isUserLoggedIn) return;
+
+    $('#profile-username').val(loggedInUserName || '');
+    $('#profile-email').val(loggedInUserEmail || '');
+    // Checkbox is checked when we WANT to show (do_not_show_username === 0)
+    $('#profile-show-ratings').prop('checked', loggedInDoNotShowUsername === 0);
+    $('#profile-error').hide().text('');
+
+    var modal = new bootstrap.Modal(document.getElementById('profileModal'));
+    modal.show();
+});
+
+$(document).on('click', '#profile-save-btn', function() {
+    var newName = $('#profile-username').val().trim();
+    var showPublicly = $('#profile-show-ratings').is(':checked'); // true = show → do_not_show_username = 0
+    var $error = $('#profile-error');
+
+    $error.hide().text('');
+
+    if (!newName) {
+        $error.text('Display name cannot be empty.').show();
+        return;
+    }
+    if (newName.length > 50) {
+        $error.text('Display name cannot be longer than 50 characters.').show();
+        return;
+    }
+
+    $.ajax({
+        url: 'filter.php',
+        method: 'POST',
+        data: {
+            action: 'updateUserProfile',
+            user_id: loggedInUserId,
+            new_username: newName,
+            do_not_show_username: showPublicly ? 0 : 1
+        },
+        dataType: 'json',
+        success: function(response) {
+            if (response.success) {
+                // Update client-side variables
+                loggedInUserName = response.new_username;
+                loggedInDoNotShowUsername = response.do_not_show_username;
+
+                // Update the navbar link text
+                $('#open-profile-modal').text(response.new_username);
+
+                // Update the User: dropdown
+                var $select = $('#user-select');
+                var oldName = $select.val();
+                // Remove old name option if it exists
+                $select.find('option').each(function() {
+                    if ($(this).val() === loggedInUserName || $(this).text() === loggedInUserName) {
+                        // keep it for now – will be replaced
+                    }
+                });
+                // Rebuild the options cleanly
+                $select.find('option:not([value="All"])').remove();
+                (response.usernames || []).forEach(function(name) {
+                    $select.append($('<option>').val(name).text(name));
+                });
+                // Keep selection if possible
+                if (oldName === 'All' || (response.usernames || []).includes(oldName)) {
+                    $select.val(oldName);
+                } else {
+                    $select.val(response.new_username);
+                }
+
+                // Close modal
+                var modalEl = document.getElementById('profileModal');
+                var modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) modal.hide();
+            } else {
+                $error.text(response.error || 'Failed to save profile.').show();
+            }
+        },
+        error: function() {
+            $error.text('Error saving profile. Please try again.').show();
+        }
+    });
+});
+
+
 $('#user-select').on('change', function() {
     $('.search-boxes .excel-row').each(function() {
         var term = $(this).find('.term-select').val();
@@ -1249,7 +1335,7 @@ function updateRecipeDetails() {
                                 <div class="excel-cell rate-control"><input type="date" id="last-date-input" value="${today}"></div>
                                 <div class="excel-cell rate-control"><button id="save-rating" class="btn btn-success btn-sm">Save Rating</button></div>
                             </div>
-							
+
                             <div class="excel-row"><div class="excel-cell label-cell">Source</div><div class="excel-cell content-cell">${data.Source || ''}</div></div>
                             <div class="excel-row"><div class="excel-cell label-cell">Page</div><div class="excel-cell content-cell">${data.Page || ''}</div></div>
                             <div class="excel-row"><div class="excel-cell label-cell">Shaken/Stirred</div><div class="excel-cell content-cell">${data['Shaken/Stirred'] || ''}</div></div>
