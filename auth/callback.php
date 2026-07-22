@@ -60,9 +60,9 @@ try {
         VALUES (?, ?, ?, ?, ?, NOW())
         ON DUPLICATE KEY UPDATE 
             email = VALUES(email),
-            name = VALUES(name),
             picture = VALUES(picture),
             last_login = NOW()
+            /* deliberately NOT updating name – keep the preferred display name */
     ");
 
     $providerName = explode('|', $user['sub'])[0] ?? 'auth0';
@@ -75,18 +75,22 @@ try {
         $providerName
     ]);
 
-    // Get the internal user_id from the users table
-    $stmt = $conn->prepare("SELECT id FROM users WHERE auth0_sub = ?");
+    // Get the internal user_id and the preferred name from the users table
+    $stmt = $conn->prepare("SELECT id, name, do_not_show_username FROM users WHERE auth0_sub = ?");
     $stmt->execute([$user['sub']]);
-    $user_id = $stmt->fetchColumn();
+    $userRow = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    $user_id = $userRow['id'];
+    $preferred_name = $userRow['name'] ?: ($user['name'] ?? ($user['nickname'] ?? ''));
 
     // === Set session variables ===
-    $_SESSION['user_id']        = $user_id;
-    $_SESSION['auth0_sub']      = $user['sub'];
-    $_SESSION['user_email']     = $user['email'] ?? '';
-    $_SESSION['user_name']      = $user['name'] ?? ($user['nickname'] ?? '');
-    $_SESSION['user_picture']   = $user['picture'] ?? '';
-    $_SESSION['is_logged_in']   = true;
+    $_SESSION['user_id']              = $user_id;
+    $_SESSION['auth0_sub']            = $user['sub'];
+    $_SESSION['user_email']           = $user['email'] ?? '';
+    $_SESSION['user_name']            = $preferred_name;          // preferred name from DB
+    $_SESSION['user_picture']         = $user['picture'] ?? '';
+    $_SESSION['is_logged_in']         = true;
+    $_SESSION['do_not_show_username'] = (int)$userRow['do_not_show_username'];
 
     // Clean up
     setcookie('oauth2state', '', time() - 3600, '/');
