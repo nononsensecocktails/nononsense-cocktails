@@ -406,6 +406,7 @@ function resetFilters() {
                 <select class="term-select" name="term[]">
                     <option value="" selected>STEP 1: Select a Filter</option>
                     <option value="All">All</option>
+                    <option value="stars_out_of_3">Stars out of 3</option>
                     <option value="adaption_of">Adaptation of</option>
                     <option value="base">Base</option>
                     <option value="characteristics">Characteristics</option>
@@ -423,7 +424,6 @@ function resetFilters() {
                     <option value="servings">Servings</option>
                     <option value="shaken_stirred">Shaken/Stirred</option>
                     <option value="source">Source</option>
-                    <option value="stars_out_of_3">Stars out of 3</option>
                     <option value="variations">Variations</option>
                 </select>
             </div>
