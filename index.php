@@ -1,4 +1,4 @@
-<div class="modal-body"><?php
+<?php
 header("Cache-Control: max-age=0, must-revalidate");
 session_start();
 
@@ -13,12 +13,25 @@ $usernames = getUsernames($conn);
 $is_logged_in = isset($_SESSION['is_logged_in']) && $_SESSION['is_logged_in'];
 $user_name = $_SESSION['user_name'] ?? '';
 $user_picture = $_SESSION['user_picture'] ?? '';
+$user_email = $_SESSION['user_email'] ?? '';
+$do_not_show_username = 0; // default
+
+if ($is_logged_in && !empty($_SESSION['user_id'])) {
+    $stmt = $conn->prepare("SELECT do_not_show_username FROM users WHERE id = ?");
+    $stmt->execute([(int)$_SESSION['user_id']]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($row !== false) {
+        $do_not_show_username = (int)$row['do_not_show_username'];
+    }
+}
 ?>
 
 <script>
     const isUserLoggedIn = <?php echo $is_logged_in ? 'true' : 'false'; ?>;
     const loggedInUserId = <?php echo $is_logged_in && !empty($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 'null'; ?>;
     const loggedInUserName = <?php echo $is_logged_in && !empty($_SESSION['user_name']) ? json_encode($_SESSION['user_name']) : 'null'; ?>;
+    const loggedInUserEmail = <?php echo $is_logged_in && !empty($user_email) ? json_encode($user_email) : 'null'; ?>;
+    const loggedInDoNotShowUsername = <?php echo (int)$do_not_show_username; ?>;
 </script>
 
 <!DOCTYPE html>
@@ -541,10 +554,11 @@ $user_picture = $_SESSION['user_picture'] ?? '';
                  style="height: 22px; width: 22px; object-fit: cover;">
         <?php endif; ?>
         
-        <span class="text-white small me-1 text-truncate d-none d-md-inline" 
-              style="font-size: 0.72rem; max-width: 110px;">
+        <a href="#" id="open-profile-modal" 
+           class="text-white small me-1 text-truncate d-none d-md-inline text-decoration-underline" 
+           style="font-size: 0.72rem; max-width: 110px; cursor: pointer;">
             <?php echo htmlspecialchars($user_name ?: $user_email); ?>
-        </span>
+        </a>
         
         <a href="/auth/logout.php" class="btn btn-sm btn-outline-light flex-shrink-0">Log out</a>
     </div>
@@ -747,6 +761,39 @@ $user_picture = $_SESSION['user_picture'] ?? '';
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-primary" id="confirm-save-rating-btn">Confirm &amp; Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- User Profile Modal -->
+<div class="modal fade" id="profileModal" tabindex="-1" aria-labelledby="profileModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="profileModalLabel">Your Profile</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="profile-username" class="form-label">Display Name</label>
+                    <input type="text" class="form-control" id="profile-username" maxlength="50">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <input type="text" class="form-control" id="profile-email" readonly>
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="profile-show-ratings">
+                    <label class="form-check-label" for="profile-show-ratings">
+                        Show my ratings publicly and include in user averages.
+                    </label>
+                </div>
+                <div id="profile-error" class="text-danger" style="display: none;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="profile-save-btn">Save</button>
             </div>
         </div>
     </div>
