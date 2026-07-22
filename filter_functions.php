@@ -8,6 +8,7 @@ ini_set('error_log', '/home/m2igrnpfhd75/public_html/php_errors.log');
 
 function getFilters() {
     return [
+        'stars_out_of_3' => ['table' => 'ur', 'column' => 'stars_out_of_3', 'type' => 'string'],
         'adaption_of' => ['table' => 'r', 'column' => '`Adaptation of`', 'type' => 'string'],
         'base' => ['table' => 'r', 'column' => 'Base', 'type' => 'string'],
         'characteristics' => ['table' => 'r', 'column' => 'Characteristics', 'type' => 'string'],
@@ -25,7 +26,6 @@ function getFilters() {
         'servings' => ['table' => 'r', 'column' => 'Servings', 'type' => 'numeric'],
         'shaken_stirred' => ['table' => 'r', 'column' => '`Shaken/Stirred`', 'type' => 'string'],
         'source' => ['table' => 'r', 'column' => 'Source', 'type' => 'string'],
-        'stars_out_of_3' => ['table' => 'ur', 'column' => 'stars_out_of_3', 'type' => 'string'],
         'variations' => ['table' => 'r', 'column' => 'Variations', 'type' => 'string']
     ];
 }
