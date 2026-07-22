@@ -120,11 +120,12 @@ function buildCondition($term, $operator, $value, &$params, $index, $filters, $u
     $param_name = ':' . $term . $index;
     if ($table === 'ur' && $user === 'All') {
         if ($term === 'stars_out_of_3') {
+            // Only count ratings from users who have not opted out
             if ($value === 'TBD') {
                 if ($operator === '=') {
-                    return "(COUNT(CASE WHEN ur.stars_out_of_3 REGEXP '^[0-9]+(\.[0-9]+)?$' THEN 1 ELSE NULL END) = 0)";
+                    return "(COUNT(CASE WHEN ur.stars_out_of_3 REGEXP '^[0-9]+(\\.[0-9]+)?$' THEN 1 ELSE NULL END) = 0)";
                 } elseif ($operator === '<>') {
-                    return "(COUNT(CASE WHEN ur.stars_out_of_3 REGEXP '^[0-9]+(\.[0-9]+)?$' THEN 1 ELSE NULL END) > 0)";
+                    return "(COUNT(CASE WHEN ur.stars_out_of_3 REGEXP '^[0-9]+(\\.[0-9]+)?$' THEN 1 ELSE NULL END) > 0)";
                 } else {
                     return '1=0';
                 }
@@ -139,7 +140,7 @@ function buildCondition($term, $operator, $value, &$params, $index, $filters, $u
                 }
             } else {
                 $params[$param_name] = floatval($value);
-                return "(AVG(CASE WHEN ur.stars_out_of_3 REGEXP '^[0-9]+(\.[0-9]+)?$' THEN CAST(ur.stars_out_of_3 AS DECIMAL(10,4)) ELSE NULL END) $operator $param_name)";
+                return "(AVG(CASE WHEN ur.stars_out_of_3 REGEXP '^[0-9]+(\\.[0-9]+)?$' THEN CAST(ur.stars_out_of_3 AS DECIMAL(10,4)) ELSE NULL END) $operator $param_name)";
             }
         } elseif ($term === 'last_date') {
             $params[$param_name] = date('Y-m-d', strtotime($value));
@@ -440,22 +441,30 @@ function getRecipeDetails($conn, $name, $source, $user) {
     $recipe = $stmt->fetch(PDO::FETCH_ASSOC);
     if (!$recipe) return [];
     $recipe_id = $recipe['ID'];
-    $join = "LEFT JOIN (
-                SELECT recipe_id, username, stars_out_of_3, last_date
-                FROM user_ratings ur1
-                WHERE last_date = (SELECT MAX(last_date) FROM user_ratings ur2 WHERE ur2.recipe_id = ur1.recipe_id AND ur2.username = ur1.username)
-            ) ur ON r.ID = ur.recipe_id" . ($user !== 'All' ? " AND ur.username = :current_user" : "");
     if ($user !== 'All') {
+        $join = "LEFT JOIN (
+                    SELECT recipe_id, username, stars_out_of_3, last_date
+                    FROM user_ratings ur1
+                    WHERE last_date = (SELECT MAX(last_date) FROM user_ratings ur2 WHERE ur2.recipe_id = ur1.recipe_id AND ur2.username = ur1.username)
+                ) ur ON r.ID = ur.recipe_id AND ur.username = :current_user";
         $stars_select = "(SELECT stars_out_of_3 FROM user_ratings WHERE recipe_id = r.ID AND username = :current_user ORDER BY last_date DESC LIMIT 1) as stars_out_of_3";
         $last_date_select = "(SELECT last_date FROM user_ratings WHERE recipe_id = r.ID AND username = :current_user ORDER BY last_date DESC LIMIT 1) as last_date";
     } else {
+        // Only include ratings from users who have not opted out of public display
+        $join = "LEFT JOIN (
+                    SELECT ur1.recipe_id, ur1.username, ur1.stars_out_of_3, ur1.last_date
+                    FROM user_ratings ur1
+                    INNER JOIN users u ON u.id = ur1.user_id AND COALESCE(u.do_not_show_username, 0) = 0
+                    WHERE ur1.last_date = (SELECT MAX(ur2.last_date) FROM user_ratings ur2 WHERE ur2.recipe_id = ur1.recipe_id AND ur2.username = ur1.username)
+                ) ur ON r.ID = ur.recipe_id";
         $stars_select = "
             CASE
-                WHEN COUNT(ur.recipe_id) > 1 AND MAX(ur.stars_out_of_3) = MIN(ur.stars_out_of_3) AND MAX(ur.stars_out_of_3) NOT REGEXP '^[0-9]+(\.[0-9]+)?$' THEN MAX(ur.stars_out_of_3)
-                ELSE AVG(CASE WHEN ur.stars_out_of_3 REGEXP '^[0-9]+(\.[0-9]+)?$' THEN CAST(ur.stars_out_of_3 AS DECIMAL(10,4)) ELSE NULL END)
+                WHEN COUNT(ur.recipe_id) > 1 AND MAX(ur.stars_out_of_3) = MIN(ur.stars_out_of_3) AND MAX(ur.stars_out_of_3) NOT REGEXP '^[0-9]+(\\.[0-9]+)?$' THEN MAX(ur.stars_out_of_3)
+                ELSE AVG(CASE WHEN ur.stars_out_of_3 REGEXP '^[0-9]+(\\.[0-9]+)?$' THEN CAST(ur.stars_out_of_3 AS DECIMAL(10,4)) ELSE NULL END)
             END as stars_out_of_3";
         $last_date_select = "MAX(ur.last_date) as last_date";
     }
+    
     $sql = "SELECT r.*,
                    $stars_select,
                    $last_date_select
