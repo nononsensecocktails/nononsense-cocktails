@@ -47,12 +47,21 @@ function getDistinctIngredientNames($conn, $user, $filters_data) {
     $filters = getFilters();
     $params = [];
     $where_clause = buildWhereClause($filters_data, $filters, $params, $user);
+if ($user !== 'All') {
     $join = "LEFT JOIN (
                 SELECT recipe_id, username, stars_out_of_3, last_date
                 FROM user_ratings ur1
-                WHERE last_date = (SELECT MAX(last_date) FROM user_ratings ur2
-                                   WHERE ur2.recipe_id = ur1.recipe_id AND ur2.username = ur1.username)
-            ) ur ON r.ID = ur.recipe_id" . ($user !== 'All' ? " AND ur.username = :current_user" : "");
+                WHERE last_date = (SELECT MAX(last_date) FROM user_ratings ur2 WHERE ur2.recipe_id = ur1.recipe_id AND ur2.username = ur1.username)
+            ) ur ON r.ID = ur.recipe_id AND ur.username = :current_user";
+} else {
+    // Only include ratings from users who have not opted out of public display
+    $join = "LEFT JOIN (
+                SELECT ur1.recipe_id, ur1.username, ur1.stars_out_of_3, ur1.last_date
+                FROM user_ratings ur1
+                INNER JOIN users u ON u.id = ur1.user_id AND COALESCE(u.do_not_show_username, 0) = 0
+                WHERE ur1.last_date = (SELECT MAX(ur2.last_date) FROM user_ratings ur2 WHERE ur2.recipe_id = ur1.recipe_id AND ur2.username = ur1.username)
+            ) ur ON r.ID = ur.recipe_id";
+}
     if ($user !== 'All') {
         $params[':current_user'] = $user;
     }
@@ -235,11 +244,21 @@ function getTotalCocktails($conn, $user, $filters_data) {
     $filters = getFilters();
     $params = [];
     $where_clause = buildWhereClause($filters_data, $filters, $params, $user);
+if ($user !== 'All') {
     $join = "LEFT JOIN (
                 SELECT recipe_id, username, stars_out_of_3, last_date
                 FROM user_ratings ur1
                 WHERE last_date = (SELECT MAX(last_date) FROM user_ratings ur2 WHERE ur2.recipe_id = ur1.recipe_id AND ur2.username = ur1.username)
-            ) ur ON r.ID = ur.recipe_id" . ($user !== 'All' ? " AND ur.username = :current_user" : "");
+            ) ur ON r.ID = ur.recipe_id AND ur.username = :current_user";
+} else {
+    // Only include ratings from users who have not opted out of public display
+    $join = "LEFT JOIN (
+                SELECT ur1.recipe_id, ur1.username, ur1.stars_out_of_3, ur1.last_date
+                FROM user_ratings ur1
+                INNER JOIN users u ON u.id = ur1.user_id AND COALESCE(u.do_not_show_username, 0) = 0
+                WHERE ur1.last_date = (SELECT MAX(ur2.last_date) FROM user_ratings ur2 WHERE ur2.recipe_id = ur1.recipe_id AND ur2.username = ur1.username)
+            ) ur ON r.ID = ur.recipe_id";
+}
     if ($user !== 'All') {
         $params[':current_user'] = $user;
     }
@@ -298,11 +317,22 @@ function getDistinctValues($conn, $term, $user, $filters_data) {
     $where_clause = buildWhereClause($filters_data, $filters, $params, $user);
     $table = $filters[$term]['table'];
     $column = $filters[$term]['column'];
+if ($user !== 'All') {
     $join = "LEFT JOIN (
                 SELECT recipe_id, username, stars_out_of_3, last_date
                 FROM user_ratings ur1
                 WHERE last_date = (SELECT MAX(last_date) FROM user_ratings ur2 WHERE ur2.recipe_id = ur1.recipe_id AND ur2.username = ur1.username)
-            ) ur ON r.ID = ur.recipe_id" . ($user !== 'All' ? " AND ur.username = :current_user" : "");
+            ) ur ON r.ID = ur.recipe_id AND ur.username = :current_user";
+} else {
+    // Only include ratings from users who have not opted out of public display
+    $join = "LEFT JOIN (
+                SELECT ur1.recipe_id, ur1.username, ur1.stars_out_of_3, ur1.last_date
+                FROM user_ratings ur1
+                INNER JOIN users u ON u.id = ur1.user_id AND COALESCE(u.do_not_show_username, 0) = 0
+                WHERE ur1.last_date = (SELECT MAX(ur2.last_date) FROM user_ratings ur2 WHERE ur2.recipe_id = ur1.recipe_id AND ur2.username = ur1.username)
+            ) ur ON r.ID = ur.recipe_id";
+}
+
     if ($user !== 'All') {
         $params[':current_user'] = $user;
     }
@@ -348,11 +378,21 @@ function getRandomRecipe($conn, $user, $filters_data) {
     $filters = getFilters();
     $params = [];
     $where_clause = buildWhereClause($filters_data, $filters, $params, $user);
+if ($user !== 'All') {
     $join = "LEFT JOIN (
                 SELECT recipe_id, username, stars_out_of_3, last_date
                 FROM user_ratings ur1
                 WHERE last_date = (SELECT MAX(last_date) FROM user_ratings ur2 WHERE ur2.recipe_id = ur1.recipe_id AND ur2.username = ur1.username)
-            ) ur ON r.ID = ur.recipe_id" . ($user !== 'All' ? " AND ur.username = :current_user" : "");
+            ) ur ON r.ID = ur.recipe_id AND ur.username = :current_user";
+} else {
+    // Only include ratings from users who have not opted out of public display
+    $join = "LEFT JOIN (
+                SELECT ur1.recipe_id, ur1.username, ur1.stars_out_of_3, ur1.last_date
+                FROM user_ratings ur1
+                INNER JOIN users u ON u.id = ur1.user_id AND COALESCE(u.do_not_show_username, 0) = 0
+                WHERE ur1.last_date = (SELECT MAX(ur2.last_date) FROM user_ratings ur2 WHERE ur2.recipe_id = ur1.recipe_id AND ur2.username = ur1.username)
+            ) ur ON r.ID = ur.recipe_id";
+}
     if ($user !== 'All') {
         $params[':current_user'] = $user;
     }
@@ -377,11 +417,21 @@ function getNames($conn, $user, $filters_data) {
     $filters = getFilters();
     $params = [];
     $where_clause = buildWhereClause($filters_data, $filters, $params, $user);
+if ($user !== 'All') {
     $join = "LEFT JOIN (
                 SELECT recipe_id, username, stars_out_of_3, last_date
                 FROM user_ratings ur1
                 WHERE last_date = (SELECT MAX(last_date) FROM user_ratings ur2 WHERE ur2.recipe_id = ur1.recipe_id AND ur2.username = ur1.username)
-            ) ur ON r.ID = ur.recipe_id" . ($user !== 'All' ? " AND ur.username = :current_user" : "");
+            ) ur ON r.ID = ur.recipe_id AND ur.username = :current_user";
+} else {
+    // Only include ratings from users who have not opted out of public display
+    $join = "LEFT JOIN (
+                SELECT ur1.recipe_id, ur1.username, ur1.stars_out_of_3, ur1.last_date
+                FROM user_ratings ur1
+                INNER JOIN users u ON u.id = ur1.user_id AND COALESCE(u.do_not_show_username, 0) = 0
+                WHERE ur1.last_date = (SELECT MAX(ur2.last_date) FROM user_ratings ur2 WHERE ur2.recipe_id = ur1.recipe_id AND ur2.username = ur1.username)
+            ) ur ON r.ID = ur.recipe_id";
+}
     if ($user !== 'All') {
         $params[':current_user'] = $user;
     }
@@ -407,11 +457,22 @@ function getSources($conn, $name, $user, $filters_data) {
     $filters = getFilters();
     $params = [':name' => $name];
     $where_clause = buildWhereClause($filters_data, $filters, $params, $user);
+if ($user !== 'All') {
     $join = "LEFT JOIN (
                 SELECT recipe_id, username, stars_out_of_3, last_date
                 FROM user_ratings ur1
                 WHERE last_date = (SELECT MAX(last_date) FROM user_ratings ur2 WHERE ur2.recipe_id = ur1.recipe_id AND ur2.username = ur1.username)
-            ) ur ON r.ID = ur.recipe_id" . ($user !== 'All' ? " AND ur.username = :current_user" : "");
+            ) ur ON r.ID = ur.recipe_id AND ur.username = :current_user";
+} else {
+    // Only include ratings from users who have not opted out of public display
+    $join = "LEFT JOIN (
+                SELECT ur1.recipe_id, ur1.username, ur1.stars_out_of_3, ur1.last_date
+                FROM user_ratings ur1
+                INNER JOIN users u ON u.id = ur1.user_id AND COALESCE(u.do_not_show_username, 0) = 0
+                WHERE ur1.last_date = (SELECT MAX(ur2.last_date) FROM user_ratings ur2 WHERE ur2.recipe_id = ur1.recipe_id AND ur2.username = ur1.username)
+            ) ur ON r.ID = ur.recipe_id";
+}
+
     if ($user !== 'All') {
         $params[':current_user'] = $user;
     }
