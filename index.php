@@ -504,6 +504,12 @@ if ($is_logged_in && !empty($_SESSION['user_id'])) {
     margin-left: 135px;     /* Adjust this number if needed */
 }
 
+/* Center all modals left-to-right and keep them near the top on every screen */
+.modal-dialog {
+    margin: 1.25rem auto !important;   /* small top margin + horizontal center */
+    max-width: min(500px, 92%) !important;
+}
+
 
     </style>
 </head>
@@ -571,12 +577,7 @@ if ($is_logged_in && !empty($_SESSION['user_id'])) {
         </div>
         
     </div>
-</nav>
 
-</div>
-
-        </div>
-    </nav>
 
 <!-- Hidden field to store the current recipe's ID -->
 <input type="hidden" id="current-recipe-id" value="">
@@ -688,7 +689,7 @@ if ($is_logged_in && !empty($_SESSION['user_id'])) {
 
 <!-- Login Modal -->
 <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="loginModalLabel">Sign in to No-Nonsense Cocktails</h5>
@@ -742,7 +743,7 @@ if ($is_logged_in && !empty($_SESSION['user_id'])) {
 
 <!-- Rating Confirmation Modal -->
 <div class="modal fade" id="ratingConfirmModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Confirm Rating</h5>
@@ -768,7 +769,7 @@ if ($is_logged_in && !empty($_SESSION['user_id'])) {
 
 <!-- User Profile Modal -->
 <div class="modal fade" id="profileModal" tabindex="-1" aria-labelledby="profileModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="profileModalLabel">Your Profile</h5>
