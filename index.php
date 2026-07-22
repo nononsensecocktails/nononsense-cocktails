@@ -29,9 +29,9 @@ if ($is_logged_in && !empty($_SESSION['user_id'])) {
 <script>
     const isUserLoggedIn = <?php echo $is_logged_in ? 'true' : 'false'; ?>;
     const loggedInUserId = <?php echo $is_logged_in && !empty($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 'null'; ?>;
-    const loggedInUserName = <?php echo $is_logged_in && !empty($_SESSION['user_name']) ? json_encode($_SESSION['user_name']) : 'null'; ?>;
+    let loggedInUserName = <?php echo $is_logged_in && !empty($_SESSION['user_name']) ? json_encode($_SESSION['user_name']) : 'null'; ?>;
     const loggedInUserEmail = <?php echo $is_logged_in && !empty($user_email) ? json_encode($user_email) : 'null'; ?>;
-    const loggedInDoNotShowUsername = <?php echo (int)$do_not_show_username; ?>;
+    let loggedInDoNotShowUsername = <?php echo (int)$do_not_show_username; ?>;
 </script>
 
 <!DOCTYPE html>
