@@ -65,6 +65,12 @@ try {
         case 'getUnitConversions':
             $result = getUnitConversions($conn);
             break;
+        case 'updateUserProfile':
+            $user_id = $_POST['user_id'] ?? null;
+            $new_username = trim($_POST['new_username'] ?? '');
+            $do_not_show = isset($_POST['do_not_show_username']) ? (int)$_POST['do_not_show_username'] : 0;
+            $result = updateUserProfile($conn, $user_id, $new_username, $do_not_show);
+            break;
         default:
             $result = ['error' => 'Invalid action'];
     }
