@@ -1073,13 +1073,6 @@ $(document).on('click', '#profile-save-btn', function() {
                 // Update the User: dropdown
                 var $select = $('#user-select');
                 var oldName = $select.val();
-                // Remove old name option if it exists
-                $select.find('option').each(function() {
-                    if ($(this).val() === loggedInUserName || $(this).text() === loggedInUserName) {
-                        // keep it for now – will be replaced
-                    }
-                });
-                // Rebuild the options cleanly
                 $select.find('option:not([value="All"])').remove();
                 (response.usernames || []).forEach(function(name) {
                     $select.append($('<option>').val(name).text(name));
@@ -1094,7 +1087,11 @@ $(document).on('click', '#profile-save-btn', function() {
                 // Close modal
                 var modalEl = document.getElementById('profileModal');
                 var modal = bootstrap.Modal.getInstance(modalEl);
-                if (modal) modal.hide();
+                if (modal) {
+                    modal.hide();
+                } else {
+                    $(modalEl).modal('hide');
+                }
             } else {
                 $error.text(response.error || 'Failed to save profile.').show();
             }
