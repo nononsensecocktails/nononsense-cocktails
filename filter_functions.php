@@ -633,4 +633,47 @@ function getUnitConversions($conn) {
     }
     return $conv;
 }
+
+function updateUserProfile($conn, $user_id, $new_username, $do_not_show_username) {
+    if (!$user_id || $new_username === '') {
+        return ['success' => false, 'error' => 'Missing parameters'];
+    }
+    if (strlen($new_username) > 50) {
+        return ['success' => false, 'error' => 'Display name cannot be longer than 50 characters'];
+    }
+
+    // Check for duplicate name in users table (exclude current user)
+    $stmt = $conn->prepare("SELECT id FROM users WHERE name = ? AND id != ?");
+    $stmt->execute([$new_username, $user_id]);
+    if ($stmt->fetch()) {
+        return ['success' => false, 'error' => 'That username is already taken. Please choose another username.'];
+    }
+
+    // Update users table
+    $stmt = $conn->prepare("UPDATE users SET name = ?, do_not_show_username = ? WHERE id = ?");
+    $stmt->execute([$new_username, $do_not_show_username, $user_id]);
+
+    // Update all existing ratings for this user
+    $stmt = $conn->prepare("UPDATE user_ratings SET username = ? WHERE user_id = ?");
+    $stmt->execute([$new_username, $user_id]);
+
+    // Update the PHP session so a page refresh keeps the new name
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+    $_SESSION['user_name'] = $new_username;
+
+    // Return the updated list of usernames for the dropdown
+    $stmt = $conn->prepare("SELECT DISTINCT username FROM user_ratings ORDER BY username ASC");
+    $stmt->execute();
+    $usernames = $stmt->fetchAll(PDO::FETCH_COLUMN, 0);
+
+    return [
+        'success' => true,
+        'new_username' => $new_username,
+        'do_not_show_username' => $do_not_show_username,
+        'usernames' => $usernames
+    ];
+}
+
 ?>
