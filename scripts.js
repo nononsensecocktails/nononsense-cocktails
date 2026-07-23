@@ -15,6 +15,94 @@ $(document).ready(function() {
     let currentRecipeData = null;
     let ingredientsOrder = 'Recipe';
 
+// ===== Mobile type-to-search for User: dropdown =====
+function enhanceUserSelectForMobile() {
+    if (!(/Mobi|Android/i.test(navigator.userAgent) || window.innerWidth < 768)) {
+        return; // desktop – leave native select alone
+    }
+
+    var $select = $('#user-select');
+    if ($select.data('mobile-enhanced')) return;
+    $select.data('mobile-enhanced', true);
+
+    // Hide the original select but keep it in the DOM so existing change handlers still work
+    $select.css({ position: 'absolute', left: '-9999px', width: '1px', height: '1px', opacity: 0 });
+
+    var $wrapper = $('<div class="input-with-clear" style="position:relative; min-width:105px;"></div>');
+    var $input = $('<input type="text" class="form-control form-control-sm" placeholder="Type to find user..." style="font-size:0.82rem;">');
+    var $clearBtn = $('<span class="clear-btn" aria-label="Clear" style="right:6px;">×</span>');
+    var $list = $('<div class="mobile-search-list" style="min-width:160px;"></div>');
+
+    $wrapper.append($input).append($clearBtn);
+    $select.after($wrapper);
+    $wrapper.append($list);
+
+    // Build the list of options from the existing select
+    var allOptions = [];
+    $select.find('option').each(function () {
+        allOptions.push({ value: $(this).val(), text: $(this).text() });
+    });
+
+    function renderList(filtered) {
+        $list.empty();
+        filtered.forEach(function (opt) {
+            var $item = $('<div class="mobile-search-item">' + opt.text + '</div>');
+            $item.on('click', function () {
+                $input.val(opt.text);
+                $select.val(opt.value).trigger('change');
+                $list.hide();
+                $clearBtn.show();
+            });
+            $list.append($item);
+        });
+    }
+
+    renderList(allOptions);
+
+    // Keep the visible input in sync with the real select
+    var currentText = $select.find('option:selected').text();
+    $input.val(currentText === 'All Users' ? '' : currentText);
+    if ($input.val()) $clearBtn.show();
+
+    $input.on('input', function () {
+        var val = $(this).val().toLowerCase();
+        var filtered = allOptions.filter(function (opt) {
+            return opt.text.toLowerCase().includes(val);
+        });
+        renderList(filtered);
+        $list.show();
+    });
+
+    $input.on('focus', function () {
+        renderList(allOptions);
+        $list.show();
+    });
+
+    $clearBtn.on('click', function () {
+        $input.val('');
+        $select.val('All').trigger('change');
+        renderList(allOptions);
+        $list.show();
+        $clearBtn.hide();
+    });
+
+    $(document).on('click', function (e) {
+        if (!$(e.target).closest($wrapper).length) {
+            $list.hide();
+        }
+    });
+
+    // When the real select changes (from other code), keep the input text updated
+    $select.on('change.mobileSync', function () {
+        var txt = $(this).find('option:selected').text();
+        $input.val(txt === 'All Users' ? '' : txt);
+        if ($input.val()) $clearBtn.show(); else $clearBtn.hide();
+    });
+}
+
+// Call it once the page is ready
+enhanceUserSelectForMobile();
+
     function loadUnitConversions(callback) {
         $.ajax({
             url: 'filter.php',
@@ -870,11 +958,22 @@ function loadFromUrl() {
     const name = decodeURIComponent(urlParams.get('name') || '');
     const source = decodeURIComponent(urlParams.get('source') || '');
 
-    // FIX: Force user to 'All' for link loads to ensure full distinct values
-    $('#user-select').val('All').trigger('change');
+    // Only force "All Users" when the page was loaded from a shared link
+    // (i.e. the URL contains recipe or filter parameters).
+    // On a normal login / normal page load, leave the logged-in username selected.
+    let hasRecipeParams = name || source;
+    let hasFilterParams = false;
+    let indexCheck = 0;
+    while (urlParams.has(`term${indexCheck}`)) {
+        hasFilterParams = true;
+        break;
+    }
+
+    if (hasRecipeParams || hasFilterParams) {
+        $('#user-select').val('All').trigger('change');
+    }
 
     // FIX: Handle recipe FIRST – populate dropdowns before any resets
-    let hasRecipeParams = name || source;
     if (hasRecipeParams) {
         // Populate name-select with the name option
         let $nameSelect = $('#name-select');
@@ -1031,6 +1130,13 @@ $(document).on('click', '#open-profile-modal', function(e) {
     $('#profile-show-ratings').prop('checked', loggedInDoNotShowUsername === 0);
     $('#profile-error').hide().text('');
 
+    // Show warning if current name looks like an email
+    if (loggedInUserName && loggedInUserName.indexOf('@') !== -1) {
+        $('#profile-email-warning').show();
+    } else {
+        $('#profile-email-warning').hide();
+    }
+
     var modal = new bootstrap.Modal(document.getElementById('profileModal'));
     modal.show();
 });
@@ -1048,6 +1154,10 @@ $(document).on('click', '#profile-save-btn', function() {
     }
     if (newName.length > 50) {
         $error.text('Display name cannot be longer than 50 characters.').show();
+        return;
+    }
+    if (newName.indexOf('@') !== -1) {
+        $error.text('Usernames cannot include the symbol “@”. Please choose a different name.').show();
         return;
     }
 
@@ -1138,6 +1248,28 @@ $('#user-select').on('change', function() {
         updateRateDrinkSection();
     }
 });
+
+// Force the User dropdown to the logged-in username on page load
+// and highlight it when "All Users" is selected
+function updateUserSelectHighlight() {
+    var $select = $('#user-select');
+    if ($select.val() === 'All') {
+        $select.addClass('all-users-selected');
+    } else {
+        $select.removeClass('all-users-selected');
+    }
+}
+
+if (isUserLoggedIn && loggedInUserName) {
+    $('#user-select').val(loggedInUserName);
+}
+updateUserSelectHighlight();
+
+// Keep the highlight in sync when the user changes the dropdown
+$('#user-select').on('change', function () {
+    updateUserSelectHighlight();
+});
+
 
 $('#name-select').off('change').on('change', updateSources);
 $('#source-select').off('change').on('change', updateRecipeDetails);
@@ -1267,6 +1399,13 @@ $('#copy-permalink').off('click').on('click', async function () {
         updateOperatorSelect($('.search-boxes .excel-row:first'), $('.term-select').val());
         updateValueInput($('.search-boxes .excel-row:first'), $('.term-select').val());
         updateLogicVisibility();
+
+        // Force profile modal if logged-in user still has an @ in their display name
+        if (isUserLoggedIn && loggedInUserName && loggedInUserName.indexOf('@') !== -1) {
+            setTimeout(function () {
+                $('#open-profile-modal').trigger('click');
+            }, 400);
+        }
     });
 
 function formatStarsValue(stars) {
@@ -1329,7 +1468,7 @@ function updateRecipeDetails() {
                             <div class="excel-row">
                                 <div class="excel-cell label-cell">Last Date</div>
                                 <div class="excel-cell content-cell" id="last-date-display">${data.last_date || 'Not set'}</div>
-                                <div class="excel-cell rate-control"><input type="date" id="last-date-input" value="${today}"></div>
+                                <div class="excel-cell rate-control"><input type="date" id="last-date-input" value="${today}" max="${today}"></div>
                                 <div class="excel-cell rate-control"><button id="save-rating" class="btn btn-success btn-sm">Save Rating</button></div>
                             </div>
 
