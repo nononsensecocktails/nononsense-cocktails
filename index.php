@@ -510,7 +510,99 @@ if ($is_logged_in && !empty($_SESSION['user_id'])) {
     max-width: min(500px, 92%) !important;
 }
 
+/* === Modal styling – works in both light and dark mode === */
 
+/* Light mode (default) */
+.modal-content {
+    background-color: #ffffff !important;
+    color: #212529 !important;
+    border: 1px solid #dee2e6 !important;
+}
+
+.modal-header {
+    border-bottom: 1px solid #dee2e6 !important;
+}
+
+.modal-footer {
+    border-top: 1px solid #dee2e6 !important;
+}
+
+.modal-title,
+.modal-body,
+.modal-body p,
+.modal-body ul,
+.modal-body li,
+.modal-body label,
+.modal-body .form-label,
+.modal-body .form-check-label {
+    color: #212529 !important;
+    background-color: transparent !important;
+}
+
+.modal-body .form-control {
+    background-color: #ffffff !important;
+    color: #212529 !important;
+    border-color: #ced4da !important;
+}
+
+.modal-body .form-control[readonly] {
+    background-color: #e9ecef !important;
+    color: #495057 !important;
+}
+
+.modal-body .text-muted {
+    color: #6c757d !important;
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+    .modal-content {
+        background-color: #2a2a2a !important;
+        color: #e0e0e0 !important;
+        border-color: #555 !important;
+    }
+
+    .modal-header {
+        border-bottom-color: #555 !important;
+    }
+
+    .modal-footer {
+        border-top-color: #555 !important;
+    }
+
+    .modal-title,
+    .modal-body,
+    .modal-body p,
+    .modal-body ul,
+    .modal-body li,
+    .modal-body label,
+    .modal-body .form-label,
+    .modal-body .form-check-label {
+        color: #e0e0e0 !important;
+        background-color: transparent !important;
+    }
+
+    .modal-body .form-control,
+    .modal-body .form-control:focus {
+        background-color: #3a3a3a !important;
+        color: #e0e0e0 !important;
+        border-color: #666 !important;
+    }
+
+    .modal-body .form-control[readonly] {
+        background-color: #333 !important;
+        color: #ccc !important;
+    }
+
+    .modal-body .text-muted {
+        color: #aaa !important;
+    }
+
+    /* Make the close (X) button visible in dark mode */
+    .btn-close {
+        filter: invert(1) grayscale(100%) brightness(200%);
+    }
+}
     </style>
 </head>
 <body>
