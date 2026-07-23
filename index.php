@@ -63,6 +63,20 @@ if ($is_logged_in && !empty($_SESSION['user_id'])) {
    
     <style>
 
+/* Highlight the User dropdown when "All Users" is selected */
+#user-select.all-users-selected {
+    background-color: #ffe066 !important;   /* bright yellow */
+    border-color: #e6b800 !important;
+    font-weight: 600;
+}
+
+@media (prefers-color-scheme: dark) {
+    #user-select.all-users-selected {
+        background-color: #b8860b !important;
+        border-color: #daa520 !important;
+        color: #fff !important;
+    }
+}
 
 /* Mobile search list (used for Ice, Glass, Ingredients, etc. on mobile) */
 .mobile-search-list {
@@ -876,6 +890,12 @@ if ($is_logged_in && !empty($_SESSION['user_id'])) {
                     <label class="form-label">Email</label>
                     <input type="text" class="form-control" id="profile-email" readonly>
                 </div>
+
+                <div id="profile-email-warning" class="alert alert-warning py-2 mb-3" style="display:none; font-size:0.85rem;">
+                    Usernames cannot include the symbol “@”.<br>
+                    Unless you uncheck the box below, your username will be visible to the public (i.e. the entire Internet). Unless you want your email public, please change your username to something else.
+                </div>
+
                 <div class="form-check mb-3">
                     <input class="form-check-input" type="checkbox" id="profile-show-ratings">
                     <label class="form-check-label" for="profile-show-ratings">
