@@ -901,7 +901,11 @@ function updateRatingDisplay(stars, last_date) {
     );
     $('#last-date-display').text(last_date || 'Not set');
     $('#stars-select').val(stars || '');
-    $('#last-date-input').val(new Date().toISOString().split('T')[0]);
+    var now = new Date();
+    var today = now.getFullYear() + '-' + 
+                String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+                String(now.getDate()).padStart(2, '0');
+    $('#last-date-input').val(today);
 }
 
 
@@ -1438,7 +1442,10 @@ function updateRecipeDetails() {
                     currentRecipeData = data;
                     // Store the current recipe's ID in the hidden field
                     document.getElementById('current-recipe-id').value = data.ID;
-                    var today = new Date().toISOString().split('T')[0];
+                    var now = new Date();
+                    var today = now.getFullYear() + '-' + 
+                        String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+                        String(now.getDate()).padStart(2, '0');
 
                     var detailsHtml = `
                         <div class="card-body">
