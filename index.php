@@ -63,6 +63,11 @@ if ($is_logged_in && !empty($_SESSION['user_id'])) {
    
     <style>
 
+/* Reduce accidental pull-to-refresh on mobile */
+html, body {
+    overscroll-behavior-y: contain;
+}
+		
 /* Highlight the User dropdown when "All Users" is selected */
 #user-select.all-users-selected {
     background-color: #ffe066 !important;   /* bright yellow */
