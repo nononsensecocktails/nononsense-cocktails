@@ -1344,6 +1344,16 @@ function generateCurrentUrl() {
     return params.toString() ? `${base}?${params.toString()}` : base;
 }
 
+function makeNameLink(text) {
+    if (!text) return '';
+    const params = new URLSearchParams();
+    params.set('term0', 'name');
+    params.set('operator0', '=');
+    params.set('value0', text);
+    const url = window.location.origin + window.location.pathname + '?' + params.toString();
+    return `<a href="${url}" target="_blank" rel="noopener noreferrer">${text}</a>`;
+}
+
 $('#copy-permalink').off('click').on('click', async function () {
     const link = generateCurrentUrl();
     const nameVal = $('#name-select').val() || '';
@@ -1493,8 +1503,8 @@ function updateRecipeDetails() {
                             <div class="excel-row"><div class="excel-cell label-cell">Mixer</div><div class="excel-cell content-cell">${data.Mixer || ''}</div></div>
                             <div class="excel-row"><div class="excel-cell label-cell">Color</div><div class="excel-cell content-cell">${data.Color || ''}</div></div>
                             <div class="excel-row"><div class="excel-cell label-cell">Characteristics</div><div class="excel-cell content-cell">${data.Characteristics || ''}</div></div>
-                            <div class="excel-row"><div class="excel-cell label-cell">Adaptation of</div><div class="excel-cell content-cell">${data['Adaptation of'] || ''}</div></div>
-                            <div class="excel-row"><div class="excel-cell label-cell">Variations</div><div class="excel-cell content-cell">${data.Variations || ''}</div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Adaptation of</div><div class="excel-cell content-cell">${makeNameLink(data['Adaptation of'])}</div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Variations</div><div class="excel-cell content-cell">${makeNameLink(data.Variations)}</div></div>
 
                             <div class="mt-3">
                                 <table class="ingredient-table">
@@ -1502,8 +1512,12 @@ function updateRecipeDetails() {
                                         <tr>
                                             <th>#</th>
                                             <th>Ingredient</th>
-                                            <th>Volume Oz</th>
+                                            <th>Vol Oz</th>
                                             <th>% Vol</th>
+                                            <th>ABV</th>
+                                            <th>% ABV</th>
+                                            <th>Cost</th>
+                                            <th>% Cost</th>
                                         </tr>
                                     </thead>
                                     <tbody></tbody>
@@ -1530,22 +1544,49 @@ function updateRecipeDetails() {
 }
 
 function renderIngredientsTable(data) {
-    var ingredients = (data.Ingredients || '').split(';').filter(Boolean).map(function(ingredient) {
-        var parts = ingredient.split(':');
-        var name = parts[0] ? parts[0].trim() : '';
-        var volumeStr = parts.length === 2 ? parts[1].trim() : '';
-        var parsed = parseVolume(volumeStr);
-        return { name: name, volume: parsed.display, numericVolume: parsed.numeric };
-    });
+    // Prefer the rich data already calculated by the backend
+    var ingredients = [];
+    if (data.parsed_ingredients && Array.isArray(data.parsed_ingredients) && data.parsed_ingredients.length > 0) {
+        ingredients = data.parsed_ingredients.map(function(ing) {
+            return {
+                name: ing.name,
+                volume: ing.quantity,
+                numericVolume: ing.volume_oz || 0,
+                abv: ing.abv || '',
+                abvPercent: ing.abv_percent || '',
+                cost: ing.cost || '',
+                costPercent: ing.cost_percent || '',
+                numericCost: (ing.cost_num !== null && ing.cost_num !== undefined) ? ing.cost_num : 0
+            };
+        });
+    } else {
+        // Fallback: old client-side volume-only parse (should rarely be needed)
+        ingredients = (data.Ingredients || '').split(';').filter(Boolean).map(function(ingredient) {
+            var parts = ingredient.split(':');
+            var name = parts[0] ? parts[0].trim() : '';
+            var volumeStr = parts.length === 2 ? parts[1].trim() : '';
+            var parsed = parseVolume(volumeStr);
+            return {
+                name: name,
+                volume: parsed.display,
+                numericVolume: parsed.numeric,
+                abv: '',
+                abvPercent: '',
+                cost: '',
+                costPercent: '',
+                numericCost: 0
+            };
+        });
+    }
 
-    // Apply sort order chosen in the Ingredients Order dropdown
+    // Apply sort order
     if (ingredientsOrder === 'Vol Desc') {
         ingredients.sort(function(a, b) {
-            return b.numericVolume - a.numericVolume || (a.volume < b.volume ? -1 : 1);
+            return b.numericVolume - a.numericVolume || a.name.localeCompare(b.name);
         });
     } else if (ingredientsOrder === 'Vol Asc') {
         ingredients.sort(function(a, b) {
-            return a.numericVolume - b.numericVolume || (a.volume < b.volume ? -1 : 1);
+            return a.numericVolume - b.numericVolume || a.name.localeCompare(b.name);
         });
     } else if (ingredientsOrder === 'Alpha Asc') {
         ingredients.sort(function(a, b) {
@@ -1555,44 +1596,96 @@ function renderIngredientsTable(data) {
         ingredients.sort(function(a, b) {
             return b.name.localeCompare(a.name);
         });
-    } else if (ingredientsOrder === 'Cost Asc' || ingredientsOrder === 'Cost Desc') {
-        // Cost-based sorting not yet implemented.
-        // For now we keep the original recipe order.
-        // TODO: implement when ingredient cost data is available.
+    } else if (ingredientsOrder === 'Cost Asc') {
+        ingredients.sort(function(a, b) {
+            return a.numericCost - b.numericCost || a.name.localeCompare(b.name);
+        });
+    } else if (ingredientsOrder === 'Cost Desc') {
+        ingredients.sort(function(a, b) {
+            return b.numericCost - a.numericCost || a.name.localeCompare(b.name);
+        });
     }
-    // 'Recipe' (default) and Cost options → keep original data order (no sort)
-
-    var totalVolume = ingredients.reduce(function(sum, ingredient) {
-        return sum + (isNaN(ingredient.numericVolume) ? 0 : ingredient.numericVolume);
-    }, 0);
+    // 'Recipe' → keep original order
 
     var tbodyHtml = '';
     ingredients.forEach(function(ingredient, index) {
-        var percentVol = (ingredient.numericVolume && totalVolume > 0) 
-            ? (ingredient.numericVolume / totalVolume * 100).toFixed(2) 
-            : '';
-	var colorStyle = percentVol ? `background-color: ${getColor(parseFloat(percentVol), 0, 60)};` : '';
+        var volPctNum = parseFloat((ingredient.abvPercent || '').replace('%','')) || 0; // not used for color
+        var volColor = '';
+        if (ingredient.volume && data.totals) {
+            var pct = parseFloat((ingredient.vol_percent || '').replace('%',''));
+            // We still need the raw % Vol number for colouring – fall back to calculation if missing
+            if (isNaN(pct) && ingredient.numericVolume && data.totals.volume_oz) {
+                pct = (ingredient.numericVolume / parseFloat(data.totals.volume_oz)) * 100;
+            }
+            if (!isNaN(pct)) {
+                volColor = `background-color: ${getColor(pct, 0, 60)};`;
+            }
+        }
+
+        // % ABV colour (0-60)
+        var abvPctColor = '';
+        if (ingredient.abvPercent) {
+            var abvPct = parseFloat(ingredient.abvPercent);
+            if (!isNaN(abvPct)) {
+                abvPctColor = `background-color: ${getColor(abvPct, 0, 60)};`;
+            }
+        }
+
+        // % Cost colour (0-100)
+        var costPctColor = '';
+        if (ingredient.costPercent) {
+            var costPct = parseFloat(ingredient.costPercent);
+            if (!isNaN(costPct)) {
+                costPctColor = `background-color: ${getColor(costPct, 0, 100)};`;
+            }
+        }
+
+        // For the old-style fallback we still need to compute % Vol
+        var displayVolPct = '';
+        if (ingredient.vol_percent) {
+            displayVolPct = ingredient.vol_percent;
+        } else if (ingredient.numericVolume && data.totals && data.totals.volume_oz) {
+            var p = (ingredient.numericVolume / parseFloat(data.totals.volume_oz)) * 100;
+            displayVolPct = p.toFixed(2) + '%';
+            volColor = `background-color: ${getColor(p, 0, 60)};`;
+        }
+
         tbodyHtml += `
             <tr>
                 <td>${index + 1}</td>
                 <td style="word-break: break-word; white-space: normal;">${ingredient.name}</td>
                 <td class="text-end">${ingredient.volume}</td>
-                <td class="text-end" style="${colorStyle}">${percentVol ? percentVol + '%' : ''}</td>
+                <td class="text-end" style="${volColor}">${displayVolPct}</td>
+                <td class="text-end">${ingredient.abv}</td>
+                <td class="text-end" style="${abvPctColor}">${ingredient.abvPercent}</td>
+                <td class="text-end">${ingredient.cost}</td>
+                <td class="text-end" style="${costPctColor}">${ingredient.costPercent}</td>
             </tr>`;
     });
+
+    // Total row
+    var totals = data.totals || {};
+    var totalAbvColor = '';
+    if (totals.abv_percent) {
+        var tAbv = parseFloat(totals.abv_percent);
+        if (!isNaN(tAbv)) {
+            totalAbvColor = `background-color: ${getColor(tAbv, 0, 60)};`;
+        }
+    }
 
     tbodyHtml += `
         <tr>
             <td></td>
             <td><strong>Total</strong></td>
-            <td class="text-end"><strong>${totalVolume.toFixed(2)}</strong></td>
-            <td class="text-end"><strong>100.00%</strong></td>
+            <td class="text-end"><strong>${totals.volume_oz || ''}</strong></td>
+            <td class="text-end"><strong>${totals.vol_percent || '100.00%'}</strong></td>
+            <td class="text-end"><strong>${totals.abv || ''}</strong></td>
+            <td class="text-end" style="${totalAbvColor}"><strong>${totals.abv_percent || ''}</strong></td>
+            <td class="text-end"><strong>${totals.cost || ''}</strong></td>
+            <td class="text-end"><strong>${totals.cost_percent || '100.0%'}</strong></td>
         </tr>`;
 
     $('#recipe_details .ingredient-table tbody').html(tbodyHtml);
 }
-
-
-
 
 });
