@@ -779,19 +779,31 @@ html, body {
                             </select>
                         </div>
 
-			<!-- NEW: Ingredients Order dropdown moved to far right -->
-	                <div class="excel-cell" style="min-width: 170px; flex: 0 0 auto; margin-left: auto;">
-        	            <div style="font-size: 0.75rem; color: #6c757d; margin-bottom: 1px;">Ingredients Order</div>
-                	    <select id="ingredients-order-select" class="form-select form-select-sm">
-                        	<option value="Recipe" selected>Recipe</option>
-	                        <option value="Vol Asc">Vol Asc</option>
-        	                <option value="Vol Desc">Vol Desc</option>
-                	        <option value="Cost Asc">Cost Asc</option>
-                        	<option value="Cost Desc">Cost Desc</option>
-	                        <option value="Alpha Asc">Alpha Asc</option>
-        	                <option value="Alpha Desc">Alpha Desc</option>
-                	    </select>
-                	</div>
+			<!-- Volume Unit dropdown (left of Ingredients Order) -->
+			<div class="excel-cell" style="min-width: 90px; flex: 0 0 auto; margin-left: auto;">
+				<div style="font-size: 0.75rem; color: #6c757d; margin-bottom: 1px;">Volume Unit</div>
+				<select id="volume-unit-select" class="form-select form-select-sm">
+					<option value="oz" selected>Oz</option>
+					<option value="ml">mL</option>
+					<option value="l">L</option>
+					<option value="p">P</option>
+					<option value="g">G</option>
+				</select>
+			</div>
+
+			<!-- Ingredients Order dropdown -->
+			<div class="excel-cell" style="min-width: 170px; flex: 0 0 auto;">
+				<div style="font-size: 0.75rem; color: #6c757d; margin-bottom: 1px;">Ingredients Order</div>
+				<select id="ingredients-order-select" class="form-select form-select-sm">
+					<option value="Recipe" selected>Recipe</option>
+					<option value="Vol Asc">Vol Asc</option>
+					<option value="Vol Desc">Vol Desc</option>
+					<option value="Cost Asc">Cost Asc</option>
+					<option value="Cost Desc">Cost Desc</option>
+					<option value="Alpha Asc">Alpha Asc</option>
+					<option value="Alpha Desc">Alpha Desc</option>
+				</select>
+			</div>
 
                     </div>
                 </div>
