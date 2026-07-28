@@ -15,6 +15,13 @@ $(document).ready(function() {
     let currentRecipeData = null;
     let ingredientsOrder = 'Recipe';
 
+// NEW: State for Volume Unit (display only)
+    let volumeUnit = 'oz';   // default
+
+// NEW: Recipe scaling
+    let currentScale = 1;          // the value currently shown / applied
+    let originalServings = 1;      // Servings from the loaded recipe (never changes)
+
 // ===== Mobile type-to-search for User: dropdown =====
 function enhanceUserSelectForMobile() {
     if (!(/Mobi|Android/i.test(navigator.userAgent) || window.innerWidth < 768)) {
@@ -537,8 +544,27 @@ function resetFilters() {
                 </select>
             </div>
 
-            <!-- Ingredients Order dropdown - keep on far right after reset -->
-            <div class="excel-cell" style="min-width: 170px; flex: 0 0 auto; margin-left: auto;">
+            <!-- Recipe Scale input (left of Volume Unit) -->
+            <div class="excel-cell recipe-scale-cell" style="margin-left: auto;">
+                <div style="font-size: 0.75rem; color: #6c757d; margin-bottom: 1px;">Scale</div>
+                <input type="number" id="recipe-scale-input" class="form-control form-control-sm"
+                       step="any" min="0.01" value="1" style="font-size: 0.82rem;">
+            </div>
+
+            <!-- Volume Unit dropdown (left of Ingredients Order) -->
+            <div class="excel-cell volume-unit-cell" style="margin-left: auto;">
+                <div style="font-size: 0.75rem; color: #6c757d; margin-bottom: 1px;">Volume Unit</div>
+                <select id="volume-unit-select" class="form-select form-select-sm">
+                    <option value="oz" selected>Oz</option>
+                    <option value="ml">mL</option>
+                    <option value="l">L</option>
+                    <option value="p">P</option>
+                    <option value="g">G</option>
+                </select>
+            </div>
+
+            <!-- Ingredients Order dropdown -->
+            <div class="excel-cell ingredients-order-cell">
                 <div style="font-size: 0.75rem; color: #6c757d; margin-bottom: 1px;">Ingredients Order</div>
                 <select id="ingredients-order-select" class="form-select form-select-sm">
                     <option value="Recipe" selected>Recipe</option>
@@ -550,7 +576,6 @@ function resetFilters() {
                     <option value="Alpha Desc">Alpha Desc</option>
                 </select>
             </div>
-        </div>
     `);
 
     // Re-attach the change handler for the Ingredients Order dropdown after reset
@@ -561,6 +586,35 @@ function resetFilters() {
             renderIngredientsTable(currentRecipeData);
         }
     });
+
+    // Re-attach Volume Unit handler after reset
+    $('#volume-unit-select').on('change', function () {
+        volumeUnit = $(this).val();
+        if (currentRecipeData) {
+            renderIngredientsTable(currentRecipeData);
+        }
+    });
+
+    // Re-attach scale handler after reset
+    $('#recipe-scale-input').off('input change').on('input change', function () {
+        var raw = $(this).val().trim();
+        var num = parseFloat(raw);
+        if (raw === '' || isNaN(num) || num <= 0) {
+            $(this).addClass('scale-invalid');
+            return;
+        }
+        $(this).removeClass('scale-invalid');
+        currentScale = num;
+        if (currentRecipeData) {
+            renderIngredientsTable(currentRecipeData);
+        }
+    });
+    // Restore current values after the HTML was rebuilt
+    $('#volume-unit-select').val(volumeUnit);
+    $('#recipe-scale-input').val(currentScale);
+
+    // Keep the current selection if the user already changed it
+    $('#volume-unit-select').val(volumeUnit);
 
     updateOperatorSelect($('.search-boxes .excel-row:first'), '');
     updateValueInput($('.search-boxes .excel-row:first'), '');
@@ -1286,6 +1340,34 @@ $(document).on('change', '#ingredients-order-select', function () {
     }
 });
 
+// NEW: Convert displayed volumes when unit changes
+$(document).on('change', '#volume-unit-select', function () {
+    volumeUnit = $(this).val();
+    if (currentRecipeData) {
+        renderIngredientsTable(currentRecipeData);
+    }
+});
+
+// NEW: Recipe scale input – apply scale or show red warning
+$(document).on('input change', '#recipe-scale-input', function () {
+    var raw = $(this).val().trim();
+    var num = parseFloat(raw);
+
+    if (raw === '' || isNaN(num) || num <= 0) {
+        // Invalid → keep previous valid scale and highlight red
+        $(this).addClass('scale-invalid');
+        return;
+    }
+
+    // Valid
+    $(this).removeClass('scale-invalid');
+    currentScale = num;
+
+    if (currentRecipeData) {
+        renderIngredientsTable(currentRecipeData);
+    }
+});
+
     $('#lucky-button').on('click', loadRandomRecipe);
 $('#reset-button').on('click', function() {
     resetFilters();
@@ -1450,6 +1532,13 @@ function updateRecipeDetails() {
             success: function(data) {
                 if (data && typeof data === 'object') {
                     currentRecipeData = data;
+                    // Set scale box to the recipe’s Servings (or 1 if missing/invalid)
+                    var servings = parseFloat(data.Servings);
+                    if (isNaN(servings) || servings <= 0) servings = 1;
+                    originalServings = servings;
+                    currentScale = servings;
+                    $('#recipe-scale-input').val(servings).removeClass('scale-invalid');
+                    
                     // Store the current recipe's ID in the hidden field
                     document.getElementById('current-recipe-id').value = data.ID;
                     var now = new Date();
@@ -1543,24 +1632,62 @@ function updateRecipeDetails() {
     }
 }
 
+// Convert a volume that is already in ounces to the currently selected display unit
+function convertVolumeFromOz(oz, unit) {
+    if (oz === null || oz === undefined || isNaN(oz)) return '';
+    const n = parseFloat(oz);
+    switch (unit) {
+        case 'ml': return (n * 29.5735).toFixed(1);          // 1 oz ≈ 29.5735 mL
+        case 'l':  return (n / 33.814).toFixed(3);           // 1 L ≈ 33.814 oz
+        case 'p':  return (n / 16).toFixed(2);               // 1 US pint = 16 oz
+        case 'g':  return (n / 128).toFixed(3);              // 1 US gallon = 128 oz
+        case 'oz':
+        default:   return n.toFixed(2);
+    }
+}
+
+function getVolumeHeaderLabel(unit) {
+    switch (unit) {
+        case 'ml': return 'Vol mL';
+        case 'l':  return 'Vol L';
+        case 'p':  return 'Vol P';
+        case 'g':  return 'Vol G';
+        default:   return 'Vol Oz';
+    }
+}
+
 function renderIngredientsTable(data) {
+    // Scale factor relative to the original Servings
+    var scaleFactor = currentScale / originalServings;
+    if (!isFinite(scaleFactor) || scaleFactor <= 0) scaleFactor = 1;
+
     // Prefer the rich data already calculated by the backend
     var ingredients = [];
     if (data.parsed_ingredients && Array.isArray(data.parsed_ingredients) && data.parsed_ingredients.length > 0) {
         ingredients = data.parsed_ingredients.map(function(ing) {
+            // Parse original cost number from the "$X.XX" string the backend sends
+            var costNum = 0;
+            if (ing.cost && typeof ing.cost === 'string') {
+                var cleaned = ing.cost.replace(/[^0-9.]/g, '');
+                costNum = parseFloat(cleaned) || 0;
+            } else if (typeof ing.cost_num === 'number') {
+                costNum = ing.cost_num;
+            }
+
             return {
                 name: ing.name,
                 volume: ing.quantity,
-                numericVolume: ing.volume_oz || 0,
+                numericVolume: (ing.volume_oz || 0) * scaleFactor,   // scaled oz
+                originalCost: costNum,
+                numericCost: costNum * scaleFactor,                  // scaled cost
                 abv: ing.abv || '',
                 abvPercent: ing.abv_percent || '',
-                cost: ing.cost || '',
                 costPercent: ing.cost_percent || '',
-                numericCost: (ing.cost_num !== null && ing.cost_num !== undefined) ? ing.cost_num : 0
+                vol_percent: ing.vol_percent || ''
             };
         });
     } else {
-        // Fallback: old client-side volume-only parse (should rarely be needed)
+        // Fallback: old client-side volume-only parse
         ingredients = (data.Ingredients || '').split(';').filter(Boolean).map(function(ingredient) {
             var parts = ingredient.split(':');
             var name = parts[0] ? parts[0].trim() : '';
@@ -1569,17 +1696,18 @@ function renderIngredientsTable(data) {
             return {
                 name: name,
                 volume: parsed.display,
-                numericVolume: parsed.numeric,
+                numericVolume: parsed.numeric * scaleFactor,
+                originalCost: 0,
+                numericCost: 0,
                 abv: '',
                 abvPercent: '',
-                cost: '',
                 costPercent: '',
-                numericCost: 0
+                vol_percent: ''
             };
         });
     }
 
-    // Apply sort order
+    // Apply sort order (still based on the scaled numeric values)
     if (ingredientsOrder === 'Vol Desc') {
         ingredients.sort(function(a, b) {
             return b.numericVolume - a.numericVolume || a.name.localeCompare(b.name);
@@ -1605,24 +1733,35 @@ function renderIngredientsTable(data) {
             return b.numericCost - a.numericCost || a.name.localeCompare(b.name);
         });
     }
-    // 'Recipe' → keep original order
+
+    // Update the Volume column header
+    var $th = $('#recipe_details .ingredient-table thead th').eq(2);
+    if ($th.length) {
+        $th.text(getVolumeHeaderLabel(volumeUnit));
+    }
 
     var tbodyHtml = '';
     ingredients.forEach(function(ingredient, index) {
-        var volPctNum = parseFloat((ingredient.abvPercent || '').replace('%','')) || 0; // not used for color
+        // Convert the (already scaled) oz value to the selected display unit
+        var displayVolume = convertVolumeFromOz(ingredient.numericVolume, volumeUnit);
+
+        // Format cost
+        var displayCost = ingredient.numericCost > 0
+            ? '$' + ingredient.numericCost.toFixed(2)
+            : (ingredient.originalCost === 0 ? '' : '$0.00');
+
         var volColor = '';
-        if (ingredient.volume && data.totals) {
+        if (ingredient.vol_percent || (ingredient.numericVolume && data.totals)) {
             var pct = parseFloat((ingredient.vol_percent || '').replace('%',''));
-            // We still need the raw % Vol number for colouring – fall back to calculation if missing
-            if (isNaN(pct) && ingredient.numericVolume && data.totals.volume_oz) {
-                pct = (ingredient.numericVolume / parseFloat(data.totals.volume_oz)) * 100;
+            if (isNaN(pct) && ingredient.numericVolume && data.totals && data.totals.volume_oz) {
+                // % Vol is independent of scale, so use original total
+                pct = (ingredient.numericVolume / scaleFactor / parseFloat(data.totals.volume_oz)) * 100;
             }
             if (!isNaN(pct)) {
                 volColor = `background-color: ${getColor(pct, 0, 60)};`;
             }
         }
 
-        // % ABV colour (0-60)
         var abvPctColor = '';
         if (ingredient.abvPercent) {
             var abvPct = parseFloat(ingredient.abvPercent);
@@ -1631,7 +1770,6 @@ function renderIngredientsTable(data) {
             }
         }
 
-        // % Cost colour (0-100)
         var costPctColor = '';
         if (ingredient.costPercent) {
             var costPct = parseFloat(ingredient.costPercent);
@@ -1640,12 +1778,9 @@ function renderIngredientsTable(data) {
             }
         }
 
-        // For the old-style fallback we still need to compute % Vol
-        var displayVolPct = '';
-        if (ingredient.vol_percent) {
-            displayVolPct = ingredient.vol_percent;
-        } else if (ingredient.numericVolume && data.totals && data.totals.volume_oz) {
-            var p = (ingredient.numericVolume / parseFloat(data.totals.volume_oz)) * 100;
+        var displayVolPct = ingredient.vol_percent || '';
+        if (!displayVolPct && ingredient.numericVolume && data.totals && data.totals.volume_oz) {
+            var p = (ingredient.numericVolume / scaleFactor / parseFloat(data.totals.volume_oz)) * 100;
             displayVolPct = p.toFixed(2) + '%';
             volColor = `background-color: ${getColor(p, 0, 60)};`;
         }
@@ -1654,16 +1789,16 @@ function renderIngredientsTable(data) {
             <tr>
                 <td>${index + 1}</td>
                 <td style="word-break: break-word; white-space: normal;">${ingredient.name}</td>
-                <td class="text-end">${ingredient.volume}</td>
+                <td class="text-end">${displayVolume}</td>
                 <td class="text-end" style="${volColor}">${displayVolPct}</td>
                 <td class="text-end">${ingredient.abv}</td>
                 <td class="text-end" style="${abvPctColor}">${ingredient.abvPercent}</td>
-                <td class="text-end">${ingredient.cost}</td>
+                <td class="text-end">${displayCost}</td>
                 <td class="text-end" style="${costPctColor}">${ingredient.costPercent}</td>
             </tr>`;
     });
 
-    // Total row
+    // Total row – scale volume and cost
     var totals = data.totals || {};
     var totalAbvColor = '';
     if (totals.abv_percent) {
@@ -1673,15 +1808,28 @@ function renderIngredientsTable(data) {
         }
     }
 
+    var displayTotalVolume = convertVolumeFromOz(
+        (parseFloat(totals.volume_oz) || 0) * scaleFactor,
+        volumeUnit
+    );
+
+    var totalCostNum = 0;
+    if (totals.cost && typeof totals.cost === 'string') {
+        totalCostNum = parseFloat(totals.cost.replace(/[^0-9.]/g, '')) || 0;
+    }
+    var displayTotalCost = totalCostNum > 0
+        ? '$' + (totalCostNum * scaleFactor).toFixed(2)
+        : (totals.cost || '');
+
     tbodyHtml += `
         <tr>
             <td></td>
             <td><strong>Total</strong></td>
-            <td class="text-end"><strong>${totals.volume_oz || ''}</strong></td>
+            <td class="text-end"><strong>${displayTotalVolume}</strong></td>
             <td class="text-end"><strong>${totals.vol_percent || '100.00%'}</strong></td>
             <td class="text-end"><strong>${totals.abv || ''}</strong></td>
             <td class="text-end" style="${totalAbvColor}"><strong>${totals.abv_percent || ''}</strong></td>
-            <td class="text-end"><strong>${totals.cost || ''}</strong></td>
+            <td class="text-end"><strong>${displayTotalCost}</strong></td>
             <td class="text-end"><strong>${totals.cost_percent || '100.0%'}</strong></td>
         </tr>`;
 
