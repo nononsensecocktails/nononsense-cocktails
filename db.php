@@ -8,7 +8,7 @@ function getDBConnection() {
         $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         return $conn;
     } catch (PDOException $e) {
-        error_log(date('Y-m-d H:i:s') . " Connection Error: " . $e->getMessage() . "\n", 3, 'C:\xampp\php_errors.log');
+        error_log(date('Y-m-d H:i:s') . " Connection Error: " . $e->getMessage() . "\n");
         return null;
     }
 }
