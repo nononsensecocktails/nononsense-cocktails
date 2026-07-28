@@ -474,7 +474,7 @@ html, body {
 
 /* % Cost */
 .ingredient-table th:nth-child(8), .ingredient-table td:nth-child(8) { 
-    width: 45px; 
+    width: 50px; 
     text-align: right;
 }
         .btn { padding: 2px 8px; font-size: 0.82rem; }
@@ -521,6 +521,53 @@ html, body {
 /* STEP 1 dropdown (the big "Select a Filter" box) */
 .term-select-cell {
     flex: 0 0 175px;           /* Change this number to make it wider/narrower */
+}
+
+//* Recipe Scale input */
+.recipe-scale-cell {
+    flex: 0 0 55px;
+    min-width: 55px;
+    margin-left: auto;          /* still pushes the group to the right */
+}
+
+/* Force the three right-hand cells to sit on the bottom of the row
+   and shift the whole group left by the same amount */
+.recipe-scale-cell,
+.volume-unit-cell,
+.ingredients-order-cell {
+    align-self: flex-end;
+    position: relative;
+    left: -40px;                /* ← change this number to move the whole group left */
+}
+
+/* Override Bootstrap so the input matches the dropdown height exactly */
+#recipe-scale-input {
+    width: 100% !important;
+    height: 31px !important;
+    min-height: 31px !important;
+    padding: 0.25rem 0.35rem !important;
+    font-size: 0.82rem !important;
+    line-height: 1.5 !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+}
+
+/* Volume Unit dropdown */
+.volume-unit-cell {
+    flex: 0 0 70px;            /* ← change this number to set the width */
+    min-width: 70px;
+}
+
+/* Ingredients Order dropdown */
+.ingredients-order-cell {
+    flex: 0 0 95x;           /* ← change this number to set the width */
+    min-width: 95;
+}
+
+/* Red warning when scale input is invalid */
+#recipe-scale-input.scale-invalid {
+    border-color: #dc3545 !important;
+    background-color: #fff5f5 !important;
 }
 
 /* Operator dropdown (the small = / ≠ box) */
@@ -779,8 +826,15 @@ html, body {
                             </select>
                         </div>
 
+            <!-- Recipe Scale input (left of Volume Unit) -->
+			<div class="excel-cell recipe-scale-cell" style="margin-left: auto;">
+				<div style="font-size: 0.75rem; color: #6c757d; margin-bottom: 1px;">Scale</div>
+				<input type="number" id="recipe-scale-input" class="form-control form-control-sm"
+					   step="any" min="0.01" value="1" style="font-size: 0.82rem;">
+			</div>
+			
 			<!-- Volume Unit dropdown (left of Ingredients Order) -->
-			<div class="excel-cell" style="min-width: 90px; flex: 0 0 auto; margin-left: auto;">
+			<div class="excel-cell volume-unit-cell" style="margin-left: auto;">
 				<div style="font-size: 0.75rem; color: #6c757d; margin-bottom: 1px;">Volume Unit</div>
 				<select id="volume-unit-select" class="form-select form-select-sm">
 					<option value="oz" selected>Oz</option>
@@ -792,7 +846,7 @@ html, body {
 			</div>
 
 			<!-- Ingredients Order dropdown -->
-			<div class="excel-cell" style="min-width: 170px; flex: 0 0 auto;">
+			<div class="excel-cell ingredients-order-cell">
 				<div style="font-size: 0.75rem; color: #6c757d; margin-bottom: 1px;">Ingredients Order</div>
 				<select id="ingredients-order-select" class="form-select form-select-sm">
 					<option value="Recipe" selected>Recipe</option>
