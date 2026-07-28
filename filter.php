@@ -96,7 +96,7 @@ try {
     ob_end_clean();
     exit(json_encode($result));
 } catch (Exception $e) {
-    error_log(date('Y-m-d H:i:s') . " Error: " . $e->getMessage() . "\n", 3, '/home/m2igrnpfhd75/public_html/php_errors.log');
+    error_log(date('Y-m-d H:i:s') . " Error: " . $e->getMessage() . "\n");
     ob_end_clean();
     exit(json_encode(['error' => 'An internal error occurred. Please try again later.']));
 }
