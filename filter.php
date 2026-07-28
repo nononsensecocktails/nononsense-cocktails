@@ -1,6 +1,7 @@
 <?php
 require_once 'db.php';  // Added: To get getDBConnection()
 require_once 'filter_functions.php';
+session_start();
 
 header('Content-Type: application/json');
 ob_start();
@@ -53,22 +54,40 @@ try {
             $user = $_GET['user'] ?? 'All';
             $result = getRecipeDetails($conn, $name, $source, $user);
             break;
-        case 'saveRating':
-            $name = $_POST['name'] ?? '';
-            $source = $_POST['source'] ?? '';
-            $stars = $_POST['stars'] ?? '';
-            $last_date = $_POST['last_date'] ?? '';
-            $user_id = $_POST['user_id'] ?? null;
-            $username = $_POST['username'] ?? '';
-            $result = saveRating($conn, $name, $source, $stars, $last_date, $user_id, $username);
-            break;
         case 'getUnitConversions':
             $result = getUnitConversions($conn);
             break;
+        case 'saveRating':
+            // Must be logged in
+            if (empty($_SESSION['is_logged_in']) || empty($_SESSION['user_id']) || empty($_SESSION['user_name'])) {
+                $result = ['success' => false, 'error' => 'You must be logged in to save a rating.'];
+                break;
+            }
+
+            $name       = $_POST['name'] ?? '';
+            $source     = $_POST['source'] ?? '';
+            $stars      = $_POST['stars'] ?? '';
+            $last_date  = $_POST['last_date'] ?? '';
+
+            // NEVER trust client-supplied user_id / username
+            $user_id    = (int)$_SESSION['user_id'];
+            $username   = $_SESSION['user_name'];
+
+            $result = saveRating($conn, $name, $source, $stars, $last_date, $user_id, $username);
+            break;
+
         case 'updateUserProfile':
-            $user_id = $_POST['user_id'] ?? null;
+            // Must be logged in
+            if (empty($_SESSION['is_logged_in']) || empty($_SESSION['user_id'])) {
+                $result = ['success' => false, 'error' => 'You must be logged in to update your profile.'];
+                break;
+            }
+
+            // NEVER trust client-supplied user_id
+            $user_id      = (int)$_SESSION['user_id'];
             $new_username = trim($_POST['new_username'] ?? '');
-            $do_not_show = isset($_POST['do_not_show_username']) ? (int)$_POST['do_not_show_username'] : 0;
+            $do_not_show  = isset($_POST['do_not_show_username']) ? (int)$_POST['do_not_show_username'] : 0;
+
             $result = updateUserProfile($conn, $user_id, $new_username, $do_not_show);
             break;
         default:
@@ -79,6 +98,6 @@ try {
 } catch (Exception $e) {
     error_log(date('Y-m-d H:i:s') . " Error: " . $e->getMessage() . "\n", 3, '/home/m2igrnpfhd75/public_html/php_errors.log');
     ob_end_clean();
-    exit(json_encode(['error' => 'Query failed: ' . $e->getMessage()]));
+    exit(json_encode(['error' => 'An internal error occurred. Please try again later.']));
 }
 ?>
