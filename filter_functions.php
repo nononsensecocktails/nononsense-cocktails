@@ -4,7 +4,6 @@ ini_set('display_errors', 0);
 ini_set('display_startup_errors', 0);
 error_reporting(E_ALL);
 ini_set('log_errors', 1);
-ini_set('error_log', '/home/m2igrnpfhd75/public_html/php_errors.log');
 
 function getFilters() {
     return [
@@ -120,7 +119,7 @@ function buildCondition($term, $operator, $value, &$params, $index, $filters, $u
         return !empty($all_conditions) ? '(' . implode(' OR ', $all_conditions) . ')' : '1=1';
     }
     if (!array_key_exists($term, $filters)) {
-        error_log(date('Y-m-d H:i:s') . " Invalid term: $term\n", 3, '/home/m2igrnpfhd75/public_html/php_errors.log');
+        error_log(date('Y-m-d H:i:s') . " Invalid term: $term\n");        
         return '1=1';
     }
     $table = $filters[$term]['table'];
