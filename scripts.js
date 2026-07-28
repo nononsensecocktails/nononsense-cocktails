@@ -622,20 +622,24 @@ function resetFilters() {
     updateNames();
 }
 
-    $(document).on('click', '.add-box', function() {
-        var newBox = $('.search-boxes .excel-row:first').clone(true);
-        newBox.find('.value-input').val('');
-        newBox.find('.remove-box').show();
-        newBox.find('.add-box').text('+');
-        newBox.find('.term-select').val('');
-        newBox.find('.excel-cell').last().remove();
-        $(this).closest('.excel-row').after(newBox);
-        var term = newBox.find('.term-select').val();
-        updateOperatorSelect(newBox, term);
-        updateValueInput(newBox, term);
-        updateLogicVisibility();
-        updateAllBelow(newBox);
-    });
+$(document).on('click', '.add-box', function() {
+    var newBox = $('.search-boxes .excel-row:first').clone(true);
+    newBox.find('.value-input').val('');
+    newBox.find('.remove-box').show();
+    newBox.find('.add-box').text('+');
+    newBox.find('.term-select').val('');
+
+    // Remove the three special controls so they only appear on the first row
+    newBox.find('.recipe-scale-cell, .volume-unit-cell, .ingredients-order-cell').remove();
+
+    $(this).closest('.excel-row').after(newBox);
+    var term = newBox.find('.term-select').val();
+    updateOperatorSelect(newBox, term);
+    updateValueInput(newBox, term);
+    updateLogicVisibility();
+    updateAllBelow(newBox);
+});
+
     $(document).on('click', '.remove-box', function() {
         if ($('.search-boxes .excel-row').length > 1) {
             pendingFilterChange = true; // Reset name/source because filters changed
