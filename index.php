@@ -67,7 +67,7 @@ if ($is_logged_in && !empty($_SESSION['user_id'])) {
 html, body {
     overscroll-behavior-y: contain;
 }
-		
+
 /* Highlight the User dropdown when "All Users" is selected */
 #user-select.all-users-selected {
     background-color: #ffe066 !important;   /* bright yellow */
@@ -407,7 +407,7 @@ html, body {
 
         /* INGREDIENTS TABLE */
         .ingredient-table {
-            width: 380px;
+            width: 470px;
             border-collapse: collapse;
             font-size: 0.82rem;
             margin-top: 2px;
@@ -445,16 +445,38 @@ html, body {
 
 	/*Volume Oz*/
         .ingredient-table th:nth-child(3), .ingredient-table td:nth-child(3) { 
-            width: 45px; 
+            width: 50px; 
             text-align: right; 
             padding-left: 4px;
         }
 
 	/*% Vol*/
         .ingredient-table th:nth-child(4), .ingredient-table td:nth-child(4) { 
-            width: 40px; 
+            width: 45px; 
             text-align: right;
         }
+/* ABV */
+.ingredient-table th:nth-child(5), .ingredient-table td:nth-child(5) { 
+    width: 45px; 
+    text-align: right;
+}
+/* % ABV */
+.ingredient-table th:nth-child(6), .ingredient-table td:nth-child(6) { 
+    width: 45px; 
+    text-align: right;
+}
+
+/* Cost */
+.ingredient-table th:nth-child(7), .ingredient-table td:nth-child(7) { 
+    width: 45px; 
+    text-align: right;
+}
+
+/* % Cost */
+.ingredient-table th:nth-child(8), .ingredient-table td:nth-child(8) { 
+    width: 45px; 
+    text-align: right;
+}
         .btn { padding: 2px 8px; font-size: 0.82rem; }
         #user-select {
             font-size: 0.82rem;
@@ -523,10 +545,15 @@ html, body {
     margin-left: 135px;     /* Adjust this number if needed */
 }
 
-/* Center all modals left-to-right and keep them near the top on every screen */
+/* Force modals to the true center of the screen on mobile (and still work on desktop) */
 .modal-dialog {
-    margin: 1.25rem auto !important;   /* small top margin + horizontal center */
-    max-width: min(500px, 92%) !important;
+    position: fixed !important;
+    top: 1.25rem !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    margin: 0 !important;
+    max-width: min(500px, 92vw) !important;
+    width: auto !important;
 }
 
 /* === Modal styling – works in both light and dark mode === */
