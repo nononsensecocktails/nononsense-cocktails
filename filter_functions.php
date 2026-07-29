@@ -651,17 +651,17 @@ function getRecipeDetails($conn, $name, $source, $user) {
 
         $recipe['parsed_ingredients'] = $parsed;
         $recipe['totals'] = [
-            'volume_oz' => sprintf('%.2f', $total_volume),
-            'vol_percent' => sprintf('%.2f%%', $total_vol_percent_sum),
-            'abv' => $total_abv_disp,
-            'abv_percent' => sprintf('%.2f%%', $total_abv_percent_sum),
-            'cost' => $total_cost_disp,
-            'cost_percent' => sprintf('%.2f%%', $total_cost_percent_sum),
+            'volume_oz'    => sprintf('%.2f', $total_volume),
+            'vol_percent'  => '100%',
+            'abv'          => sprintf('%.1f%%', $total_weighted_abv),
+            'abv_percent'  => sprintf('%.1f%%', $total_weighted_abv),
+            'cost'         => sprintf('$%.2f', $total_cost),
+            'cost_percent' => '100%',
         ];
 
         // Equiv # of Drinks (NIH standard drink = 1.5 oz of 40% ABV = 0.6 oz pure alcohol)
         // This is the *original* (unscaled) value. Front-end will multiply by scale factor.
-        $pure_alcohol_oz = $total_volume * ($total_abv / 100.0);
+        $pure_alcohol_oz = $total_volume * ($total_weighted_abv / 100.0);
         $equiv_drinks = $pure_alcohol_oz / 0.6;
         $recipe['equiv_drinks'] = sprintf('%.2f', $equiv_drinks);
     }
