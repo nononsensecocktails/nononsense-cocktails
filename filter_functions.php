@@ -119,7 +119,7 @@ function buildCondition($term, $operator, $value, &$params, $index, $filters, $u
         return !empty($all_conditions) ? '(' . implode(' OR ', $all_conditions) . ')' : '1=1';
     }
     if (!array_key_exists($term, $filters)) {
-        error_log(date('Y-m-d H:i:s') . " Invalid term: $term\n");        
+        error_log(date('Y-m-d H:i:s') . " Invalid term: $term\n");
         return '1=1';
     }
     $table = $filters[$term]['table'];
@@ -542,14 +542,16 @@ function getRecipeDetails($conn, $name, $source, $user) {
     }
     $stmt->execute();
     $recipe = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
-    // Parse ingredients and calculate new columns
+
+    // Parse ingredients and calculate ABV / % ABV / Cost / % Cost
     if (!empty($recipe)) {
         $ingredients_str = $recipe['Ingredients'] ?? '';
         $parsed = [];
         $total_volume = 0.0;
         $conversions = getUnitConversions($conn);
-        $special_units = ['top', 'splash', 'rinse']; // Add more if needed
+        $special_units = ['top', 'splash', 'rinse'];
         $ingredient_list = array_map('trim', explode(';', $ingredients_str));
+
         foreach ($ingredient_list as $item) {
             if (!$item) continue;
             $parts = explode(':', $item, 2);
@@ -559,95 +561,94 @@ function getRecipeDetails($conn, $name, $source, $user) {
             $lowered = strtolower($quantity_str);
             $volume_oz = 0.0;
             $display_volume = $quantity_str;
-            // Check for special units without number
+
             if (in_array($lowered, $special_units)) {
                 $volume_oz = $conversions[$lowered] ?? 0.0;
             } else {
-                // Primary match for decimal + unit (allow attached or spaced)
                 if (preg_match('/^(\d+(?:\.\d+)?)(?:\s*([a-zA-Z]+))?$/', $lowered, $matches)) {
                     $amount = floatval($matches[1]);
                     $unit = isset($matches[2]) ? strtolower($matches[2]) : '';
                     $conversion = $conversions[$unit] ?? 1.0;
                     $volume_oz = $amount * $conversion;
-                    $display_volume = ($unit === 'oz' || $unit === '') ? sprintf('%.2f', $amount) : $quantity_str;
-                } else {
-                    // Secondary match for integer + unit (e.g., "2 dashes")
-                    if (preg_match('/^(\d+)\s*(\w+)$/', $lowered, $matches)) {
-                        $amount = floatval($matches[1]);
-                        $unit = strtolower($matches[2]);
-                        // Singularize plural units
-                        $singular = preg_replace('/(es|s)$/', '', $unit);
-                        $conversion = $conversions[$singular] ?? $conversions[$unit] ?? 1.0;
-                        $volume_oz = $amount * $conversion;
-                        $display_volume = $quantity_str;
-                    }
+                    $display_volume = ($unit === 'oz' || $unit === '') ? sprintf('%.3f', $amount) : $quantity_str;
+                } elseif (preg_match('/^(\d+)\s*(\w+)$/', $lowered, $matches)) {
+                    $amount = floatval($matches[1]);
+                    $unit = strtolower($matches[2]);
+                    $singular = preg_replace('/(es|s)$/', '', $unit);
+                    $conversion = $conversions[$singular] ?? $conversions[$unit] ?? 1.0;
+                    $volume_oz = $amount * $conversion;
+                    $display_volume = $quantity_str;
                 }
             }
-            // Query ingredients table
+
+            // Look up ingredient data
             $stmt_ing = $conn->prepare("SELECT ABV, Cost, Size_oz FROM ingredients WHERE Name = :name");
             $stmt_ing->bindValue(':name', $name);
             $stmt_ing->execute();
             $ing = $stmt_ing->fetch(PDO::FETCH_ASSOC);
+
+            $abv_num = null;
+            $cost_num = null;
+
             if ($ing) {
-                $abv = $ing['ABV'] !== null ? floatval($ing['ABV']) : 0.0;
-                $size_oz = floatval($ing['Size_oz']);
-                $cost_per_oz = $size_oz > 0 ? floatval($ing['Cost']) / $size_oz : 0.0;
-                $abv_disp = sprintf('%.2f%%', $abv*100);
-                $cost_disp = sprintf('$%.2f', $cost_per_oz * $volume_oz);
-            } else {
-                $abv = 0.0;
-                $cost_per_oz = 0.0;
-                $abv_disp = 'NA';
-                $cost_disp = 'NA';
+                if ($ing['ABV'] !== null && $ing['ABV'] !== '') {
+                    $abv_num = floatval($ing['ABV']);
+                }
+                $size_oz = isset($ing['Size_oz']) ? floatval($ing['Size_oz']) : 0.0;
+                $cost_val = isset($ing['Cost']) ? floatval($ing['Cost']) : null;
+                if ($cost_val !== null && $size_oz > 0) {
+                    $cost_num = ($cost_val / $size_oz) * $volume_oz;
+                }
             }
+
             $parsed[] = [
-                'name' => $name,
-                'quantity' => $display_volume,
-                'volume_oz' => $volume_oz,
-                'abv' => $abv_disp,
-                'cost' => $cost_disp,
+                'name'       => $name,
+                'quantity'   => $display_volume,
+                'volume_oz'  => $volume_oz,
+                'abv_num'    => $abv_num,   // null = blank
+                'cost_num'   => $cost_num,  // null = blank
             ];
             $total_volume += $volume_oz;
         }
-        // Calculate contributions
-        $alcohol_contribs = [];
-        $cost_contribs = [];
-        $total_alcohol = 0.0;
+
+        // Second pass: percentages and display formatting
         $total_cost = 0.0;
-        foreach ($parsed as $i => $ing) {
-            $abv_num = is_numeric(trim($ing['abv'], '%')) ? floatval(trim($ing['abv'], '%')) : 0.0;
-            $alcohol_contrib = $ing['volume_oz'] * ($abv_num / 100.0);
-            $total_alcohol += $alcohol_contrib;
-            $alcohol_contribs[$i] = $alcohol_contrib;
-            $cost_num = is_numeric(trim($ing['cost'], '$')) ? floatval(trim($ing['cost'], '$')) : 0.0;
-            $total_cost += $cost_num;
-            $cost_contribs[$i] = $cost_num;
-        }
-        // Check for non-alcoholic
-        $is_non_alcoholic = ($total_alcohol == 0.0);
-        if ($is_non_alcoholic) {
-            $total_abv = 0.0;
-        } else {
-            $total_abv = $total_volume > 0 ? ($total_alcohol / $total_volume) * 100 : 0.0;
-        }
-        // Assign percentages
-        $total_vol_percent_sum = 0.0;
-        $total_abv_percent_sum = 0.0;
-        $total_cost_percent_sum = 0.0;
-        foreach ($parsed as $i => &$ing) {
+        $total_weighted_abv = 0.0; // this becomes the column total for both ABV and % ABV
+
+        foreach ($parsed as &$ing) {
             $vol_percent = $total_volume > 0 ? ($ing['volume_oz'] / $total_volume) * 100 : 0.0;
-            $ing['vol_percent'] = sprintf('%.2f%%', $vol_percent);
-            $total_vol_percent_sum += $vol_percent;
-            $abv_percent = $is_non_alcoholic ? 0.0 : ($total_alcohol > 0 ? ($alcohol_contribs[$i] / $total_alcohol) * 100 : 0.0);
-            $ing['abv_percent'] = sprintf('%.2f%%', $abv_percent);
-            $total_abv_percent_sum += $abv_percent;
-            $cost_percent = $total_cost > 0 ? ($cost_contribs[$i] / $total_cost) * 100 : 0.0;
-            $ing['cost_percent'] = sprintf('%.2f%%', $cost_percent);
-            $total_cost_percent_sum += $cost_percent;
+            $ing['vol_percent'] = sprintf('%.1f%%', $vol_percent);
+
+            // % ABV = ABV × (% Vol / 100)   → contribution to overall recipe ABV
+            if ($ing['abv_num'] !== null) {
+                $contrib = $ing['abv_num'] * ($vol_percent / 100.0); // still a fraction
+                $total_weighted_abv += $contrib * 100;               // accumulate as percentage points
+                $ing['abv']         = sprintf('%.1f%%', $ing['abv_num'] * 100);
+                $ing['abv_percent'] = sprintf('%.1f%%', $contrib * 100);
+            } else {
+                $ing['abv']         = '';
+                $ing['abv_percent'] = '';
+            }
+
+            if ($ing['cost_num'] !== null) {
+                $total_cost += $ing['cost_num'];
+                $ing['cost'] = sprintf('$%.2f', $ing['cost_num']);
+            } else {
+                $ing['cost'] = '';
+            }
         }
-        // Calculate sums for totals
-        $total_abv_disp = sprintf('%.2f%%', $total_abv);
-        $total_cost_disp = sprintf('$%.2f', $total_cost);
+        unset($ing);
+
+        // % Cost (only for rows that have a cost)
+        foreach ($parsed as &$ing) {
+            if ($ing['cost_num'] !== null && $total_cost > 0) {
+                $ing['cost_percent'] = sprintf('%.1f%%', ($ing['cost_num'] / $total_cost) * 100);
+            } else {
+                $ing['cost_percent'] = '';
+            }
+        }
+        unset($ing);
+
         $recipe['parsed_ingredients'] = $parsed;
         $recipe['totals'] = [
             'volume_oz' => sprintf('%.2f', $total_volume),
@@ -657,8 +658,15 @@ function getRecipeDetails($conn, $name, $source, $user) {
             'cost' => $total_cost_disp,
             'cost_percent' => sprintf('%.2f%%', $total_cost_percent_sum),
         ];
+
+        // Equiv # of Drinks (NIH standard drink = 1.5 oz of 40% ABV = 0.6 oz pure alcohol)
+        // This is the *original* (unscaled) value. Front-end will multiply by scale factor.
+        $pure_alcohol_oz = $total_volume * ($total_abv / 100.0);
+        $equiv_drinks = $pure_alcohol_oz / 0.6;
+        $recipe['equiv_drinks'] = sprintf('%.2f', $equiv_drinks);
     }
     return $recipe;
+
 }
 
 function saveRating($conn, $name, $source, $stars, $last_date, $user_id, $username) {
