@@ -525,9 +525,9 @@ html, body {
 
 //* Recipe Scale input */
 .recipe-scale-cell {
-    flex: 0 0 55px;
-    min-width: 55px;
-    margin-left: auto;          /* still pushes the group to the right */
+    flex: 0 0 45px;
+    min-width: 45px;
+    margin-left: auto;           /* still pushes the group to the right */
 }
 
 /* Force the three right-hand cells to sit on the bottom of the row
@@ -537,7 +537,7 @@ html, body {
 .ingredients-order-cell {
     align-self: flex-end;
     position: relative;
-    left: -40px;                /* ← change this number to move the whole group left */
+    left: -35px;                /* ← change this number to move the whole group left */
 }
 
 /* Override Bootstrap so the input matches the dropdown height exactly */
@@ -819,7 +819,7 @@ html, body {
                         <div class="excel-cell" style="flex: 0 0 32px;"><button class="remove-box btn btn-sm btn-outline-secondary w-100" style="display:none;">–</button></div>
 
                         <!-- Logic -->
-			<div class="excel-cell logic-cell" style="flex: 0 0 64px;">
+			<div class="excel-cell logic-cell" style="flex: 0 0 70px;">
                             <select class="logic-select form-select" name="logic[]" style="display:none;">
                                 <option value="AND" selected>AND</option>
                                 <option value="OR">OR</option>
