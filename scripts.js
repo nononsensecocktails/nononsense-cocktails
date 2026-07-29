@@ -1590,6 +1590,7 @@ function updateRecipeDetails() {
                             <div class="excel-row"><div class="excel-cell label-cell">Garnish</div><div class="excel-cell content-cell">${data.Garnish || ''}</div></div>
                             <div class="excel-row"><div class="excel-cell label-cell">Notes</div><div class="excel-cell content-cell">${data.Instructions || ''}</div></div>
                             <div class="excel-row"><div class="excel-cell label-cell">Servings</div><div class="excel-cell content-cell">${data.Servings || ''}</div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Equiv # of Drinks</div><div class="excel-cell content-cell" id="equiv-drinks-display">${data.equiv_drinks || '0.00'}</div></div>
                             <div class="excel-row"><div class="excel-cell label-cell">Base</div><div class="excel-cell content-cell">${data.Base || ''}</div></div>
                             <div class="excel-row"><div class="excel-cell label-cell">Family</div><div class="excel-cell content-cell">${data.Family || ''}</div></div>
                             <div class="excel-row"><div class="excel-cell label-cell">Link</div><div class="excel-cell content-cell"><a href="${data.Link || '#'}" target="_blank">${data.Link || ''}</a></div></div>
@@ -1838,6 +1839,11 @@ function renderIngredientsTable(data) {
         </tr>`;
 
     $('#recipe_details .ingredient-table tbody').html(tbodyHtml);
+
+    // Update Equiv # of Drinks to match the current scale
+    var originalEquiv = parseFloat(data.equiv_drinks) || 0;
+    var scaledEquiv = (originalEquiv * scaleFactor).toFixed(2);
+    $('#equiv-drinks-display').text(scaledEquiv);
 }
 
 });
