@@ -701,6 +701,18 @@ html, body {
         filter: invert(1) grayscale(100%) brightness(200%);
     }
 }
+
+@media (prefers-color-scheme: dark) {
+    #loginModal .btn-outline-dark {
+        color: #e0e0e0 !important;
+        border-color: #aaa !important;
+    }
+    #loginModal .btn-outline-dark:hover {
+        background-color: #444 !important;
+        color: #fff !important;
+    }
+}
+
     </style>
 </head>
 <body>
@@ -909,28 +921,28 @@ html, body {
 
                 <div class="d-grid gap-2">
                     <!-- Google -->
-                    <a href="/auth/login.php" class="btn btn-outline-dark btn-lg d-flex align-items-center justify-content-center gap-2">
+                    <a href="/auth/login.php" class="btn btn-outline-light btn-lg d-flex align-items-center justify-content-center gap-2">
                         <i class="fab fa-google fa-lg text-danger"></i>
                         <span>Sign in with Google</span>
                     </a>
 
-                    <!-- Facebook -->
-                    <a href="/auth/login.php" class="btn btn-outline-dark btn-lg d-flex align-items-center justify-content-center gap-2">
+                    <!-- Facebook 
+                    <a href="/auth/login.php" class="btn btn-outline-light btn-lg d-flex align-items-center justify-content-center gap-2">
                         <i class="fab fa-facebook-f fa-lg text-primary"></i>
                         <span>Sign in with Facebook</span>
-                    </a>
+                    </a> -->
 
                     <!-- Amazon -->
-                    <a href="/auth/login.php" class="btn btn-outline-dark btn-lg d-flex align-items-center justify-content-center gap-2">
+                    <a href="/auth/login.php" class="btn btn-outline-light btn-lg d-flex align-items-center justify-content-center gap-2">
                         <i class="fab fa-amazon fa-lg text-warning"></i>
                         <span>Sign in with Amazon</span>
                     </a>
 
-                    <!-- X / Twitter -->
-                    <a href="/auth/login.php" class="btn btn-outline-dark btn-lg d-flex align-items-center justify-content-center gap-2">
+                    <!-- X / Twitter 
+                    <a href="/auth/login.php" class="btn btn-outline-light btn-lg d-flex align-items-center justify-content-center gap-2">
                         <i class="fab fa-x-twitter fa-lg"></i>
                         <span>Sign in with X</span>
-                    </a>
+                    </a> -->
 
                     <!-- Email / Password -->
                     <a href="/auth/login.php" class="btn btn-outline-primary btn-lg d-flex align-items-center justify-content-center gap-2 mt-2">
