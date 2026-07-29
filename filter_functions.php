@@ -45,7 +45,7 @@ function has_ur_filters($filters_data) {
 function getDistinctIngredientNames($conn, $user, $filters_data) {
     $filters = getFilters();
     $params = [];
-    $where_clause = buildWhereClause($filters_data, $filters, $params, $user);
+    $where_clause = buildWhereClause($filters_data, $filters, $params, $user, $conn);
 if ($user !== 'All') {
     $join = "LEFT JOIN (
                 SELECT recipe_id, username, stars_out_of_3, last_date
@@ -146,7 +146,7 @@ if ($user !== 'All') {
 /* -------------------------------------------------------------------------
    Original buildCondition (updated – remove special case for 'name' to use partial LIKE/NOT LIKE)
    ------------------------------------------------------------------------- */
-function buildCondition($term, $operator, $value, &$params, $index, $filters, $user) {
+function buildCondition($term, $operator, $value, &$params, $index, $filters, $user, $conn = null) {
     if ($term === 'All') {
         $all_conditions = [];
         foreach ($filters as $key => $filter) {
@@ -213,27 +213,51 @@ function buildCondition($term, $operator, $value, &$params, $index, $filters, $u
             }
         } else {
             if ($type === 'string') {
-                // ----- NEW: expanded ingredients matching (name + Type + Base) -----
-                if ($term === 'ingredients') {
-                    $params[$param_name] = "%$value%";
-                    $type_or_base = "(i.Type LIKE $param_name OR (i.Type = 'Base' AND i.Base LIKE $param_name))";
+                // ----- expanded ingredients matching (name + Type + Base) -----
+                if ($term === 'ingredients' && $conn) {
+                    // Always include the direct name match
+                    $like_conditions = [];
+                    $p0 = ':' . $term . $index . '_0';
+                    $params[$p0] = "%$value%";
+                    $like_conditions[] = "r.Ingredients LIKE $p0";
+
+                    // Find every ingredient Name that should also match via Type or Base
+                    try {
+                        $stmt = $conn->prepare("
+                            SELECT DISTINCT Name
+                            FROM ingredients
+                            WHERE Type LIKE :val
+                               OR (Type = 'Base' AND Base LIKE :val2)
+                        ");
+                        $stmt->bindValue(':val',  "%$value%");
+                        $stmt->bindValue(':val2', "%$value%");
+                        $stmt->execute();
+                        $extra_names = $stmt->fetchAll(PDO::FETCH_COLUMN, 0);
+                    } catch (Exception $e) {
+                        $extra_names = [];
+                    }
+
+                    $i = 1;
+                    foreach ($extra_names as $extra_name) {
+                        // Skip if it is essentially the same as the original value
+                        if (strcasecmp($extra_name, $value) === 0) continue;
+                        $p = ':' . $term . $index . '_' . $i;
+                        $params[$p] = "%" . $extra_name . "%";
+                        $like_conditions[] = "r.Ingredients LIKE $p";
+                        $i++;
+                    }
+
                     if ($operator === '=') {
-                        return "(r.Ingredients LIKE $param_name
-                                OR EXISTS (
-                                    SELECT 1 FROM ingredients i
-                                    WHERE $type_or_base
-                                      AND r.Ingredients LIKE CONCAT('%', i.Name, '%')
-                                ))";
+                        return '(' . implode(' OR ', $like_conditions) . ')';
                     } elseif ($operator === '<>') {
-                        return "(r.Ingredients NOT LIKE $param_name
-                                AND NOT EXISTS (
-                                    SELECT 1 FROM ingredients i
-                                    WHERE $type_or_base
-                                      AND r.Ingredients LIKE CONCAT('%', i.Name, '%')
-                                ))";
+                        // For exclusion we need AND NOT LIKE for every name
+                        $not_conditions = array_map(function($c) {
+                            return str_replace(' LIKE ', ' NOT LIKE ', $c);
+                        }, $like_conditions);
+                        return '(' . implode(' AND ', $not_conditions) . ')';
                     }
                 }
-                // ----- end new ingredients logic -----
+                // ----- end expanded ingredients matching -----
 
                 if ($term === 'source' && $operator === '=') {
                     $params[$param_name] = $value;
@@ -265,7 +289,7 @@ function buildCondition($term, $operator, $value, &$params, $index, $filters, $u
 /* -------------------------------------------------------------------------
    Updated buildWhereClause – now builds sequentially with logic, inverts for consecutive same-term negatives
    ------------------------------------------------------------------------- */
-function buildWhereClause($filters_data, $filters, &$params, $user = '') {
+function buildWhereClause($filters_data, $filters, &$params, $user = '', $conn = null) {
     if (empty($filters_data)) {
         return '1=1';
     }
@@ -278,7 +302,7 @@ function buildWhereClause($filters_data, $filters, &$params, $user = '') {
         $value = $filter['value'] ?? '';
         $logic = isset($filter['logic']) ? strtoupper($filter['logic']) : null;
         if (!$term || $value === '') continue;
-        $condition = buildCondition($term, $operator, $value, $params, $i, $filters, $user);
+        $condition = buildCondition($term, $operator, $value, $params, $i, $filters, $user, $conn);
         if ($condition === '1=1' || $condition === '1=0') continue;
         if (!empty($conditions) && $logic) {
             $effective_logic = $logic;
@@ -304,7 +328,7 @@ function buildWhereClause($filters_data, $filters, &$params, $user = '') {
 function getTotalCocktails($conn, $user, $filters_data) {
     $filters = getFilters();
     $params = [];
-    $where_clause = buildWhereClause($filters_data, $filters, $params, $user);
+    $where_clause = buildWhereClause($filters_data, $filters, $params, $user, $conn);
 if ($user !== 'All') {
     $join = "LEFT JOIN (
                 SELECT recipe_id, username, stars_out_of_3, last_date
@@ -375,7 +399,7 @@ function getDistinctValues($conn, $term, $user, $filters_data) {
         return getDistinctIngredientNames($conn, $user, $filters_data);
     }
     $params = [];
-    $where_clause = buildWhereClause($filters_data, $filters, $params, $user);
+    $where_clause = buildWhereClause($filters_data, $filters, $params, $user, $conn);
     $table = $filters[$term]['table'];
     $column = $filters[$term]['column'];
 if ($user !== 'All') {
@@ -438,7 +462,7 @@ if ($user !== 'All') {
 function getRandomRecipe($conn, $user, $filters_data) {
     $filters = getFilters();
     $params = [];
-    $where_clause = buildWhereClause($filters_data, $filters, $params, $user);
+    $where_clause = buildWhereClause($filters_data, $filters, $params, $user, $conn);
 if ($user !== 'All') {
     $join = "LEFT JOIN (
                 SELECT recipe_id, username, stars_out_of_3, last_date
@@ -477,7 +501,7 @@ if ($user !== 'All') {
 function getNames($conn, $user, $filters_data) {
     $filters = getFilters();
     $params = [];
-    $where_clause = buildWhereClause($filters_data, $filters, $params, $user);
+    $where_clause = buildWhereClause($filters_data, $filters, $params, $user, $conn);
 if ($user !== 'All') {
     $join = "LEFT JOIN (
                 SELECT recipe_id, username, stars_out_of_3, last_date
@@ -517,7 +541,7 @@ function getSources($conn, $name, $user, $filters_data) {
     if (!$name) return [];
     $filters = getFilters();
     $params = [':name' => $name];
-    $where_clause = buildWhereClause($filters_data, $filters, $params, $user);
+    $where_clause = buildWhereClause($filters_data, $filters, $params, $user, $conn);
 if ($user !== 'All') {
     $join = "LEFT JOIN (
                 SELECT recipe_id, username, stars_out_of_3, last_date
