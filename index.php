@@ -921,25 +921,25 @@ html, body {
 
                 <div class="d-grid gap-2">
                     <!-- Google -->
-                    <a href="/auth/login.php" class="btn btn-outline-light btn-lg d-flex align-items-center justify-content-center gap-2">
+                    <a href="/auth/login.php" class="btn btn-outline-dark btn-lg d-flex align-items-center justify-content-center gap-2">
                         <i class="fab fa-google fa-lg text-danger"></i>
                         <span>Sign in with Google</span>
                     </a>
 
                     <!-- Facebook 
-                    <a href="/auth/login.php" class="btn btn-outline-light btn-lg d-flex align-items-center justify-content-center gap-2">
+                    <a href="/auth/login.php" class="btn btn-outline-dark btn-lg d-flex align-items-center justify-content-center gap-2">
                         <i class="fab fa-facebook-f fa-lg text-primary"></i>
                         <span>Sign in with Facebook</span>
                     </a> -->
 
                     <!-- Amazon -->
-                    <a href="/auth/login.php" class="btn btn-outline-light btn-lg d-flex align-items-center justify-content-center gap-2">
+                    <a href="/auth/login.php" class="btn btn-outline-dark btn-lg d-flex align-items-center justify-content-center gap-2">
                         <i class="fab fa-amazon fa-lg text-warning"></i>
                         <span>Sign in with Amazon</span>
                     </a>
 
                     <!-- X / Twitter 
-                    <a href="/auth/login.php" class="btn btn-outline-light btn-lg d-flex align-items-center justify-content-center gap-2">
+                    <a href="/auth/login.php" class="btn btn-outline-dark btn-lg d-flex align-items-center justify-content-center gap-2">
                         <i class="fab fa-x-twitter fa-lg"></i>
                         <span>Sign in with X</span>
                     </a> -->
