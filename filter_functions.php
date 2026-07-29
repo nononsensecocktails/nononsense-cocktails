@@ -99,8 +99,48 @@ if ($user !== 'All') {
         }
     }
     $names = array_unique($names);
-    sort($names);
-    return $names;
+
+    // ----- NEW: also surface relevant Type values (except Base) and the 6 base spirits -----
+    $extra = [];
+    if (!empty($names)) {
+        $placeholders = [];
+        $name_params = [];
+        foreach (array_values($names) as $i => $n) {
+            $ph = ":n$i";
+            $placeholders[] = $ph;
+            $name_params[$ph] = $n;
+        }
+        $in_clause = implode(',', $placeholders);
+
+        $sql_extra = "SELECT DISTINCT Type, Base FROM ingredients WHERE Name IN ($in_clause)";
+        $stmt_extra = $conn->prepare($sql_extra);
+        foreach ($name_params as $k => $v) {
+            $stmt_extra->bindValue($k, $v);
+        }
+        $stmt_extra->execute();
+        $extra_rows = $stmt_extra->fetchAll(PDO::FETCH_ASSOC);
+
+        $allowed_bases_lower = ['brandy', 'gin', 'rum', 'tequila', 'vodka', 'whiskey'];
+
+        foreach ($extra_rows as $row) {
+            $type = trim($row['Type'] ?? '');
+            $base = trim($row['Base'] ?? '');
+
+            // Type values (skip the special 'Base' type itself)
+            if ($type !== '' && strcasecmp($type, 'Base') !== 0) {
+                $extra[] = $type;
+            }
+            // Only the six canonical base spirits
+            if ($base !== '' && in_array(strtolower($base), $allowed_bases_lower, true)) {
+                $extra[] = $base;   // keep the casing that is stored in the table
+            }
+        }
+    }
+
+    $all = array_unique(array_merge($names, $extra));
+    sort($all);
+    return $all;
+    // ----- end new Type/Base dropdown values -----
 }
 
 /* -------------------------------------------------------------------------
@@ -173,6 +213,28 @@ function buildCondition($term, $operator, $value, &$params, $index, $filters, $u
             }
         } else {
             if ($type === 'string') {
+                // ----- NEW: expanded ingredients matching (name + Type + Base) -----
+                if ($term === 'ingredients') {
+                    $params[$param_name] = "%$value%";
+                    $type_or_base = "(i.Type LIKE $param_name OR (i.Type = 'Base' AND i.Base LIKE $param_name))";
+                    if ($operator === '=') {
+                        return "(r.Ingredients LIKE $param_name
+                                OR EXISTS (
+                                    SELECT 1 FROM ingredients i
+                                    WHERE $type_or_base
+                                      AND r.Ingredients LIKE CONCAT('%', i.Name, '%')
+                                ))";
+                    } elseif ($operator === '<>') {
+                        return "(r.Ingredients NOT LIKE $param_name
+                                AND NOT EXISTS (
+                                    SELECT 1 FROM ingredients i
+                                    WHERE $type_or_base
+                                      AND r.Ingredients LIKE CONCAT('%', i.Name, '%')
+                                ))";
+                    }
+                }
+                // ----- end new ingredients logic -----
+
                 if ($term === 'source' && $operator === '=') {
                     $params[$param_name] = $value;
                     return "$table.$column = $param_name";
