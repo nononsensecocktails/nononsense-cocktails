@@ -978,6 +978,11 @@ html, body {
                     <li><strong>Rating:</strong> <span id="confirm-rating-value"></span></li>
                     <li><strong>Date:</strong> <span id="confirm-rating-date"></span></li>
                 </ul>
+                <div id="confirm-on-behalf" class="mt-3" style="display: none;">
+                    <p style="font-size: 1.25rem; font-weight: 700; color: #c0392b; margin-bottom: 0;">
+                        Rating on behalf of: <span id="confirm-target-username"></span>
+                    </p>
+                </div>
                 <div id="rating-confirm-error" class="text-danger mt-3" style="display: none;"></div>
             </div>
             <div class="modal-footer">
