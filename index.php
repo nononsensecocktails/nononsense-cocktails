@@ -407,7 +407,7 @@ html, body {
 
         /* INGREDIENTS TABLE */
         .ingredient-table {
-            width: 470px;
+            width: 480px;
             border-collapse: collapse;
             font-size: 0.82rem;
             margin-top: 2px;
@@ -445,7 +445,7 @@ html, body {
 
 	/*Volume Oz*/
         .ingredient-table th:nth-child(3), .ingredient-table td:nth-child(3) { 
-            width: 50px; 
+            width: 60px; 
             text-align: right; 
             padding-left: 4px;
         }
@@ -457,12 +457,12 @@ html, body {
         }
 /* ABV */
 .ingredient-table th:nth-child(5), .ingredient-table td:nth-child(5) { 
-    width: 45px; 
+    width: 50px; 
     text-align: right;
 }
 /* % ABV */
 .ingredient-table th:nth-child(6), .ingredient-table td:nth-child(6) { 
-    width: 45px; 
+    width: 50px; 
     text-align: right;
 }
 
