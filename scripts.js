@@ -1098,6 +1098,7 @@ setTimeout(() => {
         var source = $('#source-select').val();
         var stars = $('#stars-select').val();
         var last_date = $('#last-date-input').val();
+        var targetUser = $('#user-select').val();
 
         // Validation before opening the modal
         if (!stars) {
@@ -1108,6 +1109,10 @@ setTimeout(() => {
             alert('Please select a last date.');
             return;
         }
+        if (!targetUser || targetUser === 'All') {
+            alert('Please select a specific user in the User: dropdown before saving a rating.');
+            return;
+        }
 
         // Populate the confirmation modal
         $('#confirm-recipe-name').text(name || '');
@@ -1115,6 +1120,14 @@ setTimeout(() => {
         $('#confirm-rating-value').text(stars);
         $('#confirm-rating-date').text(last_date);
         $('#rating-confirm-error').hide().text('');
+
+        // Highlight when rating for someone else
+        if (targetUser !== loggedInUserName) {
+            $('#confirm-target-username').text(targetUser);
+            $('#confirm-on-behalf').show();
+        } else {
+            $('#confirm-on-behalf').hide();
+        }
 
         // Prevent changes while the modal is open
         $('#stars-select, #last-date-input').prop('disabled', true);
@@ -1130,10 +1143,14 @@ setTimeout(() => {
         var source = $('#source-select').val();
         var stars = $('#stars-select').val();
         var last_date = $('#last-date-input').val();
+        var targetUser = $('#user-select').val();
 
-        // Always use the logged-in user (never the User: dropdown)
         if (!isUserLoggedIn || !loggedInUserId || !loggedInUserName) {
             $('#rating-confirm-error').text('You must be logged in to save a rating.').show();
+            return;
+        }
+        if (!targetUser || targetUser === 'All') {
+            $('#rating-confirm-error').text('Please select a specific user in the User: dropdown.').show();
             return;
         }
 
@@ -1149,8 +1166,7 @@ setTimeout(() => {
                 source: source,
                 stars: stars,
                 last_date: last_date,
-                user_id: loggedInUserId,
-                username: loggedInUserName
+                target_username: targetUser
             },
             dataType: 'json',
             success: function(response) {
@@ -1432,12 +1448,18 @@ function generateCurrentUrl() {
 
 function makeNameLink(text) {
     if (!text) return '';
-    const params = new URLSearchParams();
-    params.set('term0', 'name');
-    params.set('operator0', '=');
-    params.set('value0', text);
-    const url = window.location.origin + window.location.pathname + '?' + params.toString();
-    return `<a href="${url}" target="_blank" rel="noopener noreferrer">${text}</a>`;
+    return text.split(',')
+        .map(name => name.trim())
+        .filter(name => name.length > 0)
+        .map(name => {
+            const params = new URLSearchParams();
+            params.set('term0', 'name');
+            params.set('operator0', '=');
+            params.set('value0', name);
+            const url = window.location.origin + window.location.pathname + '?' + params.toString();
+            return `<a href="${url}" target="_blank" rel="noopener noreferrer">${name}</a>`;
+        })
+        .join(', ');
 }
 
 $('#copy-permalink').off('click').on('click', async function () {
@@ -1642,12 +1664,12 @@ function convertVolumeFromOz(oz, unit) {
     if (oz === null || oz === undefined || isNaN(oz)) return '';
     const n = parseFloat(oz);
     switch (unit) {
-        case 'ml': return (n * 29.5735).toFixed(1);          // 1 oz ≈ 29.5735 mL
+        case 'ml': return (n * 29.5735).toFixed(3);          // 1 oz ≈ 29.5735 mL
         case 'l':  return (n / 33.814).toFixed(3);           // 1 L ≈ 33.814 oz
-        case 'p':  return (n / 16).toFixed(2);               // 1 US pint = 16 oz
+        case 'p':  return (n / 16).toFixed(3);               // 1 US pint = 16 oz
         case 'g':  return (n / 128).toFixed(3);              // 1 US gallon = 128 oz
         case 'oz':
-        default:   return n.toFixed(2);
+        default:   return n.toFixed(3);
     }
 }
 
@@ -1747,9 +1769,30 @@ function renderIngredientsTable(data) {
 
     var tbodyHtml = '';
     ingredients.forEach(function(ingredient, index) {
-        // Convert the (already scaled) oz value to the selected display unit
-        var displayVolume = convertVolumeFromOz(ingredient.numericVolume, volumeUnit);
+        // Decide how to display the volume
+        var displayVolume;
+        var originalQty = (ingredient.volume || '').toString().trim();
+        var isPureNumericOrOz = /^[\d.]+\s*(oz)?$/i.test(originalQty) || originalQty === '';
+        var scaledOz = ingredient.numericVolume;   // already includes scaleFactor
 
+        if (isPureNumericOrOz) {
+            // Pure number / oz → always convert to the selected unit
+            displayVolume = convertVolumeFromOz(scaledOz, volumeUnit);
+        } else if (scaledOz >= 0.25) {
+            // Non-numeric unit that has grown large enough → switch to numeric volume
+            displayVolume = convertVolumeFromOz(scaledOz, volumeUnit);
+        } else {
+            // Still small non-numeric → keep (and scale) the original text
+            if (scaleFactor !== 1 && /^(\d+(?:\.\d+)?)\s*(.+)$/.test(originalQty)) {
+                var m = originalQty.match(/^(\d+(?:\.\d+)?)\s*(.+)$/);
+                var scaledNum = parseFloat(m[1]) * scaleFactor;
+                scaledNum = (scaledNum % 1 === 0) ? scaledNum.toFixed(0) : parseFloat(scaledNum.toFixed(2));
+                displayVolume = scaledNum + ' ' + m[2];
+            } else {
+                displayVolume = originalQty;
+            }
+        }
+        
         // Format cost
         var displayCost = ingredient.numericCost > 0
             ? '$' + ingredient.numericCost.toFixed(2)
