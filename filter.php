@@ -69,9 +69,26 @@ try {
             $stars      = $_POST['stars'] ?? '';
             $last_date  = $_POST['last_date'] ?? '';
 
-            // NEVER trust client-supplied user_id / username
+            // Default: always the logged-in user
             $user_id    = (int)$_SESSION['user_id'];
             $username   = $_SESSION['user_name'];
+
+            // Admin override – only the hardcoded Auth0 sub may rate for another user
+            $is_admin = (isset($_SESSION['auth0_sub']) && $_SESSION['auth0_sub'] === 'google-oauth2|115671403431087083309');
+            $target_username = trim($_POST['target_username'] ?? '');
+
+            if ($is_admin && $target_username !== '' && strcasecmp($target_username, 'All') !== 0) {
+                $stmt = $conn->prepare("SELECT id, name FROM users WHERE name = ?");
+                $stmt->execute([$target_username]);
+                $target = $stmt->fetch(PDO::FETCH_ASSOC);
+                if ($target) {
+                    $user_id  = (int)$target['id'];
+                    $username = $target['name'];
+                } else {
+                    $result = ['success' => false, 'error' => 'Target user not found.'];
+                    break;
+                }
+            }
 
             $result = saveRating($conn, $name, $source, $stars, $last_date, $user_id, $username);
             break;
