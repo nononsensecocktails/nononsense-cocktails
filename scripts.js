@@ -1,4 +1,4 @@
-$(document).ready(function() {
+    $(document).ready(function() {
     console.log('jQuery loaded and document ready');
     const dropdownFields = [
         'adaption_of', 'base', 'characteristics', 'color', 'family',
@@ -21,6 +21,37 @@ $(document).ready(function() {
 // NEW: Recipe scaling
     let currentScale = 1;          // the value currently shown / applied
     let originalServings = 1;      // Servings from the loaded recipe (never changes)
+    
+// Singular ↔ Plural map for non-numeric units (based on unit_conversions table)
+const unitPluralMap = {
+    // regular
+    'dash': 'dashes',
+    'drop': 'drops',
+    'chunk': 'chunks',
+    'cube': 'cubes',
+    'cup': 'cups',
+    'scoop': 'scoops',
+    'slice': 'slices',
+    'pinch': 'pinches',
+    'leaf': 'leaves',
+    'piece': 'pieces',
+    // irregular
+    'cherry': 'cherries',
+    'berry': 'berries',
+    // reverse lookup (plural → singular)
+    'dashes': 'dash',
+    'drops': 'drop',
+    'chunks': 'chunk',
+    'cubes': 'cube',
+    'cups': 'cup',
+    'scoops': 'scoop',
+    'slices': 'slice',
+    'pinches': 'pinch',
+    'leaves': 'leaf',
+    'pieces': 'piece',
+    'cherries': 'cherry',
+    'berries': 'berry'
+};
 
 // ===== Mobile type-to-search for User: dropdown =====
 function enhanceUserSelectForMobile() {
@@ -1769,29 +1800,89 @@ function renderIngredientsTable(data) {
 
     var tbodyHtml = '';
     ingredients.forEach(function(ingredient, index) {
-        // Decide how to display the volume
+        // ---------- Volume display logic ----------
         var displayVolume;
         var originalQty = (ingredient.volume || '').toString().trim();
-        var isPureNumericOrOz = /^[\d.]+\s*(oz)?$/i.test(originalQty) || originalQty === '';
-        var scaledOz = ingredient.numericVolume;   // already includes scaleFactor
+        var scaledOz = ingredient.numericVolume;          // already includes scaleFactor
+        var lowerQty = originalQty.toLowerCase();
 
-        if (isPureNumericOrOz) {
-            // Pure number / oz → always convert to the selected unit
-            displayVolume = convertVolumeFromOz(scaledOz, volumeUnit);
-        } else if (scaledOz >= 0.25) {
-            // Non-numeric unit that has grown large enough → switch to numeric volume
-            displayVolume = convertVolumeFromOz(scaledOz, volumeUnit);
-        } else {
-            // Still small non-numeric → keep (and scale) the original text
-            if (scaleFactor !== 1 && /^(\d+(?:\.\d+)?)\s*(.+)$/.test(originalQty)) {
-                var m = originalQty.match(/^(\d+(?:\.\d+)?)\s*(.+)$/);
-                var scaledNum = parseFloat(m[1]) * scaleFactor;
-                scaledNum = (scaledNum % 1 === 0) ? scaledNum.toFixed(0) : parseFloat(scaledNum.toFixed(2));
-                displayVolume = scaledNum + ' ' + m[2];
+        // Bare units
+        var bareConvertUnits = ['top', 'splash', 'gallon'];   // convert under certain scale conditions
+        var isBareConvert = bareConvertUnits.indexOf(lowerQty) !== -1;
+        var isRinse = (lowerQty === 'rinse');
+
+        // Pure numeric / oz?
+        var isPureNumericOrOz = /^[\d.]+\s*(oz)?$/i.test(originalQty) || originalQty === '';
+
+        // Helper: format a scaled number cleanly
+        function formatScaledNumber(n) {
+            if (Math.abs(n - Math.round(n)) < 1e-9) return String(Math.round(n));
+            return parseFloat(n.toFixed(3)).toString();
+        }
+
+        // Helper: pick singular or plural form
+        function getCorrectUnitForm(unitWord, num) {
+            var lower = unitWord.toLowerCase();
+            var isExactlyOne = Math.abs(num - 1) < 1e-9;
+
+            if (isExactlyOne) {
+                // want singular
+                return unitPluralMap[lower] && lower.endsWith('s') ? unitPluralMap[lower] : unitWord;
+                // if the map has the plural→singular entry, use it; otherwise keep original
             } else {
-                displayVolume = originalQty;
+                // want plural
+                return unitPluralMap[lower] && !lower.endsWith('s') ? unitPluralMap[lower] : unitWord;
             }
         }
+
+        if (isRinse) {
+            // Rinse never changes
+            displayVolume = originalQty;
+
+        } else if (isPureNumericOrOz) {
+            // Normal numeric / oz amounts
+            displayVolume = convertVolumeFromOz(scaledOz, volumeUnit);
+
+        } else if (isBareConvert) {
+            // Top / Splash / Gallon
+            if (scaleFactor === 1) {
+                displayVolume = originalQty;
+            } else if (scaleFactor > 1) {
+                // only convert if the scaled volume is large enough
+                displayVolume = (scaledOz >= 0.25)
+                    ? convertVolumeFromOz(scaledOz, volumeUnit)
+                    : originalQty;
+            } else {
+                // scale < 1 → always convert to numeric
+                displayVolume = convertVolumeFromOz(scaledOz, volumeUnit);
+            }
+
+        } else {
+            // Mixed units (1 Dash, 2 tsp, 0.5 Chunk, etc.)
+            var match = originalQty.match(/^(\d+(?:\.\d+)?)\s*(.+)$/i);
+
+            if (!match) {
+                // no leading number – just keep original
+                displayVolume = originalQty;
+            } else {
+                var origNum = parseFloat(match[1]);
+                var unitWord = match[2].trim();
+                var newNum = origNum * scaleFactor;
+
+                if (scaleFactor === 1) {
+                    displayVolume = originalQty;
+                } else if (scaledOz >= 0.25) {
+                    // large enough → switch to pure numeric
+                    displayVolume = convertVolumeFromOz(scaledOz, volumeUnit);
+                } else {
+                    // still small → keep as text with correct singular/plural
+                    var displayNum = formatScaledNumber(newNum);
+                    var displayUnit = getCorrectUnitForm(unitWord, newNum);
+                    displayVolume = displayNum + ' ' + displayUnit;
+                }
+            }
+        }
+        // ---------- end volume display logic ----------
         
         // Format cost
         var displayCost = ingredient.numericCost > 0
