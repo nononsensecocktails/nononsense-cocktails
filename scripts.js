@@ -5,7 +5,7 @@
         'glass', 'ice', 'ingredients', 'num_ingredients', 'last_date', 'mixer', 'servings',
         'shaken_stirred', 'source', 'stars_out_of_3', 'variations'
     ];
-    const numericOrDateFields = ['last_date', 'num_ingredients', 'servings'];
+    const numericOrDateFields = ['last_date', 'num_ingredients', 'servings', 'volume', 'abv', 'cost'];
     // NEW: Fields that can use AND logic
     const allowAndFields = ['ingredients', 'characteristics', 'garnish', 'instructions'];
     let unitConversions = {};
@@ -547,6 +547,9 @@ function resetFilters() {
                     <option value="mixer">Mixer</option>
                     <option value="name">Name</option>
                     <option value="num_ingredients">Number of Ingredients</option>
+                    <option value="volume">Volume</option>
+                    <option value="abv">ABV</option>
+                    <option value="cost">Cost</option>
                     <option value="servings">Servings</option>
                     <option value="shaken_stirred">Shaken/Stirred</option>
                     <option value="source">Source</option>
