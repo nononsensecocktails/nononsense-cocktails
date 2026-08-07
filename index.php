@@ -810,7 +810,10 @@ html, body {
                                 <option value="last_date">Last Date</option>
                                 <option value="mixer">Mixer</option>
                                 <option value="name">Name</option>
-				<option value="num_ingredients">Number of Ingredients</option>
+                                <option value="num_ingredients">Number of Ingredients</option>
+                                <option value="volume">Volume</option>
+                                <option value="abv">ABV</option>
+                                <option value="cost">Cost</option>
                                 <option value="servings">Servings</option>
                                 <option value="shaken_stirred">Shaken/Stirred</option>
                                 <option value="source">Source</option>
