@@ -796,11 +796,14 @@ html, body {
                             <select class="term-select form-select" name="term[]">
                                 <option value="" selected>STEP 1: Select a Filter</option>
                                 <option value="All">All</option>
+                                <option value="name">Name</option>
                                 <option value="stars_out_of_3">Stars out of 3</option>
+                                <option value="abv">ABV</option>
                                 <option value="adaption_of">Adaptation of</option>
                                 <option value="base">Base</option>
                                 <option value="characteristics">Characteristics</option>
                                 <option value="color">Color</option>
+                                <option value="cost">Cost</option>
                                 <option value="family">Family</option>
                                 <option value="garnish">Garnish</option>
                                 <option value="glass">Glass</option>
@@ -809,15 +812,12 @@ html, body {
                                 <option value="instructions">Instructions</option>
                                 <option value="last_date">Last Date</option>
                                 <option value="mixer">Mixer</option>
-                                <option value="name">Name</option>
                                 <option value="num_ingredients">Number of Ingredients</option>
-                                <option value="volume">Volume</option>
-                                <option value="abv">ABV</option>
-                                <option value="cost">Cost</option>
                                 <option value="servings">Servings</option>
                                 <option value="shaken_stirred">Shaken/Stirred</option>
                                 <option value="source">Source</option>
                                 <option value="variations">Variations</option>
+                                <option value="volume">Volume</option>
                             </select>
                         </div>
 			<!-- Operator -->
