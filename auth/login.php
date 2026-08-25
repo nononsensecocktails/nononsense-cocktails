@@ -1,7 +1,7 @@
 <?php
 // auth/login.php - Start login with Auth0 (cookie-based state)
 
-session_start();
+require_once __DIR__ . '/../session.php';
 session_regenerate_id(true);
 
 require_once __DIR__ . '/../vendor/autoload.php';
