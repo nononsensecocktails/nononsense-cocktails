@@ -1,6 +1,6 @@
 <?php
 header("Cache-Control: max-age=0, must-revalidate");
-session_start();
+require_once __DIR__ . '/session.php';
 
 require_once 'db.php';
 require_once 'functions.php';
