@@ -532,6 +532,7 @@ function resetFilters() {
                 <select class="term-select" name="term[]">
                     <option value="" selected>STEP 1: Select a Filter</option>
                     <option value="All">All</option>
+                    <option value="name">Name</option>
                     <option value="stars_out_of_3">Stars out of 3</option>
                     <option value="adaption_of">Adaptation of</option>
                     <option value="base">Base</option>
@@ -545,7 +546,6 @@ function resetFilters() {
                     <option value="instructions">Instructions</option>
                     <option value="last_date">Last Date</option>
                     <option value="mixer">Mixer</option>
-                    <option value="name">Name</option>
                     <option value="num_ingredients">Number of Ingredients</option>
                     <option value="volume">Volume</option>
                     <option value="abv">ABV</option>
@@ -988,10 +988,11 @@ function updateRateDrinkSection() {
 function updateRatingDisplay(stars, last_date) {
     var ratingBgColor = getRatingColor(stars);
     var displayValue = formatStarsValue(stars);
-    $('#stars-display').html(
-        '<span style="background-color:' + ratingBgColor + '; color: #000000;">' + displayValue + '</span>'
-    );
-    $('#last-date-display').text(last_date || 'Not set');
+    var starsHtml = stars
+        ? '<span style="background-color:' + ratingBgColor + '; color: #000000;">' + makeFilterLink(displayValue, 'stars_out_of_3') + '</span>'
+        : 'Not rated';
+    $('#stars-display').html(starsHtml);
+    $('#last-date-display').html(last_date ? makeFilterLink(last_date, 'last_date') : 'Not set');
     $('#stars-select').val(stars || '');
     var now = new Date();
     var today = now.getFullYear() + '-' + 
@@ -999,7 +1000,6 @@ function updateRatingDisplay(stars, last_date) {
                 String(now.getDate()).padStart(2, '0');
     $('#last-date-input').val(today);
 }
-
 
     function loadRandomRecipe() {
         var user = $('#user-select').val();
@@ -1480,18 +1480,18 @@ function generateCurrentUrl() {
     return params.toString() ? `${base}?${params.toString()}` : base;
 }
 
-function makeNameLink(text) {
+function makeFilterLink(text, term) {
     if (!text) return '';
-    return text.split(',')
-        .map(name => name.trim())
-        .filter(name => name.length > 0)
-        .map(name => {
+    return String(text).split(',')
+        .map(val => val.trim())
+        .filter(val => val.length > 0)
+        .map(val => {
             const params = new URLSearchParams();
-            params.set('term0', 'name');
+            params.set('term0', term);
             params.set('operator0', '=');
-            params.set('value0', name);
+            params.set('value0', val);
             const url = window.location.origin + window.location.pathname + '?' + params.toString();
-            return `<a href="${url}" target="_blank" rel="noopener noreferrer">${name}</a>`;
+            return `<a href="${url}" target="_blank" rel="noopener noreferrer">${val}</a>`;
         })
         .join(', ');
 }
@@ -1610,12 +1610,12 @@ function updateRecipeDetails() {
                         <div class="card-body">
                             <div class="excel-row">
                                 <div class="excel-cell label-cell">Name</div>
-                                <div class="excel-cell content-cell"><strong>${data.Name || ''}</strong></div>
+                                <div class="excel-cell content-cell"><strong>${makeFilterLink(data.Name || '', 'name')}</strong></div>
                             </div>
 
                             <div class="excel-row">
                                 <div class="excel-cell label-cell">Stars Out of 3</div>
-                                <div class="excel-cell content-cell" id="stars-display">${formatStarsValue(data.stars_out_of_3)}</div>
+                                <div class="excel-cell content-cell" id="stars-display">${data.stars_out_of_3 ? makeFilterLink(formatStarsValue(data.stars_out_of_3), 'stars_out_of_3') : 'Not rated'}</div>
                                 <div class="excel-cell label-cell rate-control">Rate this Drink:</div>
                                 <div class="excel-cell rate-control">
                                     <select id="stars-select">
@@ -1633,28 +1633,28 @@ function updateRecipeDetails() {
 
                             <div class="excel-row">
                                 <div class="excel-cell label-cell">Last Date</div>
-                                <div class="excel-cell content-cell" id="last-date-display">${data.last_date || 'Not set'}</div>
+                                <div class="excel-cell content-cell" id="last-date-display">${data.last_date ? makeFilterLink(data.last_date, 'last_date') : 'Not set'}</div>
                                 <div class="excel-cell rate-control"><input type="date" id="last-date-input" value="${today}" max="${today}"></div>
                                 <div class="excel-cell rate-control"><button id="save-rating" class="btn btn-success btn-sm">Save Rating</button></div>
                             </div>
 
-                            <div class="excel-row"><div class="excel-cell label-cell">Source</div><div class="excel-cell content-cell">${data.Source || ''}</div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Source</div><div class="excel-cell content-cell">${makeFilterLink(data.Source || '', 'source')}</div></div>
                             <div class="excel-row"><div class="excel-cell label-cell">Page</div><div class="excel-cell content-cell">${data.Page || ''}</div></div>
-                            <div class="excel-row"><div class="excel-cell label-cell">Shaken/Stirred</div><div class="excel-cell content-cell">${data['Shaken/Stirred'] || ''}</div></div>
-                            <div class="excel-row"><div class="excel-cell label-cell">Ice</div><div class="excel-cell content-cell">${data.Ice || ''}</div></div>
-                            <div class="excel-row"><div class="excel-cell label-cell">Glass</div><div class="excel-cell content-cell">${data.Glass || ''}</div></div>
-                            <div class="excel-row"><div class="excel-cell label-cell">Garnish</div><div class="excel-cell content-cell">${data.Garnish || ''}</div></div>
-                            <div class="excel-row"><div class="excel-cell label-cell">Notes</div><div class="excel-cell content-cell">${data.Instructions || ''}</div></div>
-                            <div class="excel-row"><div class="excel-cell label-cell">Servings</div><div class="excel-cell content-cell">${data.Servings || ''}</div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Shaken/Stirred</div><div class="excel-cell content-cell">${makeFilterLink(data['Shaken/Stirred'] || '', 'shaken_stirred')}</div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Ice</div><div class="excel-cell content-cell">${makeFilterLink(data.Ice || '', 'ice')}</div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Glass</div><div class="excel-cell content-cell">${makeFilterLink(data.Glass || '', 'glass')}</div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Garnish</div><div class="excel-cell content-cell">${makeFilterLink(data.Garnish || '', 'garnish')}</div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Notes</div><div class="excel-cell content-cell">${makeFilterLink(data.Instructions || '', 'instructions')}</div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Servings</div><div class="excel-cell content-cell">${makeFilterLink(data.Servings || '', 'servings')}</div></div>
                             <div class="excel-row"><div class="excel-cell label-cell">Equiv # of Drinks</div><div class="excel-cell content-cell" id="equiv-drinks-display">${data.equiv_drinks || '0.00'}</div></div>
-                            <div class="excel-row"><div class="excel-cell label-cell">Base</div><div class="excel-cell content-cell">${data.Base || ''}</div></div>
-                            <div class="excel-row"><div class="excel-cell label-cell">Family</div><div class="excel-cell content-cell">${data.Family || ''}</div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Base</div><div class="excel-cell content-cell">${makeFilterLink(data.Base || '', 'base')}</div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Family</div><div class="excel-cell content-cell">${makeFilterLink(data.Family || '', 'family')}</div></div>
                             <div class="excel-row"><div class="excel-cell label-cell">Link</div><div class="excel-cell content-cell"><a href="${data.Link || '#'}" target="_blank">${data.Link || ''}</a></div></div>
-                            <div class="excel-row"><div class="excel-cell label-cell">Mixer</div><div class="excel-cell content-cell">${data.Mixer || ''}</div></div>
-                            <div class="excel-row"><div class="excel-cell label-cell">Color</div><div class="excel-cell content-cell">${data.Color || ''}</div></div>
-                            <div class="excel-row"><div class="excel-cell label-cell">Characteristics</div><div class="excel-cell content-cell">${data.Characteristics || ''}</div></div>
-                            <div class="excel-row"><div class="excel-cell label-cell">Adaptation of</div><div class="excel-cell content-cell">${makeNameLink(data['Adaptation of'])}</div></div>
-                            <div class="excel-row"><div class="excel-cell label-cell">Variations</div><div class="excel-cell content-cell">${makeNameLink(data.Variations)}</div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Mixer</div><div class="excel-cell content-cell">${makeFilterLink(data.Mixer || '', 'mixer')}</div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Color</div><div class="excel-cell content-cell">${makeFilterLink(data.Color || '', 'color')}</div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Characteristics</div><div class="excel-cell content-cell">${makeFilterLink(data.Characteristics || '', 'characteristics')}</div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Adaptation of</div><div class="excel-cell content-cell">${makeFilterLink(data['Adaptation of'] || '', 'name')}</div></div>
+                            <div class="excel-row"><div class="excel-cell label-cell">Variations</div><div class="excel-cell content-cell">${makeFilterLink(data.Variations || '', 'name')}</div></div>
 
                             <div class="mt-3">
                                 <table class="ingredient-table">
