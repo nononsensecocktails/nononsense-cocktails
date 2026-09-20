@@ -257,6 +257,11 @@ function updateOperatorSelect($row, term) {
 function updateValueInput($row, term, initialValue = '') {
     var $valueCell = $row.find('.excel-cell:nth-child(3)');
     var currentValue = $row.find('.value-input').val() || initialValue.trim();
+    if (currentValue) {
+        $row.data('pendingValue', currentValue);
+    } else {
+        $row.removeData('pendingValue');
+    }
     $valueCell.empty();
 
     var textInputOnlyFields = ['name', 'garnish', 'instructions', 'All'];
@@ -443,6 +448,7 @@ function updateValueInput($row, term, initialValue = '') {
                 duplicateItemsAllowed: false,
                 position: 'auto'
             });
+            $select.data('choices', choicesInstance);
 
             if (currentValue) {
                 choicesInstance.setChoiceByValue(currentValue);
@@ -494,12 +500,27 @@ function updateValueInput($row, term, initialValue = '') {
         });
         return filters;
     }
+    
+    function getRowValue($row) {
+        var pending = $row.data('pendingValue');
+        if (pending) return String(pending);
+        var $input = $row.find('.value-input').first();
+        if (!$input.length) return '';
+        var choicesInst = $input.data('choices');
+        if (choicesInst && typeof choicesInst.getValue === 'function') {
+            var cv = choicesInst.getValue(true);
+            if (Array.isArray(cv)) cv = cv[0];
+            if (cv) return String(cv);
+        }
+        return ($input.val() || '').toString();
+    }
+
     function getFilters() {
         var filters = [];
         $('.search-boxes .excel-row').each(function() {
             var term = $(this).find('.term-select').val();
             var operator = $(this).find('.operator-select').val();
-            var value = $(this).find('.value-input').val();
+            var value = getRowValue($(this));
             var logic = $(this).find('.logic-select').val() || 'AND';
             if (term && value) {
                 var f = {
@@ -1514,7 +1535,7 @@ function makeFilterLink(text, term) {
             params.set('operator0', '=');
             params.set('value0', val);
             var currentUser = $('#user-select').val();
-            if (currentUser && currentUser !== 'All') {
+            if (currentUser) {
                 params.set('user', currentUser);
             }
             const url = window.location.origin + window.location.pathname + '?' + params.toString();
