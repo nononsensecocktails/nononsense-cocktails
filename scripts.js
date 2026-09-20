@@ -417,11 +417,21 @@ function updateValueInput($row, term, initialValue = '') {
                 $select.append($('<option>', { value: value, text: value }));
             });
 
+            if (currentValue && !$select.find('option').filter(function() {
+                return $(this).val() === currentValue;
+            }).length) {
+                $select.append($('<option>', { value: currentValue, text: currentValue }));
+            }
+
+            if (currentValue) {
+                $select.val(currentValue);
+            }
+
             if ($select.data('choices')) {
                 $select.data('choices').destroy();
             }
 
-            new Choices($select[0], {
+            var choicesInstance = new Choices($select[0], {
                 searchEnabled: true,
                 searchPlaceholderValue: 'Type to search...',
                 shouldSort: false,
@@ -433,8 +443,14 @@ function updateValueInput($row, term, initialValue = '') {
                 duplicateItemsAllowed: false,
                 position: 'auto'
             });
-        });
 
+            if (currentValue) {
+                choicesInstance.setChoiceByValue(currentValue);
+                $select.trigger('change');
+                loadTotalCocktails();
+            }
+        });
+        
         $select.on('change', function () {
             if (typeof updateAllBelow === 'function') {
                 updateAllBelow($row);
@@ -1065,7 +1081,14 @@ function loadFromUrl() {
         break;
     }
 
-    if (hasRecipeParams || hasFilterParams) {
+    var urlUser = urlParams.get('user') || '';
+    if (urlUser) {
+        $('#user-select').val(urlUser);
+        if (typeof updateUserSelectHighlight === 'function') {
+            updateUserSelectHighlight();
+        }
+    } else if (hasRecipeParams) {
+        // Shared recipe link with no user param → keep existing public-share behavior
         $('#user-select').val('All').trigger('change');
     }
 
@@ -1490,6 +1513,10 @@ function makeFilterLink(text, term) {
             params.set('term0', term);
             params.set('operator0', '=');
             params.set('value0', val);
+            var currentUser = $('#user-select').val();
+            if (currentUser && currentUser !== 'All') {
+                params.set('user', currentUser);
+            }
             const url = window.location.origin + window.location.pathname + '?' + params.toString();
             return `<a href="${url}" target="_blank" rel="noopener noreferrer">${val}</a>`;
         })
@@ -1552,8 +1579,11 @@ $('#copy-permalink').off('click').on('click', async function () {
     });
     loadUnitConversions(function() {
         loadFromUrl();
-        updateOperatorSelect($('.search-boxes .excel-row:first'), $('.term-select').val());
-        updateValueInput($('.search-boxes .excel-row:first'), $('.term-select').val());
+        var restoredFromUrl = new URLSearchParams(window.location.search).has('term0');
+        if (!restoredFromUrl) {
+            updateOperatorSelect($('.search-boxes .excel-row:first'), $('.term-select').val());
+            updateValueInput($('.search-boxes .excel-row:first'), $('.term-select').val());
+        }
         updateLogicVisibility();
 
         // Force profile modal if logged-in user still has an @ in their display name
