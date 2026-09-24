@@ -254,9 +254,14 @@ function updateOperatorSelect($row, term) {
         return filters;
     }
 
-function updateValueInput($row, term, initialValue = '') {
+function updateValueInput($row, term, initialValue = '', keepExisting = true) {
     var $valueCell = $row.find('.excel-cell:nth-child(3)');
-    var currentValue = $row.find('.value-input').val() || initialValue.trim();
+    var currentValue = '';
+    if (keepExisting) {
+        currentValue = getRowValue($row) || String(initialValue || '').trim();
+    } else {
+        currentValue = String(initialValue || '').trim();
+    }
     if (currentValue) {
         $row.data('pendingValue', currentValue);
     } else {
@@ -422,14 +427,15 @@ function updateValueInput($row, term, initialValue = '') {
                 $select.append($('<option>', { value: value, text: value }));
             });
 
-            if (currentValue && !$select.find('option').filter(function() {
-                return $(this).val() === currentValue;
+            var valueToRestore = currentValue;
+            if (valueToRestore && !$select.find('option').filter(function() {
+                return $(this).val() === valueToRestore;
             }).length) {
-                $select.append($('<option>', { value: currentValue, text: currentValue }));
+                valueToRestore = '';
             }
 
-            if (currentValue) {
-                $select.val(currentValue);
+            if (valueToRestore) {
+                $select.val(valueToRestore);
             }
 
             if ($select.data('choices')) {
@@ -450,11 +456,11 @@ function updateValueInput($row, term, initialValue = '') {
             });
             $select.data('choices', choicesInstance);
 
-            if (currentValue) {
-                choicesInstance.setChoiceByValue(currentValue);
-                $select.trigger('change');
+            if (valueToRestore) {
+                choicesInstance.setChoiceByValue(valueToRestore);
                 loadTotalCocktails();
             }
+            $row.removeData('pendingValue');
         });
         
         $select.on('change', function () {
@@ -502,17 +508,20 @@ function updateValueInput($row, term, initialValue = '') {
     }
     
     function getRowValue($row) {
+        var $input = $row.find('.value-input').first();
+        if ($input.length) {
+            var choicesInst = $input.data('choices');
+            if (choicesInst && typeof choicesInst.getValue === 'function') {
+                var cv = choicesInst.getValue(true);
+                if (Array.isArray(cv)) cv = cv[0];
+                if (cv) return String(cv);
+            }
+            var live = ($input.val() || '').toString();
+            if (live) return live;
+        }
         var pending = $row.data('pendingValue');
         if (pending) return String(pending);
-        var $input = $row.find('.value-input').first();
-        if (!$input.length) return '';
-        var choicesInst = $input.data('choices');
-        if (choicesInst && typeof choicesInst.getValue === 'function') {
-            var cv = choicesInst.getValue(true);
-            if (Array.isArray(cv)) cv = cv[0];
-            if (cv) return String(cv);
-        }
-        return ($input.val() || '').toString();
+        return '';
     }
 
     function getFilters() {
@@ -726,8 +735,9 @@ $(document).on('click', '.add-box', function() {
     $(document).on('change', '.term-select', function() {
         var $row = $(this).closest('.excel-row');
         var term = $(this).val();
+        $row.removeData('pendingValue');
         updateOperatorSelect($row, term);
-        updateValueInput($row, term);
+        updateValueInput($row, term, '', false);
         updateLogicVisibility();
         // DO NOT call updateAllBelow() here
         // Changing the term is NOT a filter change yet
@@ -740,6 +750,7 @@ $(document).on('click', '.add-box', function() {
     $(document).on('change', '.value-input', function() {
     pendingFilterChange = true; // <-- Mark that a real change happened
     var $row = $(this).closest('.excel-row');
+    $row.removeData('pendingValue');
     updateAllBelow($row);
     });
     $(document).on('change', '.logic-select', function() {
@@ -773,9 +784,9 @@ $(document).on('click', '.add-box', function() {
 function updateNames() {
     var user = $('#user-select').val();
     var filters = getFilters();
+    var shouldRebuildNames = pendingFilterChange;
     // FIX: Skip reset if loading from URL params
     if (window.skipNameReset) {
-        delete window.skipNameReset;
         // Still fetch/update counts/names, but don't clear dropdown
         console.log('Fetching names with user:', user, 'filters:', filters);
         $.ajax({
@@ -824,7 +835,7 @@ function updateNames() {
     } else {
         // Original logic with resets
         // Reset name/source if filters were actually changed (not just adding blank row)
-        if (pendingFilterChange) {
+        if (shouldRebuildNames) {
             $('#name-select').val('').trigger('change');
             $('#source-select').html('<option value="">STEP 4: Select a Source</option>');
             $('#source-count').text('');
@@ -853,7 +864,7 @@ function updateNames() {
                     var currentName = nameSelect.val();
                     // Only fully rebuild the name list if a real filter value changed
                     // (not just when user picks a term in a new row)
-                    if (pendingFilterChange || !currentName) {
+                    if (shouldRebuildNames || !currentName) {
                         nameSelect.empty();
                         nameSelect.append('<option value="">STEP 3: Select a Name</option>');
                     }
@@ -864,7 +875,7 @@ function updateNames() {
                         }
                     });
                     // Remove names no longer valid (only if filter actually changed)
-                    if (pendingFilterChange) {
+                    if (shouldRebuildNames) {
                         nameSelect.find('option:not(:first)').each(function() {
                             var val = $(this).val();
                             if (val && !data.includes(val)) {
@@ -878,11 +889,11 @@ function updateNames() {
                         nameSelect.val(currentName);
                     }
                     // If only one result and we're not in reset mode, auto-select it
-                    else if (data.length === 1 && !pendingFilterChange) {
+                    else if (data.length === 1 && !shouldRebuildNames) {
                         nameSelect.val(data[0]).trigger('change');
                     }
                     // If current name is no longer valid due to real filter change
-                    else if (pendingFilterChange && currentName && !data.includes(currentName)) {
+                    else if (shouldRebuildNames && currentName && !data.includes(currentName)) {
                         nameSelect.val('').trigger('change');
                         $('#source-select').html('<option value="">STEP 4: Select a Source</option>');
                         $('#source-count').text('');
