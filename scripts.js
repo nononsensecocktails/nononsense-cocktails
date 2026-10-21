@@ -1555,6 +1555,12 @@ function makeFilterLink(text, term) {
         .join(', ');
 }
 
+function makeGoogleSearchLink(displayText, searchTerm) {
+    if (!displayText) return '';
+    if (!searchTerm) return displayText;
+    var url = 'https://www.google.com/search?q=' + encodeURIComponent(searchTerm);
+    return `<a href="${url}" target="_blank" rel="noopener noreferrer">${displayText}</a>`;
+}
 $('#copy-permalink').off('click').on('click', async function () {
     const link = generateCurrentUrl();
     const nameVal = $('#name-select').val() || '';
@@ -1992,8 +1998,8 @@ function renderIngredientsTable(data) {
         tbodyHtml += `
             <tr>
                 <td>${index + 1}</td>
-                <td style="word-break: break-word; white-space: normal;">${ingredient.name}</td>
-                <td class="text-end">${displayVolume}</td>
+                <td style="word-break: break-word; white-space: normal;">${makeFilterLink(ingredient.name, 'ingredients')}</td>
+                <td class="text-end">${makeGoogleSearchLink(displayVolume, ingredient.name)}</td>
                 <td class="text-end" style="${volColor}">${displayVolPct}</td>
                 <td class="text-end">${ingredient.abv}</td>
                 <td class="text-end" style="${abvPctColor}">${ingredient.abvPercent}</td>
