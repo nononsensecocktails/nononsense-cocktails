@@ -842,4 +842,147 @@ function updateUserProfile($conn, $user_id, $new_username, $do_not_show_username
     ];
 }
 
+function allowedDefaultTerms() {
+    return array_merge(['All'], array_keys(getFilters()));
+}
+
+function sanitizeSearchPayload($payload, $include_recipe) {
+    if (!is_array($payload)) {
+        return null;
+    }
+
+    $allowed_terms = allowedDefaultTerms();
+    $allowed_ops = ['=', '<>', '>=', '<'];
+    $allowed_units = ['oz', 'ml', 'l', 'p', 'g'];
+    $allowed_orders = ['Recipe', 'Vol Asc', 'Vol Desc', 'Cost Asc', 'Cost Desc', 'Alpha Asc', 'Alpha Desc'];
+
+    $filters = [];
+    $raw_filters = $payload['filters'] ?? [];
+    if (is_array($raw_filters)) {
+        foreach ($raw_filters as $filter) {
+            if (!is_array($filter)) {
+                continue;
+            }
+            $term = (string)($filter['term'] ?? '');
+            $operator = (string)($filter['operator'] ?? '=');
+            $value = trim((string)($filter['value'] ?? ''));
+            $logic = strtoupper((string)($filter['logic'] ?? 'AND'));
+            if (!in_array($term, $allowed_terms, true)) {
+                continue;
+            }
+            if (!in_array($operator, $allowed_ops, true)) {
+                $operator = '=';
+            }
+            if ($value === '' || strlen($value) > 255) {
+                continue;
+            }
+            if ($logic !== 'OR') {
+                $logic = 'AND';
+            }
+            $row = [
+                'term' => $term,
+                'operator' => $operator,
+                'value' => $value,
+            ];
+            if (count($filters) > 0) {
+                $row['logic'] = $logic;
+            }
+            $filters[] = $row;
+            if (count($filters) >= 20) {
+                break;
+            }
+        }
+    }
+
+    $user = trim((string)($payload['user'] ?? 'All'));
+    if ($user === '' || strlen($user) > 50) {
+        $user = 'All';
+    }
+
+    $scale = isset($payload['scale']) ? floatval($payload['scale']) : 1;
+    if ($scale <= 0 || $scale > 1000) {
+        $scale = 1;
+    }
+
+    $unit = (string)($payload['volume_unit'] ?? 'oz');
+    if (!in_array($unit, $allowed_units, true)) {
+        $unit = 'oz';
+    }
+
+    $order = (string)($payload['ingredients_order'] ?? 'Recipe');
+    if (!in_array($order, $allowed_orders, true)) {
+        $order = 'Recipe';
+    }
+
+    $clean = [
+        'filters' => $filters,
+        'user' => $user,
+        'scale' => $scale,
+        'volume_unit' => $unit,
+        'ingredients_order' => $order,
+    ];
+
+    if ($include_recipe) {
+        $name = trim((string)($payload['name'] ?? ''));
+        $source = trim((string)($payload['source'] ?? ''));
+        if (strlen($name) > 255) {
+            $name = '';
+        }
+        if (strlen($source) > 255) {
+            $source = '';
+        }
+        $clean['name'] = $name;
+        $clean['source'] = $source;
+    }
+
+    return $clean;
+}
+
+function saveUserDefaults($conn, $user_id, $payload) {
+    if (!$user_id) {
+        return ['success' => false, 'error' => 'You must be logged in to save defaults.'];
+    }
+    $clean = sanitizeSearchPayload($payload, false);
+    if ($clean === null) {
+        return ['success' => false, 'error' => 'Invalid defaults payload.'];
+    }
+    $json = json_encode($clean, JSON_UNESCAPED_UNICODE);
+    $stmt = $conn->prepare("UPDATE users SET default_filters = ? WHERE id = ?");
+    $stmt->execute([$json, $user_id]);
+    return ['success' => true, 'defaults' => $clean];
+}
+
+function clearUserDefaults($conn, $user_id) {
+    if (!$user_id) {
+        return ['success' => false, 'error' => 'You must be logged in to clear defaults.'];
+    }
+    $stmt = $conn->prepare("UPDATE users SET default_filters = NULL WHERE id = ?");
+    $stmt->execute([$user_id]);
+    return ['success' => true, 'defaults' => null];
+}
+
+function saveLastSearch($conn, $user_id, $payload) {
+    if (!$user_id) {
+        return ['success' => false, 'error' => 'You must be logged in to save the last search.'];
+    }
+    $clean = sanitizeSearchPayload($payload, true);
+    if ($clean === null) {
+        return ['success' => false, 'error' => 'Invalid last search payload.'];
+    }
+    $json = json_encode($clean, JSON_UNESCAPED_UNICODE);
+    $stmt = $conn->prepare("UPDATE users SET last_search = ? WHERE id = ?");
+    $stmt->execute([$json, $user_id]);
+    return ['success' => true, 'last_search' => $clean];
+}
+
+function setUseLastSearch($conn, $user_id, $enabled) {
+    if (!$user_id) {
+        return ['success' => false, 'error' => 'You must be logged in.'];
+    }
+    $flag = $enabled ? 1 : 0;
+    $stmt = $conn->prepare("UPDATE users SET use_last_search = ? WHERE id = ?");
+    $stmt->execute([$flag, $user_id]);
+    return ['success' => true, 'use_last_search' => $flag];
+}
+
 ?>
