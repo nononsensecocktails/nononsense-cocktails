@@ -15,13 +15,29 @@ $user_name = $_SESSION['user_name'] ?? '';
 $user_picture = $_SESSION['user_picture'] ?? '';
 $user_email = $_SESSION['user_email'] ?? '';
 $do_not_show_username = 0; // default
+$user_defaults = null;
+$last_search = null;
+$use_last_search = 0;
 
 if ($is_logged_in && !empty($_SESSION['user_id'])) {
-    $stmt = $conn->prepare("SELECT do_not_show_username FROM users WHERE id = ?");
+    $stmt = $conn->prepare("SELECT do_not_show_username, default_filters, last_search, use_last_search FROM users WHERE id = ?");
     $stmt->execute([(int)$_SESSION['user_id']]);
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
     if ($row !== false) {
         $do_not_show_username = (int)$row['do_not_show_username'];
+        $use_last_search = (int)($row['use_last_search'] ?? 0);
+        if (!empty($row['default_filters'])) {
+            $decoded = json_decode($row['default_filters'], true);
+            if (is_array($decoded)) {
+                $user_defaults = $decoded;
+            }
+        }
+        if (!empty($row['last_search'])) {
+            $decoded_search = json_decode($row['last_search'], true);
+            if (is_array($decoded_search)) {
+                $last_search = $decoded_search;
+            }
+        }
     }
 }
 ?>
@@ -32,6 +48,9 @@ if ($is_logged_in && !empty($_SESSION['user_id'])) {
     let loggedInUserName = <?php echo $is_logged_in && !empty($_SESSION['user_name']) ? json_encode($_SESSION['user_name']) : 'null'; ?>;
     const loggedInUserEmail = <?php echo $is_logged_in && !empty($user_email) ? json_encode($user_email) : 'null'; ?>;
     let loggedInDoNotShowUsername = <?php echo (int)$do_not_show_username; ?>;
+    let userDefaults = <?php echo ($is_logged_in && $user_defaults) ? json_encode($user_defaults) : 'null'; ?>;
+    let lastSearch = <?php echo ($is_logged_in && $last_search) ? json_encode($last_search) : 'null'; ?>;
+    let useLastSearch = <?php echo $is_logged_in && $use_last_search ? 'true' : 'false'; ?>;
 </script>
 
 <!DOCTYPE html>
@@ -1025,6 +1044,32 @@ html, body {
                         Show my ratings publicly and include in user averages.
                     </label>
                 </div>
+                <hr>
+                <h6 class="mb-2">Homepage defaults</h6>
+                <p class="text-muted mb-2" style="font-size:0.85rem;">
+                    Applied when you sign in, click Reset, or open the site with no shared link,
+                    unless Last Known Search is on.
+                </p>
+                <div id="profile-defaults-summary" class="mb-2" style="font-size:0.85rem;"></div>
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    <button type="button" class="btn btn-outline-primary btn-sm" id="profile-save-defaults-btn">
+                        Save current filters as my defaults
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="profile-clear-defaults-btn">
+                        Clear my defaults
+                    </button>
+                </div>
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="profile-last-known-search">
+                    <label class="form-check-label" for="profile-last-known-search">
+                        Last Known Search
+                    </label>
+                </div>
+                <p class="text-muted mb-2" style="font-size:0.85rem;">
+                    If checked, your last filters, units, and open drink override saved defaults
+                    the next time you sign in or reopen the site. Shared links still win. Reset still goes to your defaults.
+                </p>
+                <div id="profile-defaults-status" class="text-success mb-2" style="display:none; font-size:0.85rem;"></div>
                 <div id="profile-error" class="text-danger" style="display: none;"></div>
             </div>
             <div class="modal-footer">
