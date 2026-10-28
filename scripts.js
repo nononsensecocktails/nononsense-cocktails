@@ -615,22 +615,25 @@ function updateValueInput($row, term, initialValue = '', keepExisting = true) {
         }
         const $firstRow = $('.search-boxes .excel-row:first');
         const first = filters[0];
+        $firstRow.removeData('pendingValue');
         $firstRow.find('.term-select').val(first.term);
         updateOperatorSelect($firstRow, first.term);
         $firstRow.find('.operator-select').val(first.operator);
-        updateValueInput($firstRow, first.term, first.value);
+        updateValueInput($firstRow, first.term, first.value, false);
         for (let i = 1; i < filters.length; i++) {
             var newBox = $('.search-boxes .excel-row:first').clone(true);
             newBox.find('.recipe-scale-cell, .volume-unit-cell, .ingredients-order-cell').remove();
             newBox.find('.remove-box').show();
             newBox.find('.add-box').text('+');
             newBox.find('.term-select').val('');
+            newBox.removeData('pendingValue');
+            newBox.find('.value-input').removeData('choices');
             $('.search-boxes .excel-row:last').after(newBox);
             const filt = filters[i];
             newBox.find('.term-select').val(filt.term);
             updateOperatorSelect(newBox, filt.term);
             newBox.find('.operator-select').val(filt.operator);
-            updateValueInput(newBox, filt.term, filt.value);
+            updateValueInput(newBox, filt.term, filt.value, false);
             newBox.find('.logic-select').val(filt.logic || 'AND');
         }
         updateLogicVisibility();
@@ -1368,12 +1371,14 @@ setTimeout(() => {
             newBox.find('.remove-box').show();
             newBox.find('.add-box').text('+');
             newBox.find('.term-select').val('');
+            newBox.removeData('pendingValue');
+            newBox.find('.value-input').removeData('choices');
             $('.search-boxes .excel-row:last').after(newBox);
             const filt = filters[i];
             newBox.find('.term-select').val(filt.term);
             updateOperatorSelect(newBox, filt.term);
             newBox.find('.operator-select').val(filt.operator);
-            updateValueInput(newBox, filt.term, filt.value);
+            updateValueInput(newBox, filt.term, filt.value, false);
             newBox.find('.logic-select').val(filt.logic || 'AND');
         }
         updateLogicVisibility();
