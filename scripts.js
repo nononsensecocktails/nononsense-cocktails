@@ -545,6 +545,208 @@ function updateValueInput($row, term, initialValue = '', keepExisting = true) {
         });
         return filters;
     }
+
+    let applyingSavedState = false;
+    let lastSearchTimer = null;
+
+    function collectCurrentDefaults() {
+        return {
+            filters: getFilters(),
+            user: $('#user-select').val() || 'All',
+            scale: currentScale,
+            volume_unit: volumeUnit,
+            ingredients_order: ingredientsOrder
+        };
+    }
+
+    function collectCurrentSearch() {
+        var state = collectCurrentDefaults();
+        state.name = $('#name-select').val() || '';
+        state.source = $('#source-select').val() || '';
+        return state;
+    }
+
+    function formatDefaultsSummary(defaults) {
+        if (!defaults) {
+            return 'No defaults saved. The site blank start will be used.';
+        }
+        var parts = [];
+        (defaults.filters || []).forEach(function (f, i) {
+            var label = $('select.term-select:first option[value="' + f.term + '"]').text() || f.term;
+            var prefix = (i === 0) ? '' : ((f.logic || 'AND') + ' ');
+            parts.push(prefix + label + ' ' + f.operator + ' ' + f.value);
+        });
+        if (!parts.length) {
+            parts.push('No filter rows (site blank start for filters)');
+        }
+        parts.push('User: ' + (defaults.user || 'All'));
+        parts.push('Scale: ' + defaults.scale);
+        parts.push('Volume Unit: ' + defaults.volume_unit);
+        parts.push('Ingredients Order: ' + defaults.ingredients_order);
+        return parts.join(' · ');
+    }
+
+    function refreshDefaultsSummary() {
+        var $summary = $('#profile-defaults-summary');
+        if ($summary.length) {
+            $summary.text(formatDefaultsSummary(userDefaults));
+        }
+        $('#profile-last-known-search').prop('checked', !!useLastSearch);
+    }
+
+    function applySiteBlankDisplayPrefs() {
+        currentScale = 1;
+        volumeUnit = 'oz';
+        ingredientsOrder = 'Recipe';
+        $('#recipe-scale-input').val(1);
+        $('#volume-unit-select').val('oz');
+        $('#ingredients-order-select').val('Recipe');
+        if (isUserLoggedIn && loggedInUserName) {
+            $('#user-select').val(loggedInUserName);
+        }
+        if (typeof updateUserSelectHighlight === 'function') {
+            updateUserSelectHighlight();
+        }
+    }
+
+    function applyFilterRows(filters) {
+        if (!filters || !filters.length) {
+            return;
+        }
+        const $firstRow = $('.search-boxes .excel-row:first');
+        const first = filters[0];
+        $firstRow.find('.term-select').val(first.term);
+        updateOperatorSelect($firstRow, first.term);
+        $firstRow.find('.operator-select').val(first.operator);
+        updateValueInput($firstRow, first.term, first.value);
+        for (let i = 1; i < filters.length; i++) {
+            var newBox = $('.search-boxes .excel-row:first').clone(true);
+            newBox.find('.recipe-scale-cell, .volume-unit-cell, .ingredients-order-cell').remove();
+            newBox.find('.remove-box').show();
+            newBox.find('.add-box').text('+');
+            newBox.find('.term-select').val('');
+            $('.search-boxes .excel-row:last').after(newBox);
+            const filt = filters[i];
+            newBox.find('.term-select').val(filt.term);
+            updateOperatorSelect(newBox, filt.term);
+            newBox.find('.operator-select').val(filt.operator);
+            updateValueInput(newBox, filt.term, filt.value);
+            newBox.find('.logic-select').val(filt.logic || 'AND');
+        }
+        updateLogicVisibility();
+    }
+
+    function applySavedState(state, includeRecipe) {
+        if (!state) {
+            return;
+        }
+        applyingSavedState = true;
+        resetFilters();
+
+        var desiredUser = state.user || '';
+        if (desiredUser) {
+            var $sel = $('#user-select');
+            if (desiredUser !== 'All' && $sel.find('option').filter(function () {
+                return $(this).val() === desiredUser;
+            }).length === 0) {
+                $sel.append($('<option>').val(desiredUser).text(desiredUser));
+            }
+            $sel.val(desiredUser);
+            if (typeof updateUserSelectHighlight === 'function') {
+                updateUserSelectHighlight();
+            }
+        }
+
+        if (state.volume_unit) {
+            volumeUnit = state.volume_unit;
+            $('#volume-unit-select').val(volumeUnit);
+        }
+        if (state.ingredients_order) {
+            ingredientsOrder = state.ingredients_order;
+            $('#ingredients-order-select').val(ingredientsOrder);
+        }
+        var n = parseFloat(state.scale);
+        if (!isNaN(n) && n > 0) {
+            currentScale = n;
+            $('#recipe-scale-input').val(n);
+        }
+
+        applyFilterRows(state.filters || []);
+
+        if (includeRecipe && state.name) {
+            var $nameSelect = $('#name-select');
+            if (!$nameSelect.find('option').filter(function () {
+                return $(this).val() === state.name;
+            }).length) {
+                $nameSelect.append($('<option>').val(state.name).text(state.name));
+            }
+            $nameSelect.val(state.name);
+            window.skipNameReset = true;
+            updateNames();
+            updateSources();
+            setTimeout(function () {
+                if (state.source) {
+                    var $source = $('#source-select');
+                    if (!$source.find('option').filter(function () {
+                        return $(this).val() === state.source;
+                    }).length) {
+                        $source.append($('<option>').val(state.source).text(state.source));
+                    }
+                    $source.val(state.source).trigger('change');
+                }
+            }, 250);
+        } else {
+            loadTotalCocktails();
+            updateNames();
+        }
+
+        setTimeout(function () {
+            applyingSavedState = false;
+        }, 1200);
+    }
+
+    function applyUserDefaults() {
+        applySavedState(userDefaults, false);
+    }
+
+    function applyLastSearch() {
+        applySavedState(lastSearch, true);
+    }
+
+    function saveLastSearchNow(done) {
+        if (!isUserLoggedIn || !useLastSearch) {
+            if (done) done();
+            return;
+        }
+        var payload = JSON.stringify(collectCurrentSearch());
+        if (navigator.sendBeacon) {
+            var body = new URLSearchParams();
+            body.set('action', 'saveLastSearch');
+            body.set('search', payload);
+            navigator.sendBeacon('filter.php', body);
+            if (done) done();
+            return;
+        }
+        $.ajax({
+            url: 'filter.php',
+            method: 'POST',
+            data: { action: 'saveLastSearch', search: payload },
+            complete: function () {
+                if (done) done();
+            }
+        });
+    }
+
+    function scheduleSaveLastSearch() {
+        if (applyingSavedState || !isUserLoggedIn || !useLastSearch) {
+            return;
+        }
+        clearTimeout(lastSearchTimer);
+        lastSearchTimer = setTimeout(function () {
+            saveLastSearchNow();
+        }, 800);
+    }
+    
     // NEW: Smart AND/OR visibility
     function updateLogicVisibility() {
         $('.search-boxes .excel-row').each(function(index) {
@@ -1162,6 +1364,7 @@ setTimeout(() => {
         console.log('Set filter row:', { term: first.term, operator: first.operator, value: first.value }); // Debug
         for (let i = 1; i < filters.length; i++) {
             var newBox = $('.search-boxes .excel-row:first').clone(true);
+            newBox.find('.recipe-scale-cell, .volume-unit-cell, .ingredients-order-cell').remove();
             newBox.find('.remove-box').show();
             newBox.find('.add-box').text('+');
             newBox.find('.term-select').val('');
@@ -1305,6 +1508,8 @@ $(document).on('click', '#open-profile-modal', function(e) {
     }
 
     var modal = new bootstrap.Modal(document.getElementById('profileModal'));
+    refreshDefaultsSummary();
+    $('#profile-defaults-status').hide().text('');    
     modal.show();
 });
 
@@ -1379,6 +1584,114 @@ $(document).on('click', '#profile-save-btn', function() {
     });
 });
 
+$(document).on('click', '#profile-save-defaults-btn', function () {
+    if (!isUserLoggedIn) return;
+    var $status = $('#profile-defaults-status');
+    $status.hide();
+    $.ajax({
+        url: 'filter.php',
+        method: 'POST',
+        data: {
+            action: 'saveUserDefaults',
+            defaults: JSON.stringify(collectCurrentDefaults())
+        },
+        dataType: 'json',
+        success: function (response) {
+            if (response.success) {
+                userDefaults = response.defaults;
+                refreshDefaultsSummary();
+                $status.removeClass('text-danger').addClass('text-success')
+                    .text('Defaults saved.').show();
+            } else {
+                $status.removeClass('text-success').addClass('text-danger')
+                    .text(response.error || 'Failed to save defaults.').show();
+            }
+        },
+        error: function () {
+            $status.removeClass('text-success').addClass('text-danger')
+                .text('Error saving defaults. Please try again.').show();
+        }
+    });
+});
+
+$(document).on('click', '#profile-clear-defaults-btn', function () {
+    if (!isUserLoggedIn) return;
+    var $status = $('#profile-defaults-status');
+    $status.hide();
+    $.ajax({
+        url: 'filter.php',
+        method: 'POST',
+        data: { action: 'clearUserDefaults' },
+        dataType: 'json',
+        success: function (response) {
+            if (response.success) {
+                userDefaults = null;
+                refreshDefaultsSummary();
+                $status.removeClass('text-danger').addClass('text-success')
+                    .text('Defaults cleared. Reset or reopen / to use the blank start.').show();
+            } else {
+                $status.removeClass('text-success').addClass('text-danger')
+                    .text(response.error || 'Failed to clear defaults.').show();
+            }
+        },
+        error: function () {
+            $status.removeClass('text-success').addClass('text-danger')
+                .text('Error clearing defaults. Please try again.').show();
+        }
+    });
+});
+
+$(document).on('change', '#profile-last-known-search', function () {
+    if (!isUserLoggedIn) return;
+    var enabled = $(this).is(':checked');
+    var $status = $('#profile-defaults-status');
+    $.ajax({
+        url: 'filter.php',
+        method: 'POST',
+        data: { action: 'setUseLastSearch', enabled: enabled ? 1 : 0 },
+        dataType: 'json',
+        success: function (response) {
+            if (response.success) {
+                useLastSearch = !!response.use_last_search;
+                if (useLastSearch) {
+                    saveLastSearchNow();
+                }
+                $status.removeClass('text-danger').addClass('text-success')
+                    .text(useLastSearch ? 'Last Known Search is on.' : 'Last Known Search is off.')
+                    .show();
+            } else {
+                $('#profile-last-known-search').prop('checked', !!useLastSearch);
+                $status.removeClass('text-success').addClass('text-danger')
+                    .text(response.error || 'Could not update Last Known Search.').show();
+            }
+        },
+        error: function () {
+            $('#profile-last-known-search').prop('checked', !!useLastSearch);
+            $status.removeClass('text-success').addClass('text-danger')
+                .text('Error updating Last Known Search.').show();
+        }
+    });
+});
+
+$(document).on('filtersChanged change', '#user-select, #name-select, #source-select, #volume-unit-select, #ingredients-order-select, #recipe-scale-input', function () {
+    scheduleSaveLastSearch();
+});
+
+$(window).on('pagehide', function () {
+    saveLastSearchNow();
+});
+
+$(document).on('click', 'a[href="/auth/logout.php"]', function (e) {
+    if (!isUserLoggedIn || !useLastSearch) return;
+    e.preventDefault();
+    var href = this.href;
+    saveLastSearchNow(function () {
+        window.location.href = href;
+    });
+    setTimeout(function () {
+        window.location.href = href;
+    }, 800);
+});
 
 $('#user-select').on('change', function() {
     $('.search-boxes .excel-row').each(function() {
@@ -1478,18 +1791,21 @@ $(document).on('input change', '#recipe-scale-input', function () {
 });
 
     $('#lucky-button').on('click', loadRandomRecipe);
+    
 $('#reset-button').on('click', function() {
-    resetFilters();
+    if (isUserLoggedIn && userDefaults) {
+        applyUserDefaults();
+    } else {
+        resetFilters();
+        if (isUserLoggedIn) {
+            applySiteBlankDisplayPrefs();
+        }
+        loadTotalCocktails();
+    }
     $('#name-select').html('<option value="">STEP 3: Select a Name</option>');
     $('#source-select').html('<option value="">STEP 4: Select a Source</option>');
-
-    // Refresh counts instead of clearing them (so they persist with correct totals)
-    loadTotalCocktails();
-
-    // Note: source-count will keep its previous value (or update naturally when a name is selected later)
-    // If you ever want to force-clear source-count after reset, add: $('#source-count').text('');
-
     $('#recipe_details').empty();
+    scheduleSaveLastSearch();
 });
 
 function generateCurrentUrl() {
@@ -1615,14 +1931,23 @@ $('#copy-permalink').off('click').on('click', async function () {
     $('#close-qr-code').on('click', function() {
         $('#qr-code-popup').hide();
     });
+    
     loadUnitConversions(function() {
         loadFromUrl();
-        var restoredFromUrl = new URLSearchParams(window.location.search).has('term0');
-        if (!restoredFromUrl) {
+        var urlParams = new URLSearchParams(window.location.search);
+        var restoredFromUrl = urlParams.has('term0') || !!(urlParams.get('name') || urlParams.get('source'));
+        if (!restoredFromUrl && isUserLoggedIn && useLastSearch && lastSearch) {
+            applyLastSearch();
+        } else if (!restoredFromUrl && isUserLoggedIn && userDefaults) {
+            applyUserDefaults();
+        } else if (!urlParams.has('term0')) {
             updateOperatorSelect($('.search-boxes .excel-row:first'), $('.term-select').val());
             updateValueInput($('.search-boxes .excel-row:first'), $('.term-select').val());
         }
         updateLogicVisibility();
+        if (restoredFromUrl) {
+            scheduleSaveLastSearch();
+        }
 
         // Force profile modal if logged-in user still has an @ in their display name
         if (isUserLoggedIn && loggedInUserName && loggedInUserName.indexOf('@') !== -1) {
