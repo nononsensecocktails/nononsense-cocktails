@@ -1,7 +1,7 @@
 <?php
 require_once 'db.php';  // Added: To get getDBConnection()
 require_once 'filter_functions.php';
-session_start();
+require_once __DIR__ . '/session.php';
 
 header('Content-Type: application/json');
 ob_start();
@@ -107,6 +107,43 @@ try {
 
             $result = updateUserProfile($conn, $user_id, $new_username, $do_not_show);
             break;
+        case 'saveUserDefaults':
+            if (empty($_SESSION['is_logged_in']) || empty($_SESSION['user_id'])) {
+                $result = ['success' => false, 'error' => 'You must be logged in to save defaults.'];
+                break;
+            }
+            $raw = $_POST['defaults'] ?? '';
+            $payload = is_string($raw) ? json_decode($raw, true) : null;
+            $result = saveUserDefaults($conn, (int)$_SESSION['user_id'], $payload);
+            break;
+
+        case 'clearUserDefaults':
+            if (empty($_SESSION['is_logged_in']) || empty($_SESSION['user_id'])) {
+                $result = ['success' => false, 'error' => 'You must be logged in to clear defaults.'];
+                break;
+            }
+            $result = clearUserDefaults($conn, (int)$_SESSION['user_id']);
+            break;
+
+        case 'saveLastSearch':
+            if (empty($_SESSION['is_logged_in']) || empty($_SESSION['user_id'])) {
+                $result = ['success' => false, 'error' => 'You must be logged in to save the last search.'];
+                break;
+            }
+            $raw = $_POST['search'] ?? '';
+            $payload = is_string($raw) ? json_decode($raw, true) : null;
+            $result = saveLastSearch($conn, (int)$_SESSION['user_id'], $payload);
+            break;
+
+        case 'setUseLastSearch':
+            if (empty($_SESSION['is_logged_in']) || empty($_SESSION['user_id'])) {
+                $result = ['success' => false, 'error' => 'You must be logged in.'];
+                break;
+            }
+            $enabled = !empty($_POST['enabled']) && $_POST['enabled'] !== '0';
+            $result = setUseLastSearch($conn, (int)$_SESSION['user_id'], $enabled);
+            break;
+            
         default:
             $result = ['error' => 'Invalid action'];
     }
