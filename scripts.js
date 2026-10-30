@@ -1728,6 +1728,7 @@ $('#user-select').on('change', function() {
     var currentSource = $('#source-select').val();
     loadTotalCocktails();
     if (hasUserDependentFilters) {
+        pendingFilterChange = true;   // force full rebuild of #name-select
         updateNames(function() {
             if (currentName && $('#name-select option[value="' + currentName + '"]').length) {
                 $('#name-select').val(currentName);
