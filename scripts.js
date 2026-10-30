@@ -344,6 +344,10 @@ function updateValueInput($row, term, initialValue = '', keepExisting = true) {
 
             loadDistinctValues(term, getFiltersBeforeForDropdown($row, term)).then(function(values) {
                 allOptions = values || [];
+                if (term === 'last_date') {
+                    allOptions = allOptions.filter(function (value) { return value !== 'Most Recent'; });
+                    allOptions.unshift('Most Recent');
+                }
 
                 function renderList(filtered) {
                     $list.empty();
@@ -422,7 +426,12 @@ function updateValueInput($row, term, initialValue = '', keepExisting = true) {
 
         var filtersBefore = getFiltersBeforeForDropdown($row, term);
 
-        loadDistinctValues(term, filtersBefore).then(function(values) {
+            loadDistinctValues(term, filtersBefore).then(function(values) {
+            values = values || [];
+            if (term === 'last_date') {
+                values = values.filter(function (value) { return value !== 'Most Recent'; });
+                values.unshift('Most Recent');
+            }
             $.each(values, function(index, value) {
                 $select.append($('<option>', { value: value, text: value }));
             });
