@@ -296,14 +296,14 @@ function resolveMostRecentDate($conn, $user, $other_filters) {
 
     if ($user !== 'All') {
         $join = "LEFT JOIN (
-                    SELECT recipe_id, username, last_date
+                    SELECT recipe_id, username, stars_out_of_3, last_date
                     FROM user_ratings ur1
                     WHERE last_date = (SELECT MAX(last_date) FROM user_ratings ur2 WHERE ur2.recipe_id = ur1.recipe_id AND ur2.username = ur1.username)
                 ) ur ON r.ID = ur.recipe_id AND ur.username = :mr_user";
         $params[':mr_user'] = $user;
     } else {
         $join = "LEFT JOIN (
-                    SELECT ur1.recipe_id, ur1.username, ur1.last_date
+                    SELECT ur1.recipe_id, ur1.username, ur1.stars_out_of_3, ur1.last_date
                     FROM user_ratings ur1
                     INNER JOIN users u ON u.id = ur1.user_id AND COALESCE(u.do_not_show_username, 0) = 0
                     WHERE ur1.last_date = (SELECT MAX(ur2.last_date) FROM user_ratings ur2 WHERE ur2.recipe_id = ur1.recipe_id AND ur2.username = ur1.username)
@@ -351,19 +351,26 @@ function buildWhereClause($filters_data, $filters, &$params, $user = '', $conn =
         return '1=1';
     }
 
-    $resolved_most_recent = null;
-    $needs_most_recent = false;
-    foreach ($filters_data as $filter) {
-        if (($filter['term'] ?? '') === 'last_date' && ($filter['value'] ?? '') === 'Most Recent') {
-            $needs_most_recent = true;
-            break;
+    $resolved_by_index = [];
+    if ($conn) {
+        foreach ($filters_data as $i => $filter) {
+            if (($filter['term'] ?? '') !== 'last_date' || ($filter['value'] ?? '') !== 'Most Recent') {
+                continue;
+            }
+            $above = [];
+            for ($j = 0; $j < $i; $j++) {
+                $prior = $filters_data[$j];
+                if (($prior['term'] ?? '') === 'last_date' && ($prior['value'] ?? '') === 'Most Recent') {
+                    if (!empty($resolved_by_index[$j])) {
+                        $prior['value'] = $resolved_by_index[$j];
+                    } else {
+                        continue;
+                    }
+                }
+                $above[] = $prior;
+            }
+            $resolved_by_index[$i] = resolveMostRecentDate($conn, $user, $above);
         }
-    }
-    if ($needs_most_recent && $conn) {
-        $other_filters = array_values(array_filter($filters_data, function ($filter) {
-            return !(($filter['term'] ?? '') === 'last_date' && ($filter['value'] ?? '') === 'Most Recent');
-        }));
-        $resolved_most_recent = resolveMostRecentDate($conn, $user, $other_filters);
     }
 
     $conditions = [];
@@ -377,6 +384,7 @@ function buildWhereClause($filters_data, $filters, &$params, $user = '', $conn =
         if (!$term || $value === '') continue;
 
         if ($term === 'last_date' && $value === 'Most Recent') {
+            $resolved_most_recent = $resolved_by_index[$i] ?? null;
             if (!$resolved_most_recent) {
                 $condition = '0=1';
             } else {
