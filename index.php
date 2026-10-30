@@ -47,7 +47,8 @@ if ($is_logged_in && !empty($_SESSION['user_id'])) {
     const loggedInUserId = <?php echo $is_logged_in && !empty($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 'null'; ?>;
     let loggedInUserName = <?php echo $is_logged_in && !empty($_SESSION['user_name']) ? json_encode($_SESSION['user_name']) : 'null'; ?>;
     const loggedInUserEmail = <?php echo $is_logged_in && !empty($user_email) ? json_encode($user_email) : 'null'; ?>;
-    let loggedInDoNotShowUsername = <?php echo (int)$do_not_show_username; ?>;
+    const isAdmin = <?php echo (isset($_SESSION['auth0_sub']) && $_SESSION['auth0_sub'] === 'google-oauth2|115671403431087083309') ? 'true' : 'false'; ?>;
+	let loggedInDoNotShowUsername = <?php echo (int)$do_not_show_username; ?>;
     let userDefaults = <?php echo ($is_logged_in && $user_defaults) ? json_encode($user_defaults) : 'null'; ?>;
     let lastSearch = <?php echo ($is_logged_in && $last_search) ? json_encode($last_search) : 'null'; ?>;
     let useLastSearch = <?php echo $is_logged_in && $use_last_search ? 'true' : 'false'; ?>;
