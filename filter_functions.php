@@ -289,6 +289,60 @@ function buildCondition($term, $operator, $value, &$params, $index, $filters, $u
     return '1=1';
 }
 
+function resolveMostRecentDate($conn, $user, $other_filters) {
+    $filters = getFilters();
+    $params = [];
+    $where_clause = buildWhereClause($other_filters, $filters, $params, $user, $conn);
+
+    if ($user !== 'All') {
+        $join = "LEFT JOIN (
+                    SELECT recipe_id, username, last_date
+                    FROM user_ratings ur1
+                    WHERE last_date = (SELECT MAX(last_date) FROM user_ratings ur2 WHERE ur2.recipe_id = ur1.recipe_id AND ur2.username = ur1.username)
+                ) ur ON r.ID = ur.recipe_id AND ur.username = :mr_user";
+        $params[':mr_user'] = $user;
+    } else {
+        $join = "LEFT JOIN (
+                    SELECT ur1.recipe_id, ur1.username, ur1.last_date
+                    FROM user_ratings ur1
+                    INNER JOIN users u ON u.id = ur1.user_id AND COALESCE(u.do_not_show_username, 0) = 0
+                    WHERE ur1.last_date = (SELECT MAX(ur2.last_date) FROM user_ratings ur2 WHERE ur2.recipe_id = ur1.recipe_id AND ur2.username = ur1.username)
+                ) ur ON r.ID = ur.recipe_id";
+    }
+
+    $base_where = "WHERE (COALESCE(r.Hide, 0) = 0 OR EXISTS (SELECT 1 FROM user_ratings ur3 WHERE ur3.recipe_id = r.ID AND ur3.username = r.Source))";
+
+    if ($user === 'All') {
+        $sql = "SELECT MAX(val) FROM (
+                    SELECT MAX(ur.last_date) AS val
+                    FROM recipes r
+                    $join
+                    $base_where
+                    GROUP BY r.ID";
+        $having = ["MAX(ur.last_date) IS NOT NULL"];
+        if ($where_clause !== '1=1') {
+            $having[] = "($where_clause)";
+        }
+        $sql .= " HAVING " . implode(' AND ', $having) . ") sub";
+    } else {
+        $sql = "SELECT MAX(ur.last_date)
+                FROM recipes r
+                $join
+                $base_where";
+        if ($where_clause !== '1=1') {
+            $sql .= " AND ($where_clause)";
+        }
+    }
+
+    $stmt = $conn->prepare($sql);
+    foreach ($params as $key => $value) {
+        $stmt->bindValue($key, $value);
+    }
+    $stmt->execute();
+    $date = $stmt->fetchColumn();
+    return $date ? date('Y-m-d', strtotime($date)) : null;
+}
+
 /* -------------------------------------------------------------------------
    Updated buildWhereClause – now builds sequentially with logic, inverts for consecutive same-term negatives
    ------------------------------------------------------------------------- */
@@ -296,6 +350,22 @@ function buildWhereClause($filters_data, $filters, &$params, $user = '', $conn =
     if (empty($filters_data)) {
         return '1=1';
     }
+
+    $resolved_most_recent = null;
+    $needs_most_recent = false;
+    foreach ($filters_data as $filter) {
+        if (($filter['term'] ?? '') === 'last_date' && ($filter['value'] ?? '') === 'Most Recent') {
+            $needs_most_recent = true;
+            break;
+        }
+    }
+    if ($needs_most_recent && $conn) {
+        $other_filters = array_values(array_filter($filters_data, function ($filter) {
+            return !(($filter['term'] ?? '') === 'last_date' && ($filter['value'] ?? '') === 'Most Recent');
+        }));
+        $resolved_most_recent = resolveMostRecentDate($conn, $user, $other_filters);
+    }
+
     $conditions = [];
     $prev_term = null;
     $prev_operator = null;
@@ -305,7 +375,17 @@ function buildWhereClause($filters_data, $filters, &$params, $user = '', $conn =
         $value = $filter['value'] ?? '';
         $logic = isset($filter['logic']) ? strtoupper($filter['logic']) : null;
         if (!$term || $value === '') continue;
-        $condition = buildCondition($term, $operator, $value, $params, $i, $filters, $user, $conn);
+
+        if ($term === 'last_date' && $value === 'Most Recent') {
+            if (!$resolved_most_recent) {
+                $condition = '0=1';
+            } else {
+                $condition = buildCondition($term, $operator, $resolved_most_recent, $params, $i, $filters, $user, $conn);
+            }
+        } else {
+            $condition = buildCondition($term, $operator, $value, $params, $i, $filters, $user, $conn);
+        }
+
         if ($condition === '1=1' || $condition === '1=0') continue;
         if (!empty($conditions) && $logic) {
             $effective_logic = $logic;
@@ -459,7 +539,14 @@ if ($user !== 'All') {
     $stmt = $conn->prepare($sql);
     foreach ($params as $key => $value) $stmt->bindValue($key, $value);
     $stmt->execute();
-    return $stmt->fetchAll(PDO::FETCH_COLUMN, 0);
+    $values = $stmt->fetchAll(PDO::FETCH_COLUMN, 0);
+    if ($term === 'last_date') {
+        $values = array_values(array_filter($values, function ($value) {
+            return $value !== 'Most Recent';
+        }));
+        array_unshift($values, 'Most Recent');
+    }
+    return $values;
 }
 
 function getRandomRecipe($conn, $user, $filters_data) {
