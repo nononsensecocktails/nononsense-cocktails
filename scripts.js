@@ -1102,8 +1102,8 @@ function updateNames() {
                     if (currentName && data.includes(currentName)) {
                         nameSelect.val(currentName);
                     }
-                    // If only one result and we're not in reset mode, auto-select it
-                    else if (data.length === 1 && !shouldRebuildNames) {
+                    // If only one result, auto-select it
+                    else if (data.length === 1) {
                         nameSelect.val(data[0]).trigger('change');
                     }
                     // If current name is no longer valid due to real filter change
