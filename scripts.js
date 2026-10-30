@@ -1404,8 +1404,10 @@ setTimeout(() => {
         var source = $('#source-select').val();
         var stars = $('#stars-select').val();
         var last_date = $('#last-date-input').val();
-        var targetUser = $('#user-select').val();
-
+    
+        // Non-admins always rate as themselves; admin uses the filter User dropdown
+        var targetUser = isAdmin ? $('#user-select').val() : loggedInUserName;
+    
         // Validation before opening the modal
         if (!stars) {
             alert('Please select stars.');
@@ -1415,29 +1417,29 @@ setTimeout(() => {
             alert('Please select a last date.');
             return;
         }
-        if (!targetUser || targetUser === 'All') {
+        if (isAdmin && (!targetUser || targetUser === 'All')) {
             alert('Please select a specific user in the User: dropdown before saving a rating.');
             return;
         }
-
+    
         // Populate the confirmation modal
         $('#confirm-recipe-name').text(name || '');
         $('#confirm-recipe-source').text(source || '');
         $('#confirm-rating-value').text(stars);
         $('#confirm-rating-date').text(last_date);
         $('#rating-confirm-error').hide().text('');
-
-        // Highlight when rating for someone else
-        if (targetUser !== loggedInUserName) {
+    
+        // Highlight when admin is rating for someone else
+        if (isAdmin && targetUser !== loggedInUserName) {
             $('#confirm-target-username').text(targetUser);
             $('#confirm-on-behalf').show();
         } else {
             $('#confirm-on-behalf').hide();
         }
-
+    
         // Prevent changes while the modal is open
         $('#stars-select, #last-date-input').prop('disabled', true);
-
+    
         // Show the modal
         var modal = new bootstrap.Modal(document.getElementById('ratingConfirmModal'));
         modal.show();
@@ -1449,20 +1451,22 @@ setTimeout(() => {
         var source = $('#source-select').val();
         var stars = $('#stars-select').val();
         var last_date = $('#last-date-input').val();
-        var targetUser = $('#user-select').val();
-
+    
+        // Non-admins always rate as themselves; admin uses the filter User dropdown
+        var targetUser = isAdmin ? $('#user-select').val() : loggedInUserName;
+    
         if (!isUserLoggedIn || !loggedInUserId || !loggedInUserName) {
             $('#rating-confirm-error').text('You must be logged in to save a rating.').show();
             return;
         }
-        if (!targetUser || targetUser === 'All') {
+        if (isAdmin && (!targetUser || targetUser === 'All')) {
             $('#rating-confirm-error').text('Please select a specific user in the User: dropdown.').show();
             return;
         }
-
+    
         var $error = $('#rating-confirm-error');
         $error.hide().text('');
-
+    
         $.ajax({
             url: 'filter.php',
             method: 'POST',
@@ -1482,7 +1486,7 @@ setTimeout(() => {
                     var modalEl = document.getElementById('ratingConfirmModal');
                     var modal = bootstrap.Modal.getInstance(modalEl);
                     if (modal) modal.hide();
-
+    
                     updateRatingDisplay(stars, last_date);
                     // Re-enable the controls
                     $('#stars-select, #last-date-input').prop('disabled', false);
