@@ -344,7 +344,7 @@ function resolveMostRecentDate($conn, $user, $other_filters) {
 }
 
 /* -------------------------------------------------------------------------
-   Updated buildWhereClause – now builds sequentially with logic, inverts for consecutive same-term negatives
+   Updated buildWhereClause – now builds sequentially with logic
    ------------------------------------------------------------------------- */
 function buildWhereClause($filters_data, $filters, &$params, $user = '', $conn = null) {
     if (empty($filters_data)) {
@@ -396,11 +396,7 @@ function buildWhereClause($filters_data, $filters, &$params, $user = '', $conn =
 
         if ($condition === '1=1' || $condition === '1=0') continue;
         if (!empty($conditions) && $logic) {
-            $effective_logic = $logic;
-            if ($prev_term === $term && $prev_operator === '<>' && $operator === '<>') {
-                $effective_logic = ($logic === 'AND') ? 'OR' : 'AND';
-            }
-            $conditions[] = $effective_logic;
+            $conditions[] = $logic;
         }
         $conditions[] = "($condition)";
         $prev_term = $term;
