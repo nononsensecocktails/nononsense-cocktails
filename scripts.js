@@ -557,6 +557,7 @@ function updateValueInput($row, term, initialValue = '', keepExisting = true) {
 
     let applyingSavedState = false;
     let lastSearchTimer = null;
+    let suppressLastSearchSave = false;
 
     function collectCurrentDefaults() {
         return {
@@ -726,7 +727,7 @@ function updateValueInput($row, term, initialValue = '', keepExisting = true) {
     }
 
     function saveLastSearchNow(done) {
-        if (!isUserLoggedIn || !useLastSearch) {
+        if (suppressLastSearchSave || !isUserLoggedIn || !useLastSearch) {
             if (done) done();
             return;
         }
@@ -750,7 +751,7 @@ function updateValueInput($row, term, initialValue = '', keepExisting = true) {
     }
 
     function scheduleSaveLastSearch() {
-        if (applyingSavedState || !isUserLoggedIn || !useLastSearch) {
+        if (suppressLastSearchSave || applyingSavedState || !isUserLoggedIn || !useLastSearch) {
             return;
         }
         clearTimeout(lastSearchTimer);
@@ -1812,19 +1813,19 @@ $(document).on('input change', '#recipe-scale-input', function () {
     $('#lucky-button').on('click', loadRandomRecipe);
     
 $('#reset-button').on('click', function() {
-    if (isUserLoggedIn && userDefaults) {
-        applyUserDefaults();
-    } else {
-        resetFilters();
-        if (isUserLoggedIn) {
-            applySiteBlankDisplayPrefs();
-        }
-        loadTotalCocktails();
+    suppressLastSearchSave = true;
+    clearTimeout(lastSearchTimer);
+    resetFilters();
+    if (isUserLoggedIn) {
+        applySiteBlankDisplayPrefs();
     }
+    loadTotalCocktails();
     $('#name-select').html('<option value="">STEP 3: Select a Name</option>');
     $('#source-select').html('<option value="">STEP 4: Select a Source</option>');
     $('#recipe_details').empty();
-    scheduleSaveLastSearch();
+    setTimeout(function () {
+        suppressLastSearchSave = false;
+    }, 1200);
 });
 
 function generateCurrentUrl() {
